@@ -1,0 +1,18 @@
+This is BAMT-PoolManager, a extension of the default BAMT web interface 
+that allows you to manage pools, has a few system stats, and stop/start miner control. 
+
+Executing the install.sh script will put the files in the right places. 
+
+To allow the web interface permission to stop/start the miner, you will need to add the 
+following line in /etc/sudoers: 
+
+www-data localhost=(ALL)NOPASSWD:/usr/sbin/mine
+
+Please use 'visudo' to edit sudoers. 
+
+TODO: 
+pool stats tests / hw error test
+
+filesave backup?cron for conf backups?
+
+munin for pools
