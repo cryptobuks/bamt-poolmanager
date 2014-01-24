@@ -1,6 +1,8 @@
 #!/bin/bash
 
-if { -f /var/www/favicon.ico.bamt } { 
+if [ -f /var/www/favicon.ico.bamt ]
+
+then
 
   cp /var/www/bamt/status.css /var/www/bamt/status.css.back
   cp status.css /var/www/bamt/
@@ -14,7 +16,7 @@ if { -f /var/www/favicon.ico.bamt } {
   cp /opt/bamt/common.pl /opt/bamt/common.pl.back
   cp common.pl /opt/bamt/
 
-} else { 
+else 
 
   cp /var/www/favicon.ico /var/www/favicon.ico.bamt
   cp favicon.ico /var/www/
@@ -33,5 +35,5 @@ if { -f /var/www/favicon.ico.bamt } {
   cp /opt/bamt/common.pl /opt/bamt/common.pl.bamt
   cp common.pl /opt/bamt/
 
-}
+fi
 
