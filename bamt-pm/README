@@ -1,8 +1,11 @@
 This is Island Farm and Mining Implement BAMT-PoolManager, 
 an extension of the default BAMT web interface that allows you to manage pools, 
 has a few system stats, and stop/start miner control. 
+It was written and tested on litecoin-bamt 1.2 
+( https://litecointalk.org/index.php?topic=2924.0 ), but should work on any BAMT based 
+distro (SMOS, etc). I am interested to hear if it doesnt. 
 
-Executing the install.sh script will put the files in the right places. 
+Executing the install.sh script as root will put the files in the right places. 
 
 Please make sure the following entries are in your cgminer.conf 
 (usually /etc/bamt/cgminer.conf):
