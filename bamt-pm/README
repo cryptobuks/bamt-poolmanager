@@ -12,7 +12,7 @@ Please make sure the following entries are in your cgminer.conf
 
 To allow the web interface permission to stop/start the miner, you will need to add the 
 following line in /etc/sudoers: 
-www-data localhost=(ALL)NOPASSWD:/usr/sbin/mine
+www-data ALL=(ALL)NOPASSWD:/usr/sbin/mine
 
 Please use 'visudo' to edit sudoers. 
 
