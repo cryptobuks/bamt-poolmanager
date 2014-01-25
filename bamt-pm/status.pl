@@ -99,33 +99,8 @@ for (my $i=0;$i<@gpus;$i++)
 	$tot_accept += ${@gpus[$i]}{shares_accepted};	
 	$tot_invalid += ${@gpus[$i]}{shares_invalid};	
 
-#	my $url = $gpus[$i]{'pool_url'};
-	
-#    if ($url =~ m/.+\@(.+)/)
-#    {
-#    $url = $1;
-#      if ($url =~ m/(.+):.*/)
-#      {
-#         $url = $1;
-#      }
-#    }
-
     $gput .= '</TR></TABLE></TD>';
 
-#    if ($i == $showgpu)
-#	{
-#		$gsput .= "<tr><td>Status:</td><td>$url</td></tr>";
-		
-#		if ($conf{'gpu'. $i}{cgminer})
-#		{
-#			$gsput .= "<tr><td>Miner:</td><td>cgminer</td></tr>";
-#		}
-#		else
-#		{
-#			$gsput .= "<tr><td>Miner:</td><td>Phoenix</td></tr>";
-#		}		
-#	}
-    
 	if (defined($conf{'gpu'. $i}{monitor_temp_hi}) && ($gpus[$i]{'current_temp_0'} > $conf{'gpu'. $i}{monitor_temp_hi}))
 	{
 			$problems++;
@@ -287,8 +262,6 @@ for (my $i=0;$i<@gpus;$i++)
 		$gput .= '<td>n/a';
 	}
 	
-#	$gput .= "</TD><TD>";
-
 	$gput .= "</TD>";
 	
         my $gpuhwe = $gpus[$i]{'hardware_errors'};	
@@ -337,8 +310,6 @@ for (my $i=0;$i<@gpus;$i++)
 #		$gput .= $gpus[$i]{'desc'};
 	}
 	
-#	$gput .= '</TD>';
-
 	$gput .= "</TD></TR>";
 	
 	my $gpuurl = "?";
@@ -372,7 +343,7 @@ my $runtime = `ps -eo etime,command | grep [c]gminer`;
 if ($runtime =~ /^\s+(.*?):\d+\s+\S+/) {
   $cgrt = $1;
   $cgrt =~ s/[\-]/ days, /;  
-  $cgrt =~ s/$cgrun/$cgrun min/ if (length $cgrun < 3);
+  $cgrt =~ s/$cgrun/$cgrt min/ if (length $cgrt < 3);
   $cgrun = "<td>$cgrt</td>";
 } else { 
   $cgrun = "<td class='error'>Stopped</td>";
@@ -419,7 +390,10 @@ if (@pools) {
       } else { 
 	$current = "<font size=4>Not Active</font>";
       }
-      $psput .= "<tr><td colspan=2>$current</td></tr>";
+      $psput .= "<tr><td>$current</td>";
+      if ($g0url ne $pname) {
+      $psput .= "<td><form name='pdelete' action='poolmanage.pl' method='text'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
+      }
       $psput .= "<tr><td>Mining URL:</td><td>" . $pname . "</td></tr>";
       $psput .= "<tr><td>Worker:</td><td>" . $pusr . "</td></tr>";
       $psput .= "<tr><td>Priority:</td><td>" . $ppri . "</td></tr>";
@@ -436,9 +410,6 @@ if (@pools) {
       $psput .= "<tr><td>Stale:</td><td>" . $pss . "</td></tr>";
       $psput .= "<tr><td>Get Failures:</td><td>" . $psgf . "</td></tr>";
       $psput .= "<tr><td>Remote Failures:</td><td>" . $psrf . "</td></tr>";
-      if ($g0url ne $pname) {
-      $psput .= "<tr><td colspan=2><br><form name='pdelete' action='poolmanage.pl' method='text'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
-      }
     } else {
       my $purl = "?";
       $purl .= "pool=$i";
