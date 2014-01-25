@@ -73,7 +73,6 @@ my $problemgpus = 0;
 my @nodemsg;
 my @gpumsg;
 
-
 $g1put .= "<TR class='ghdr'><TD class='ghdr'>GPU</TD>";
 $g1put .= "<TD class='ghdr'>Status</TD>";
 $g1put .= "<TD class='ghdr'>Temp</TD>";
@@ -264,14 +263,15 @@ for (my $i=0;$i<@gpus;$i++)
 	
 	$gput .= "</TD>";
 	
-        my $gpuhwe = $gpus[$i]{'hardware_errors'};	
-	if ($gpuhwe > 0) { 
-	  $gput .= "<td class='error'>" . $gpuhwe;
+        my $ghwe = $gpus[$i]{'hardware_errors'};	
+	if ($ghwe > 0) { 
+	  $gpuhwe = "<td class='error'>" . $ghwe . "</td>";
 	} else { 
-	  $gput .= "<td>" . $gpuhwe;
+	  $gpuhwe = "<td>" . $ghwe . "</td>";
 	}
+        $gput .= $gpuhwe;
 		
-	$gput .= "</TD><TD>";
+	$gput .= "<TD>";
 
 	$gput .= $gpus[$i]{'current_core_clock'} . ' Mhz';
 	
@@ -287,7 +287,8 @@ for (my $i=0;$i<@gpus;$i++)
 
 	if ($i == $showgpu)
 	{
-		$gsput .= "<tr><td>HW Errors:</td><td>" . $gpus[$i]{'hardware_errors'} . "</td></tr>"; 
+                push(@gpumsg, "GPU has Hardware Errors") if ($ghwe > 0);		
+		$gsput .= "<tr><td>HW Errors:</td>" . $gpuhwe . "</tr>"; 
 		$gsput .= "<tr><td>Core clock:</td><td>" . $gpus[$i]{'current_core_clock'} . ' Mhz</td></tr>'; 
 		$gsput .= "<tr><td>Mem clock:</td><td>" . $gpus[$i]{'current_mem_clock'} . ' Mhz</td></tr>';
 		$gsput .= "<tr><td>Core power:</td><td>" . $gpus[$i]{'current_core_voltage'} . "v</td></tr>";
@@ -363,6 +364,8 @@ $p1sum .= "<TD class='ghdr'>Worker</TD>";
 $p1sum .= "<TD class='ghdr'>Status</TD>";
 $p1sum .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
 $p1sum .= "</TR>";
+
+my @poolmsg;
 my $g0url = $gpus[0]{'pool_url'}; 
 my @pools = &getCGMinerPools(1);
 if (@pools) { 
@@ -373,12 +376,29 @@ if (@pools) {
     $pimg = "<img src='/bamt/ok24.png'>" if ($g0url eq $pname);
     $pusr = ${@pools[$i]}{'user'};
     $pstat = ${@pools[$i]}{'status'};
+    if ($pstat eq "Dead") {
+      $pstatus = "<td class='error'>" . $pstat . "</td>" 
+    } else {
+      $pstatus = "<td>" . $pstat . "</td>";
+    }
     $pimg = "<img src='/bamt/error24.png'>" if ($pstat ne "Alive");
     $ppri = ${@pools[$i]}{'priority'};
     $pimg = "<img src='/bamt/timeout32.png'>" if (($g0url ne $pname)&&(($ppri eq 0)&&($pstat eq "Alive")));
     $pacc = ${@pools[$i]}{'accepted'};
     $prej = ${@pools[$i]}{'rejected'};
+    if ($prej ne "0") {
+        $prr = sprintf("%.2f", $prej / ($pacc + $prej)*100);
+    } else { 
+	$prr = "0.0";
+    }
+    if ($prr >= 2) { 
+	$prat = "<td class='error'>" . $prr . "%</td>";
+      } else { 
+        $prat = "<td>" . $prr . "%</td>";
+      }
     if ($showpool == $i) { 
+      push(@poolmsg, "Reject ratio is too high") if ($prr >= 2); 
+      push(@poolmsg, "Pool is dead") if ($pstat eq "Dead");
       $psgw = ${@pools[$i]}{'getworks'};
       $psw = ${@pools[$i]}{'works'}; 
       $psd = ${@pools[$i]}{'discarded'}; 
@@ -397,12 +417,9 @@ if (@pools) {
       $psput .= "<tr><td>Mining URL:</td><td>" . $pname . "</td></tr>";
       $psput .= "<tr><td>Worker:</td><td>" . $pusr . "</td></tr>";
       $psput .= "<tr><td>Priority:</td><td>" . $ppri . "</td></tr>";
-      if ($pstat eq "Dead") {
-        $pssput .= "<td class='error'>" . $pstat;
-      } else {
-        $pssput .= "<td>" . $pstat;
-      }
-      $psput .= "<tr><td>Status:</td>" . $pssput . "</td></tr>";
+
+      $psput .= "<tr><td>Status:</td>" . $pstatus . "</tr>";
+
       $psput .= "<tr><td>Shares A/R:</td><td>" . $pacc . " / " . $prej . "</td></tr>";
       $psput .= "<tr><td>Getworks:</td><td>" . $psgw . "</td></tr>";
       $psput .= "<tr><td>Works:</td><td>" . $psw . "</td></tr>";
@@ -418,18 +435,9 @@ if (@pools) {
       $psum .= "<td>" . $ppri . "</td>";
       $psum .= "<td>" . $pname . "</td>";
       $psum .= "<td>" . $pusr . "</td>";
-      if ($pstat eq "Dead") {
-        $psum .= "<td class='error'>" . $pstat . "</td>" 
-      } else {
-        $psum .= "<td>" . $pstat . "</td>";
-      }
+      $psum .= $pstatus;
       $psum .= "<td>" . $pacc . " / " . $prej . "</td>";
-      if (($prej ne "0")&&($pacc ne "0")) {
-        $prr = sprintf("%.2f%%", $prej / ($pacc + $prej)*100);
-      } else { 
-	$prr = "0";
-      }
-      $psum .= "<td>" . $prr . "</td>";
+      $psum .= $prat;
     }
   }
 } else { 
