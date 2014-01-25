@@ -1,5 +1,6 @@
-This is BAMT-PoolManager, a extension of the default BAMT web interface 
-that allows you to manage pools, has a few system stats, and stop/start miner control. 
+This is Island Farm and Mining Implement BAMT-PoolManager, 
+an extension of the default BAMT web interface that allows you to manage pools, 
+has a few system stats, and stop/start miner control. 
 
 Executing the install.sh script will put the files in the right places. 
 
@@ -18,6 +19,7 @@ Please use 'visudo' to edit sudoers.
 Pizza and praises to lily@disorg.net
 BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6
 
+"Island Farm and Mining Implement - cross over to the Island!" 
 
 TODO: 
 pool stats tests / hw error test
