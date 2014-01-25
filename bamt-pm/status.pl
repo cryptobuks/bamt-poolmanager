@@ -287,7 +287,7 @@ for (my $i=0;$i<@gpus;$i++)
 
 	if ($i == $showgpu)
 	{
-                push(@gpumsg, "GPU has Hardware Errors") if ($ghwe > 0);		
+                push(@gpumsg, "GPU $i has Hardware Errors") if ($ghwe > 0);		
 		$gsput .= "<tr><td>HW Errors:</td>" . $gpuhwe . "</tr>"; 
 		$gsput .= "<tr><td>Core clock:</td><td>" . $gpus[$i]{'current_core_clock'} . ' Mhz</td></tr>'; 
 		$gsput .= "<tr><td>Mem clock:</td><td>" . $gpus[$i]{'current_mem_clock'} . ' Mhz</td></tr>';
@@ -590,7 +590,7 @@ elsif ($showpool > -1)
         print "<font size=5>Pool $showpool<br>";
         my $psacc = ${@pools[$showpool]}{'accepted'};
         my $psrej = ${@pools[$showpool]}{'rejected'};
-	if (($psrej ne "0")&&($psacc ne "0")) { 
+	if ($psacc ne "0") { 
  	  print sprintf("%.2f%%", $psrej / ($psacc + $psrej)*100);
           print "</font><br> reject ratio";
 	} else {
