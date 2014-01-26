@@ -1,11 +1,13 @@
 This is Island Farm and Mining Implement BAMT-PoolManager, 
-an extension of the default BAMT web interface that allows you to manage pools, 
+an extension of the default BAMT web interface that allows you to manage cgminer pools, 
 has a few system stats, and stop/start miner control. 
 It was written and tested on litecoin-bamt 1.2 
 ( https://litecointalk.org/index.php?topic=2924.0 ), but should work on any BAMT based 
 distro (SMOS, etc). I am interested to hear if it doesnt. 
+I am on freenode in #scrypt-mining 
 
-Executing the install.sh script as root will put the files in the right places. 
+Executing the install.sh script as root ('sudo ./install.sh') will put the files in 
+the right places. 
 
 Please make sure the following entries are in your cgminer.conf 
 (usually /etc/bamt/cgminer.conf):
@@ -13,14 +15,13 @@ Please make sure the following entries are in your cgminer.conf
 "api-port" : "4028",
 "api-allow" : "W:127.0.0.1",
 
-To allow the web interface permission to stop/start the miner, you will need to add the 
-following line in /etc/sudoers: 
+To allow the web interface permission to stop/start the miner, you will need to run 
+'visudo' and add the following line:
 www-data ALL=(ALL)NOPASSWD:/usr/sbin/mine
-
-Please use 'visudo' to edit sudoers. 
 
 Pizza and praises to lily@disorg.net
 BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6
+LTC: LdMJB36zEfTo7QLZyKDB55z9epgN78hhFb
 
 "Island Farm and Mining Implement - cross over to the Island!" 
 
