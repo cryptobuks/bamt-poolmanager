@@ -82,7 +82,6 @@ $g1put .= "<TD class='ghdr'>Load</TD>";
 $g1put .= "<TD class='ghdr'>Rate</TD>";
 $g1put .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
 
-#$g1put .= "<TD class='ghdr'>GPU Family</TD>";
 $g1put .= "<TD class='ghdr'>HW Errors</TD>";
 $g1put .= "<TD class='ghdr'>Core</TD>";
 $g1put .= "<TD class='ghdr'>Memory</TD>";
@@ -289,26 +288,11 @@ for (my $i=0;$i<@gpus;$i++)
 	{
                 push(@gpumsg, "GPU $i has Hardware Errors") if ($ghwe > 0);		
 		$gsput .= "<tr><td>HW Errors:</td>" . $gpuhwe . "</tr>"; 
+                $gsput .= "<tr><td>Powertune:</td><td>" . $gpus[$i]{'current_powertune'} . "%</td></tr>";
 		$gsput .= "<tr><td>Core clock:</td><td>" . $gpus[$i]{'current_core_clock'} . ' Mhz</td></tr>'; 
 		$gsput .= "<tr><td>Mem clock:</td><td>" . $gpus[$i]{'current_mem_clock'} . ' Mhz</td></tr>';
 		$gsput .= "<tr><td>Core power:</td><td>" . $gpus[$i]{'current_core_voltage'} . "v</td></tr>";
-	}
-	
-	if ($gpus[$i]{'desc'} =~ m/.*\s(\d+\sSeries).*/i)
-	{
-		if ($i == $showgpu)
-		{
-				$gsput .= "<tr><td>GPU family:</td><td>" .  $1 . "</td></tr>";
-		}
-#		$gput .= $1;
-	}
-	else
-	{
-		if ($i == $showgpu)
-		{
-				$gsput .= "<tr><td>GPU family:</td><td>" . $gpus[$i]{'desc'}  . "</td></tr>";
-		}
-#		$gput .= $gpus[$i]{'desc'};
+		$gsput .= "<tr><td>GPU model:</td><td>" . $gpus[$i]{'desc'}  . "</td></tr>";
 	}
 	
 	$gput .= "</TD></TR>";
