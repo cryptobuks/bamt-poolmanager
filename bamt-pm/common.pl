@@ -36,12 +36,12 @@ setlogsock('unix');
 
 sub saveConfig 
 {
+ my $savefile = $_[0];
  my $conf = &getConfig;
  %conf = %{$conf};
- my $savefile = $_[0];
  $savefile = "/etc/bamt/cgminer.conf" if ($savefile eq "");
   if (-e $savefile) { 
-   $bkpfile = $savefile . ".bkp";
+   $bkpfile = $savefile . "-bkp";
    rename $savefile, $bkpfile; 
   }
    &blog("saving config to $savefile...");
@@ -779,6 +779,11 @@ sub getCGMinerStats
 		if ($res =~ m/.*,Hardware\sErrors=(\d+),.*/)
 		{
 			$data->{'hardware_errors'} =$1;
+		}
+
+		if ($res =~ m/.*,Intensity=(\d+),.*/)
+		{
+			$data->{'intensity'} =$1;
 		}
 		
 		if ($res =~ m/.*,Last\sShare\sPool=(\d+),.*/)

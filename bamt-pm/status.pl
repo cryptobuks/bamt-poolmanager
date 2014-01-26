@@ -289,6 +289,7 @@ for (my $i=0;$i<@gpus;$i++)
                 push(@gpumsg, "GPU $i has Hardware Errors") if ($ghwe > 0);		
 		$gsput .= "<tr><td>HW Errors:</td>" . $gpuhwe . "</tr>"; 
                 $gsput .= "<tr><td>Powertune:</td><td>" . $gpus[$i]{'current_powertune'} . "%</td></tr>";
+                $gsput .= "<tr><td>Intensity:</td><td>" . $gpus[$i]{'intensity'} . "</td></tr>";
 		$gsput .= "<tr><td>Core clock:</td><td>" . $gpus[$i]{'current_core_clock'} . ' Mhz</td></tr>'; 
 		$gsput .= "<tr><td>Mem clock:</td><td>" . $gpus[$i]{'current_mem_clock'} . ' Mhz</td></tr>';
 		$gsput .= "<tr><td>Core power:</td><td>" . $gpus[$i]{'current_core_voltage'} . "v</td></tr>";
