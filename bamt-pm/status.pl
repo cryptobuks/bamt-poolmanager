@@ -344,7 +344,7 @@ my $runtime = `ps -eo etime,command | grep [c]gminer`;
 if ($runtime =~ /^\s+(.*?):\d+\s+\S+/) {
   $cgrt = $1;
   $cgrt =~ s/[\-]/ days, /;  
-  $cgrt =~ s/$cgrun/$cgrt min/ if (length $cgrt < 3);
+  $cgrt =~ s/$cgrt/$cgrt min/ if (length $cgrt < 3);
   $cgrun = "<td>$cgrt</td>";
 } else { 
   $cgrun = "<td class='error'>Stopped</td>";

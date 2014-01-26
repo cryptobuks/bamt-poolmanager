@@ -5,8 +5,8 @@ print header;
 &ReadParse(%in);
 
 print "<meta http-equiv='REFRESH' content='3;url=./status.pl?'>";
-print "<style type='text/css'> body {font-family: 'Trebuchet MS', Helvetica, sans-serif; text-align:center; background-color:white; } </style>";
-print "<style type='text/css'> table { border: 1px solid #cccccc;  margin-left: auto; margin-right: auto; } </style>"; 
+print "<style type='text/css'> body {font-family: 'Trebuchet MS', Helvetica, sans-serif; background-color:white; } </style>";
+print "<style type='text/css'> table { border: 2px solid #cccccc; margin-left: auto; margin-right: auto; } td { text-align:center; padding:10px; ) </style>"; 
 print "<br><br><br><table><tr>";
 
 
@@ -59,7 +59,7 @@ if ($mstart eq "start") {
     print "<p><b>Or processes have not finished closing from last stop</b></td>";
   } else {
     print "<td bgcolor='green'><p><big><font color='white'>STARTING MINER...</big></td>";
-    exec 'sudo /usr/sbin/mine start';
+    exec('sudo /usr/sbin/mine start');
   }
 }
 
@@ -68,7 +68,7 @@ if ($mstop eq "stop") {
   my $runcheck = `ps -eo command | grep [c]gminer | wc -l`;
   if ($runcheck > 0) {
     print "<td bgcolor='red'><p><big>STOPPING MINER...</big></td>";
-    exec 'sudo /usr/sbin/mine stop';
+    exec('sudo /usr/sbin/mine stop');
   } else {
     print "<td bgcolor='yellow'><p><big>MINER NOT RUNNING</big></td>";
   }
