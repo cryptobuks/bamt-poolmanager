@@ -391,13 +391,14 @@ if (@pools) {
     } else { 
 	$prr = "0.0";
     }
-    if ($prr >= 2) { 
+    if ($prr >= 5) { 
 	$prat = "<td class='error'>" . $prr . "%</td>";
       } else { 
         $prat = "<td>" . $prr . "%</td>";
       }
+
     if ($showpool == $i) { 
-      push(@poolmsg, "Reject ratio is too high") if ($prr >= 2); 
+      push(@poolmsg, "Reject ratio is too high") if ($prr >= 5); 
       push(@poolmsg, "Pool is dead") if ($pstat eq "Dead");
       $psgw = ${@pools[$i]}{'getworks'};
       $psw = ${@pools[$i]}{'works'}; 
@@ -417,9 +418,7 @@ if (@pools) {
       $psput .= "<tr><td>Mining URL:</td><td>" . $pname . "</td></tr>";
       $psput .= "<tr><td>Worker:</td><td>" . $pusr . "</td></tr>";
       $psput .= "<tr><td>Priority:</td><td>" . $ppri . "</td></tr>";
-
       $psput .= "<tr><td>Status:</td>" . $pstatus . "</tr>";
-
       $psput .= "<tr><td>Shares A/R:</td><td>" . $pacc . " / " . $prej . "</td></tr>";
       $psput .= "<tr><td>Getworks:</td><td>" . $psgw . "</td></tr>";
       $psput .= "<tr><td>Works:</td><td>" . $psw . "</td></tr>";
