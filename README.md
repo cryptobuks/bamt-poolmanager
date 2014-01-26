@@ -11,4 +11,7 @@ Extra system stats in the header (uptime, load, free mem).
 Reqirements: BAMT linux running CGminer. Built and tested on litecoin-bamt 1.2, but should 
 work with any flavor of BAMT, including SMOS. 
 
+To install, wget the zipfile to your miner and unzip it, then run ./install.sh in the 
+bamt-pm directory. Please see the README to complete the setup. 
+
 See the Wiki for a screenshot

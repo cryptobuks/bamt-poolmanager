@@ -3,9 +3,9 @@ an extension of the default BAMT web interface that allows you to manage cgminer
 has a few system stats, and stop/start miner control. 
 It was written and tested on litecoin-bamt 1.2 
 ( https://litecointalk.org/index.php?topic=2924.0 ), but should work on any BAMT based 
-distro (SMOS, etc). I am interested to hear if it doesnt. 
-I am on freenode in #scrypt-mining 
+distro (SMOS, etc). I am interested to hear if it doesnt. I am on freenode in #scrypt-mining 
 
+INSTALL: 
 Executing the install.sh script as root ('sudo ./install.sh') will put the files in 
 the right places. 
 
@@ -19,9 +19,15 @@ To allow the web interface permission to stop/start the miner, you will need to 
 'visudo' and add the following line:
 www-data ALL=(ALL)NOPASSWD:/usr/sbin/mine
 
+NOTES:
+Pool priority is not preserved by CGminer when it stops. CGminer will prioritize the pools 
+in the conf when it starts in the same order that they appear, so if you have a pool you 
+always want to be Pri 0 on start, make it Pool 0. 
+
+
 Pizza and praises to lily@disorg.net
-BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6
 LTC: LdMJB36zEfTo7QLZyKDB55z9epgN78hhFb
+BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6
 
 "Island Farm and Mining Implement - cross over to the Island!" 
 
