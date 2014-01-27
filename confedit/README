@@ -1,0 +1,12 @@
+This is a web based file editor written in perl. 
+It is extremely basic. It performs no validation whatsoever. 
+It WILL let you overwrite files without warning. It may cause cancer. 
+USE ENTIRELY AT YOUR OWN RISK! 
+
+This file is self contained. Copy the confedit.pl file to your /usr/lib/cgi-bin/ directory, 
+then you can open it at http://<MINER-IP>/confedit.pl
+
+For any file to be saved by this tool, it has to be writable by the web server 
+(generally insecure and ill-advised); e.g. 'chmod +w /path/to/file'. 
+
+Good luck! 
