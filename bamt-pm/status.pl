@@ -488,11 +488,6 @@ else
 
 print "</td>";
 
-if (! $mgpumon eq "")
-{
-	print "<td><A href=$mgpumon>Back to mgpumon..</A></td>";
-}
-
 # EXTRA HEADER STATS
 print "<TD id='overviewsys'>";
 my $uptime = `uptime`;
@@ -505,6 +500,11 @@ print "System Uptime: $rigup<br>";
 print "CPU Load: $rigload<br>";
 print "Mem free: $rigmem GB<br>";
 # END EXTRA STATS
+
+if (! $mgpumon eq "")
+{
+	print "<td><A href=$mgpumon>Back to mgpumon..</A></td>";
+}
 
 print "</TR></table></div>";
 
@@ -649,6 +649,7 @@ else
 }
 
 
+print "<p><a href='/cgi-bin/confedit.pl'>Configuration Editor</a>";
 
 print "<p>Powered by <br><a href='http://guiminer.net/bamt' target=_blank><img src='/bamt/bamt_small.png'></a>";
 
