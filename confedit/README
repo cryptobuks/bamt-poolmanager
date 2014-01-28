@@ -1,12 +1,21 @@
 This is a web based file editor written in perl. 
 It is extremely basic. It performs no validation whatsoever. 
-It WILL let you overwrite files without warning. It may cause cancer. 
-USE ENTIRELY AT YOUR OWN RISK! 
+It WILL let you overwrite files without warning. It will NOT preserve your edits if 
+your save fails. USE ENTIRELY AT YOUR OWN RISK! 
 
 This file is self contained. Copy the confedit.pl file to your /usr/lib/cgi-bin/ directory, 
 then you can open it at http://<MINER-IP>/confedit.pl
 
-For any file to be saved by this tool, it has to be writable by the web server 
-(generally insecure and ill-advised); e.g. 'chmod +w /path/to/file'. 
+For this to save files, you will need to execute 'visudo' and add the following lines 
+to the end of the file:
+Defaults targetpw
+www-data ALL=(ALL) /bin/cp
 
-Good luck! 
+This allows the web server to execute the 'cp' command with a given users name and password 
+(and thus save the file). 
+
+Pizza and praises to lily@disorg.net
+LTC: LdMJB36zEfTo7QLZyKDB55z9epgN78hhFb
+BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6
+
+"Island Farm and Mining Implement - cross over to the Island!"
