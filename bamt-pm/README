@@ -17,7 +17,7 @@ Please make sure the following entries are in your cgminer.conf
 
 To allow the web interface permission to stop/start the miner, you will need to run 
 'visudo' and add the following lines to the end of the file:
-Default targetpw
+Defaults targetpw
 www-data ALL=(ALL) /usr/sbin/mine,/bin/cp
 
 If you have previously put a different line here for poolmanager, please remove it. 
