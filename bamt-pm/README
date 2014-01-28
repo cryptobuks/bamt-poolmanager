@@ -6,8 +6,8 @@ It was written and tested on litecoin-bamt 1.2
 distro (SMOS, etc). I am interested to hear if it doesnt. I am on freenode in #scrypt-mining 
 
 INSTALL: 
-Executing the install.sh script as root ('sudo ./install.sh') will put the files in 
-the right places. 
+Executing the install-pm.sh script as root ('sudo ./install-pm.sh') will put the files in 
+the right places. You can run remove-pm.sh later if you decide to uninstall. 
 
 Please make sure the following entries are in your cgminer.conf 
 (usually /etc/bamt/cgminer.conf):
