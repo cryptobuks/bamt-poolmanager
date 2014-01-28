@@ -51,27 +51,36 @@ if ($dpool ne "") {
   $dpool = "";
 }
 
+my $status = ""; 
 my $mstart = $in{'mstart'};
 if ($mstart eq "start") { 
-  my $runcheck = `ps -eo command | grep [c]gminer | wc -l`;
-  if ($runcheck > 0) {
-    print "<td bgcolor='yellow'><p><big>MINER IS ALREADY RUNNING!</big>";
-    print "<p><b>Or processes have not finished closing from last stop</b></td>";
+  if (system("echo $in{'ptext'} | sudo -S /usr/sbin/mine start")!=0) {
+    $status = "Failed!";
+  }
+  if ($status ne "") {
+    print "<td bgcolor='yellow'><p><big>$status</big>";
   } else {
     print "<td bgcolor='green'><p><big><font color='white'>STARTING MINER...</big></td>";
-    exec('sudo /usr/sbin/mine start');
   }
 }
 
 my $mstop = $in{'mstop'};
 if ($mstop eq "stop") { 
-  my $runcheck = `ps -eo command | grep [c]gminer | wc -l`;
-  if ($runcheck > 0) {
-    print "<td bgcolor='red'><p><big>STOPPING MINER...</big></td>";
-    exec('sudo /usr/sbin/mine stop');
-  } else {
-    print "<td bgcolor='yellow'><p><big>MINER NOT RUNNING</big></td>";
+  if (system("echo $in{'ptext'} | sudo -S /usr/sbin/mine stop")!=0) {
+    $status = "Failed!";
   }
+  if ($status ne "") {
+    print "<td bgcolor='yellow'><p><big>$status</big>";
+  } else {
+   print "<td bgcolor='red'><p><big>STOPPING MINER...</big></td>";
+  }
+#  my $runcheck = `ps -eo command | grep [c]gminer | wc -l`;
+#  if ($runcheck > 0) {
+#    print "<td bgcolor='red'><p><big>STOPPING MINER...</big></td>";
+#    exec('sudo /usr/sbin/mine stop');
+#  } else {
+#    print "<td bgcolor='yellow'><p><big>MINER NOT RUNNING</big></td>";
+#  }
 }
 
 print "</tr></table></body></html>";

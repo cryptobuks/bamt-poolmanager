@@ -325,21 +325,27 @@ for (my $i=0;$i<@gpus;$i++)
 
 
 # EXTRA CONTROLS
+my $cgrc = 0;
 my $runtime = `ps -eo etime,command | grep [c]gminer`;
 if ($runtime =~ /^\s+(.*?):\d+\s+\S+/) {
   $cgrt = $1;
   $cgrt =~ s/[\-]/ days, /;  
   $cgrt =~ s/$cgrt/$cgrt min/ if (length $cgrt < 3);
   $cgrun = "<td>$cgrt</td>";
+  $cgrc = 1;
 } else { 
   $cgrun = "<td class='error'>Stopped</td>";
+  $cgrc = 0;
 }
-$mcontrol .= "<table>";
-$mcontrol .= "<tr><td>Miner control:</td>"; 
-$mcontrol .= "<td><form name='mstop' action='poolmanage.pl' method='text'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></form></td>";
-$mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='text'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></form></td>";
+$mcontrol .= "<table><tr>";
 $mcontrol .= "<td>Miner run time:</td>$cgrun";
-$mcontrol .= "</tr></table><br>";
+if ($cgrc eq 1) { 
+  $mcontrol .= "<td><form name='mstop' action='poolmanage.pl' method='text'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></td>";
+} else {
+  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='text'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
+}
+$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required>";
+$mcontrol .= "</form></tr></table><br>";
 $p1sum .= "<table id='pcontent'>";
 $p1sum .= "<TR class='ghdr'><TD class='ghdr'>Pool</TD>";
 $p1sum .= "<TD class='ghdr'>Active</TD>";
@@ -649,7 +655,7 @@ else
 }
 
 
-print "<p><a href='/cgi-bin/confedit.pl'>Configuration Editor</a>";
+print "<p><a href='/cgi-bin/confedit.pl' target='_blank'>Configuration Editor</a>";
 
 print "<p>Powered by <br><a href='http://guiminer.net/bamt' target=_blank><img src='/bamt/bamt_small.png'></a>";
 
