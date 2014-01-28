@@ -16,11 +16,8 @@ if ($confdata ne "") {
   print MYFILE $confdata;
   close (MYFILE); 
 }
-my $ln = $in{'lname'}; 
-if ($ln ne "") {
-  if (system("echo $in{'ptext'} | sudo -S -u $ln /bin/cp $tempfile $savepath")!=0) { 
-    $status = "Save Failed!";
-  }
+my $ln = $in{'lname'}; if ($ln ne "") {
+  $status = "Save of $savepath failed!" if (system("echo $in{'ptext'} | sudo -S -u $ln /bin/cp $tempfile $savepath")!=0);
 }
 $ln = ""; unlink $tempfile; 
 print "<style type='text/css'> body {font-family: 'Trebuchet MS', Helvetica, sans-serif; background-color:white; text-align:center; }";
@@ -31,19 +28,23 @@ print "<tr><td><input type='text' placeholder='/path/to/config.file' size='40' n
 print "<input type='submit' value='Load into textbox'>";
 print "</form></td></tr>";
 $filepath = $savepath if ($savepath ne ""); 
-print "<tr><td>Loaded file: $filepath";
-$owner = getpwuid((stat($filepath))[4]) if ($filepath ne "");
-print " - Owned by: $owner</td></tr>";
-open (MYFILE, $filepath);
- while (<MYFILE>) {
+if (-f $filepath) { 
+  print "<tr><td>Loaded file: $filepath";
+  $owner = getpwuid((stat($filepath))[4]) if ($filepath ne "");
+  print " - Owned by: $owner</td></tr>";
+  open (MYFILE, $filepath);
+   while (<MYFILE>) {
  	chomp;
  	$filedata .= "$_\n";
- }
- close (MYFILE); 
+   }
+  close (MYFILE); 
+} else {
+  print "<tr><td>$filepath isn't valid" if ($filepath ne "");
+}
 print "<tr><td>";
 print "<form name='configedit' action='confedit.pl' method='POST'>";
 print "<textarea name='configtext' style='width:512px;height:256px'>$filedata</textarea>";
-print "</td></tr><tr><td><input type='submit' value='Save textbox as' onclick='this.disabled=true;this.form.submit();' >";
+print "</td></tr><tr><td><input type='submit' value='Save textbox as'>";
 print "<input type='text' placeholder='/path/to/config.file' size='40' name='csavepath' required>";
 print "</td></tr><tr><td>User:";
 print "<input type='text' placeholder='username' name='lname' required>";
