@@ -18,6 +18,8 @@ case "$input" in
       cp status.css /var/www/bamt/
       cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.back
       cp status.pl /usr/lib/cgi-bin/
+      cp /usr/lib/cgi-bin/confedit.pl /usr/lib/cgi-bin/confedit.pl.back
+      cp confedit.pl /usr/lib/cgi-bin/
       cp /usr/lib/cgi-bin/poolmanage.pl /usr/lib/cgi-bin/poolmanage.pl.back
       cp poolmanage.pl /usr/lib/cgi-bin/
       cp /opt/bamt/common.pl /opt/bamt/common.pl.back
@@ -34,6 +36,7 @@ case "$input" in
     cp status.css /var/www/bamt/
     cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.bamt
     cp status.pl /usr/lib/cgi-bin/
+    cp confedit.pl /usr/lib/cgi-bin/
     cp poolmanage.pl /usr/lib/cgi-bin/
     cp /opt/bamt/common.pl /opt/bamt/common.pl.bamt
     cp common.pl /opt/bamt/
