@@ -55,7 +55,7 @@ if ($status ne "") {
 }
 print "</form></td></tr></table>";
 print "<br><p>WARNING! This tool performs no validation whatsoever.";
-print "<br>It will NOT save your edits if your save fails!";
+print "<br>It will NOT preserve your edits if your save fails!";
 print "<br>It will let you make stupid mistakes and overwrite files. It is not secure.";
 print "<br><big>USE ENTIRELY AT YOUR OWN RISK!</big>";
 print "<p>Pizza and praises to lily\@disorg.net";
