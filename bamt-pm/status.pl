@@ -507,10 +507,8 @@ print "CPU Load: $rigload<br>";
 print "Mem free: $rigmem GB<br>";
 # END EXTRA STATS
 
-if (! $mgpumon eq "")
-{
-	print "<td><A href=$mgpumon>Back to mgpumon..</A></td>";
-}
+my $mcheck = `ps -eo command | grep [m]gpumon | wc -l`;
+print "<td><A href=/mgpumon/>Back to mgpumon..</A></td>" if ($mcheck >0);
 
 print "</TR></table></div>";
 
@@ -657,7 +655,7 @@ else
 
 print "<p><a href='/cgi-bin/confedit.pl' target='_blank'>Configuration Editor</a>";
 
-print "<p>Powered by <br><a href='http://guiminer.net/bamt' target=_blank><img src='/bamt/bamt_small.png'></a>";
+print "<p>Powered by <br><a href='https://litecointalk.org/index.php?topic=2924.0' target=_blank><img src='/bamt/bamt_small.png'></a>";
 
 print "</body></html>";
 
