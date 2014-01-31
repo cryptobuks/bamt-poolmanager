@@ -17,4 +17,12 @@ TO INSTALL: wget the repo zipfile to your miner and unzip it, then cd to the bam
 and run the ./install-pm.sh  
 Please see the README to complete the setup. 
 
-See the Wiki for a screenshot
+See the Wiki for a screenshot.
+
+Absolutely NO hidden donate code! You can trust the IFMI brand to never include any kind of 
+auto donate or hash theft code. 
+
+BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6
+LTC: LdMJB36zEfTo7QLZyKDB55z9epgN78hhFb
+
+Donate your hashpower directly at http://wafflepool.com/
