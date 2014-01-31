@@ -7,20 +7,13 @@ distro (SMOS, etc). I am interested to hear if it doesnt. I am on freenode in #s
 
 INSTALL: 
 Executing the install-pm.sh script as root ('sudo ./install-pm.sh') will put the files in 
-the right places. You can run remove-pm.sh later if you decide to uninstall. 
+the right places, and enable some Apache security.  
 
 Please make sure the following entries are in your cgminer.conf 
 (usually /etc/bamt/cgminer.conf):
 "api-listen" : true,
 "api-port" : "4028",
 "api-allow" : "W:127.0.0.1",
-
-To allow the web interface permission to stop/start the miner, you will need to run 
-'visudo' and add the following lines to the end of the file:
-Defaults targetpw
-www-data ALL=(ALL) /usr/sbin/mine,/bin/cp
-
-If you have previously put a different line here for poolmanager, please remove it. 
 
 NOTES:
 Pool priority is not preserved by CGminer when it stops. CGminer will prioritize the pools 
@@ -35,4 +28,6 @@ BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6
 "Island Farm and Mining Implement - cross over to the Island!" 
 
 TODO: 
+quotas
+poolmanager for mgpumon
 munin for pools

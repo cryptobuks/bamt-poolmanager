@@ -48,7 +48,7 @@ case "$input" in
     cp /etc/sudoers /etc/sudoers.bamt
     cp /etc/sudoers.ifmi /etc/sudoers
     echo "Running Apache security script..."
-    ./install-htsec.sh
+    ./htsec.sh
     echo "Done! Please read the README and edit your conf file as required. Thank you for flying IFMI!"
   fi ;;
   * ) echo "installation exited";;
