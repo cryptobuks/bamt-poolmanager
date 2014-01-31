@@ -9,6 +9,8 @@ INSTALL:
 Executing the install-pm.sh script as root ('sudo ./install-pm.sh') will put the files in 
 the right places, and enable some Apache security.  
 
+If you run the install-pm.sh in bamt-pm/ you can ignore the other directories. 
+
 Please make sure the following entries are in your cgminer.conf 
 (usually /etc/bamt/cgminer.conf):
 "api-listen" : true,
