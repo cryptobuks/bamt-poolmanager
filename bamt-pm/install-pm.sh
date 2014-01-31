@@ -4,16 +4,17 @@ if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 1>&2
    exit 1
 fi
-echo "This script will install the IFMI web interface upgrade to BAMT."
+echo "This script will install the IFMI PoolManager web interface upgrade to BAMT."
 read -p "Are you sure?(y/n)" input
 shopt -s nocasematch
 case "$input" in
   y|Y|Yes)
-  if [ -e /var/www/favicon.ico.bamt ]; then
-    read -p  "It looks like this has been installed before. Continue?(y/n)" overwrite
+  if [ -d /var/www/IFMI ]; then
+    read -p  "It looks like this has been installed before. Overwrite?(y/n)" overwrite
     shopt -s nocasematch
     case "$overwrite" in
       y|Y|Yes)
+      echo "Copying files..."
       cp /var/www/bamt/status.css /var/www/bamt/status.css.back
       cp status.css /var/www/bamt/
       cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.back
@@ -28,6 +29,7 @@ case "$input" in
       * ) echo "installation exited";;
     esac
   else
+    echo "Copying files..."
     cp /var/www/favicon.ico /var/www/favicon.ico.bamt
     cp favicon.ico /var/www/
     mkdir /var/www/IFMI
@@ -40,7 +42,14 @@ case "$input" in
     cp poolmanage.pl /usr/lib/cgi-bin/
     cp /opt/bamt/common.pl /opt/bamt/common.pl.bamt
     cp common.pl /opt/bamt/
-    echo "Done! Please read the README and edit files as required. Thank you for flying IFMI!"
+    echo "Modifying sudoers...."
+    sed \$a"Defaults targetpw\n"\
+"www-data ALL=(ALL) /usr/sbin/mine,/bin/cp\n" /etc/sudoers > /etc/sudoers.ifmi
+    cp /etc/sudoers /etc/sudoers.bamt
+    cp /etc/sudoers.ifmi /etc/sudoers
+    echo "Running Apache security script..."
+    ./install-htsec.sh
+    echo "Done! Please read the README and edit your conf file as required. Thank you for flying IFMI!"
   fi ;;
   * ) echo "installation exited";;
 esac
