@@ -4,7 +4,8 @@ if [[ $EUID -ne 0 ]]; then
    echo "This script must be run as root" 1>&2
    exit 1
 fi
-echo "This script will REMOVE the IFMI web interface upgrade to BAMT."
+echo "This script will REMOVE the IFMI PoolManager web interface upgrade to BAMT."
+echo "It will not undo the Apache security changes."
 read -p "Are you sure?(y/n)" input
 shopt -s nocasematch
 case "$input" in
@@ -23,6 +24,8 @@ case "$input" in
     mv /usr/lib/cgi-bin/poolmanage.pl /var/www/IFMI/
     mv /opt/bamt/common.pl /var/www/IFMI/common.pl.ifmi
     mv /opt/bamt/common.pl.bamt /opt/bamt/common.pl 
+    mv /etc/sudoers /etc/sudoers.ifmi
+    mv /etc/sudoers.bamt /etc/sudoers
     echo "Done!"
   fi ;;
   * ) echo "installation exited";;
