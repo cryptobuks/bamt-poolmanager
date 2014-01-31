@@ -29,6 +29,8 @@ echo "It will optionally also set up a default site password."
 
   echo "Configuring Apache for SSL..."
   if [ ! -e /etc/ssl/certs/apache.crt ] ; then
+    echo "Creating cert."
+    echo "Please set the country code, the rest of the cert quetions can be blank (hit enter)"
     /usr/bin/openssl req -x509 -nodes -days 1825 -newkey rsa:2048 -keyout /etc/ssl/private/apache.key -out /etc/ssl/certs/apache.crt
   else
     echo "certs appear to be installed, skipping..."
