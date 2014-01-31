@@ -80,6 +80,8 @@ img
         vertical-align: top;
 }
 
+#
+
 
 #content td.gpudata
 {
@@ -175,6 +177,7 @@ img
 	font-weight: bold;
 
 }
+
 
 #content td.error
 {
@@ -285,3 +288,14 @@ h5
         font-family: "Trebuchet MS", Helvetica, sans-serif;
         font-size: 12px;
 }
+
+#cpage
+{
+font-family: "Trebuchet MS", Helvetica, sans-serif;
+notfont-family: Tahoma, Geneva, sans-serif;
+border-left-width: 0px; border-right-width: 0px; border-top-width: 0px; border-bottom-width: 0px;
+border-left-style: none; border-right-style: none; border-top-style: none; border-bottom-style: none;
+margin: 0px;
+padding: 0px;
+}
+
