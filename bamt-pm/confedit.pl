@@ -55,10 +55,9 @@ if ($status ne "") {
   print "$status";
 }
 print "</form></td></tr></table>";
-print "<br><p>WARNING! This tool performs no validation whatsoever.";
-print "<br>It will NOT preserve your edits if your save fails!";
-print "<br>It will let you make stupid mistakes and overwrite files. It is not secure.";
-print "<br><big>USE ENTIRELY AT YOUR OWN RISK!</big>";
-print "<p>Pizza and praises to lily\@disorg.net";
+print "<br><p>WARNING! This will NOT preserve your edits if your save fails.";
+print "<br>It will let you overwrite files. It performs no validation whatsoever.";
+print "<br><big>USE ENTIRELY AT YOUR OWN RISK</big>";
+print "<small><p>Pizza and praises to lily\@disorg.net";
 print "<br>BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6 <br>LTC: LdMJB36zEfTo7QLZyKDB55z9epgN78hhFb";
 print "</body></html>";
