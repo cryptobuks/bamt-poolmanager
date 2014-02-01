@@ -348,18 +348,19 @@ $mcontrol .= "<td><input type='password' placeholder='root password' name='ptext
 $mcontrol .= "</form></tr></table><br>";
 $p1sum .= "<table id='pcontent'>";
 $p1sum .= "<TR class='ghdr'><TD class='ghdr'>Pool</TD>";
-$p1sum .= "<TD class='ghdr'>Active</TD>";
-$p1sum .= "<TD class='ghdr'>Prio</TD>";
 $p1sum .= "<TD class='ghdr'>Pool URL</TD>";
 $p1sum .= "<TD class='ghdr'>Worker</TD>";
 $p1sum .= "<TD class='ghdr'>Status</TD>";
 $p1sum .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
+$p1sum .= "<TD class='ghdr'>Active</TD>";
+$p1sum .= "<TD class='ghdr'>Prio</TD>";
+#$p1sum .= "<TD class='ghdr' colspan=2>Quota (ratio or %)</TD>";
 $p1sum .= "</TR>";
 
-my @poolmsg;
-my $g0url = $gpus[0]{'pool_url'}; 
+my @poolmsg; $pqb=0;
 my @pools = &getCGMinerPools(1);
 if (@pools) { 
+  my $g0url = $gpus[0]{'pool_url'}; 
   for (my $i=0;$i<@pools;$i++) {
     $pimg = "<form name='pselect' action='poolmanage.pl' method='text'><input type='hidden' name='swpool' value='$i'><input type='submit' value='Switch'> </form>";
     $pnum = ${@pools[$i]}{'poolid'};
@@ -384,11 +385,13 @@ if (@pools) {
     }
     if ($prr >= 5) { 
 	$prat = "<td class='error'>" . $prr . "%</td>";
-      } else { 
+    } else { 
         $prat = "<td>" . $prr . "%</td>";
-      }
-
-    if ($showpool == $i) { 
+    }
+    $pquo = ${@pools[$i]}{'quota'};
+    $pqb++ if ($pquo ne "1");
+    
+      if ($showpool == $i) { 
       push(@poolmsg, "Reject ratio is too high") if ($prr >= 5); 
       push(@poolmsg, "Pool is dead") if ($pstat eq "Dead");
       $psgw = ${@pools[$i]}{'getworks'};
@@ -409,6 +412,7 @@ if (@pools) {
       $psput .= "<tr><td>Mining URL:</td><td>" . $pname . "</td></tr>";
       $psput .= "<tr><td>Worker:</td><td>" . $pusr . "</td></tr>";
       $psput .= "<tr><td>Priority:</td><td>" . $ppri . "</td></tr>";
+      $psput .= "<tr><td>Quota:</td><td>" . $ppri . "</td></tr>";
       $psput .= "<tr><td>Status:</td>" . $pstatus . "</tr>";
       $psput .= "<tr><td>Shares A/R:</td><td>" . $pacc . " / " . $prej . "</td></tr>";
       $psput .= "<tr><td>Getworks:</td><td>" . $psgw . "</td></tr>";
@@ -421,27 +425,44 @@ if (@pools) {
       my $purl = "?";
       $purl .= "pool=$i";
       $psum .= '<TR><TD><font size=5><A href="' . $purl . '">' . $i . '</TD>';
-      $psum .= "<td>" . $pimg . "</td>";
-      $psum .= "<td>" . $ppri . "</td>";
       $psum .= "<td>" . $pname . "</td>";
+      if (length($pusr) > 20) { 
+        $pusr = substr($pusr, 1, 6) . " ... " . substr($pusr, -6, 6) if (index($pusr, '.') < 0);
+      }
       $psum .= "<td>" . $pusr . "</td>";
       $psum .= $pstatus;
       $psum .= "<td>" . $pacc . " / " . $prej . "</td>";
       $psum .= $prat;
+      $psum .= "<td>" . $pimg . "</td>";
+      $psum .= "<td>" . $ppri . "</td>";
+#      $psum .= "<td>" . $pquo . "</td>";
+#      $psum .= "<td><form name='pquota' action='poolmanage.pl' method='text'>";
+#      $psum .= "<input type='text' size='3' name='qval' required>";
+#      $psum .= "<input type='hidden' name='qpool' value='$i'>";
+#      $psum .= "<input type='submit' value='Set'></form></td></tr>";
+
     }
   }
 } else { 
     $psum .= "<TR><TD colspan='7'><big>Active Pool Information Unavailable</big></td></tr>";
 }
 $p1sum .= $psum;
-$p1add .= "<tr>";
-$p1add .= "<form name='padd' action='poolmanage.pl' method='text'>";
-$p1add .= "</td><td colspan='2'><input type='submit' value='Add'>"; 
-$p1add .= "</td><td colspan='2'><input type='text' size='45' placeholder='MiningURL:portnumber' name='npoolurl' required>";
+$p1add .= "<tr><form name='padd' action='poolmanage.pl' method='text'>";
+$p1add .= "<td colspan='2'><input type='text' size='45' placeholder='MiningURL:portnumber' name='npoolurl' required>";
 $p1add .= "</td><td colspan='2'><input type='text' placeholder='username.worker' name='npooluser' required>";
 $p1add .= "</td><td colspan='2'><input type='text' size='15' placeholder='worker password' name='npoolpw'>";
-$p1add .= "</td></form></tr>";
-$p1add .= "</table><br>";
+$p1add .= "</td><td colspan='2'><input type='submit' value='Add'>"; 
+$p1add .= "</td></form>";
+
+#if ($pqb ne "0") {
+#  $p1add .= "<td colspan='3'><form name='qreset' action='poolmanage.pl' method='text'>";
+#  $p1add .= "<input type='hidden' name='qreset' value='reset'>";
+#  $p1add .= "<input type='submit' value='Unset Quotas'></form></td>";
+#} else { 
+#  $p1add .= "<td colspan='3'><small>Failover Mode</small></td>"; 
+#}
+
+$p1add .= "</tr></table><br>";
 $p1sum .= $p1add;
 # END EXTRA CONTROLS
 
@@ -508,7 +529,7 @@ print "Mem free: $rigmem GB<br>";
 # END EXTRA STATS
 
 my $mcheck = `ps -eo command | grep [m]gpumon | wc -l`;
-print "<td><A href=/mgpumon/>Back to mgpumon..</A></td>" if ($mcheck >0);
+print "<td><A href=/mgpumon/>Back to <br>mgpumon..</A></td>" if ($mcheck >0);
 
 print "</TR></table></div>";
 

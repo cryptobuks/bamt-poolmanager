@@ -117,6 +117,46 @@ sub switchPool
     }
 }
 
+sub quotaPool 
+{
+ my $conf = &getConfig;
+ %conf = %{$conf};
+ my $preq = $_[0];
+ my $pqta = $_[1];
+   &blog("setting quota on pool $preq to $pqta ...");
+   if (${$conf}{'settings'}{'cgminer'})
+   {
+         my $cgport = 4028;
+         if (defined(${$conf}{'settings'}{'cgminer_port'}))
+         {
+                 $cgport = ${$conf}{'settings'}{'cgminer_port'};
+         }
+         my $sock = new IO::Socket::INET (
+                                  PeerAddr => '127.0.0.1',
+                                  PeerPort => $cgport,
+                                  Proto => 'tcp',
+                                  ReuseAddr => 1,
+                                  Timeout => 10,
+                                 );
+        if ($sock)
+        {
+        &blog("sending poolquota command to cgminer api");
+        print $sock "poolquota|$preq,$pqta"; 
+                my $res = "";
+                while(<$sock>)
+                {
+                        $res .= $_;
+                }
+                close($sock);
+	        &blog("success!");
+        }
+        else
+        {
+                &blog("failed to get socket for cgminer api");
+        }
+    }
+}
+
 sub addPool 
 {
  my $conf = &getConfig;

@@ -9,13 +9,30 @@ print "<style type='text/css'> body {font-family: 'Trebuchet MS', Helvetica, san
 print "<style type='text/css'> table { border: 2px solid #cccccc; margin-left: auto; margin-right: auto; } td { text-align:center; padding:10px; ) </style>"; 
 print "<br><br><br><table><tr>";
 
+my $qval = $in{'qval'};
+if ($qval ne "") {
+  $qpool = $in{'qpool'};
+  print "<td><big>Setting pool $qpool to quota $qval... </big></td>";
+  &quotaPool($qpool, $qval); 
+  $qval = ""; $qpool = ""; 
+}
+
+my $qreset = $in{'qreset'};
+if ($qreset eq "reset") {
+  print "<td><big>Unsetting pool quotas ... </big></td>";
+  my @pools = &getCGMinerPools(1);
+  for (my $i=0;$i<@pools;$i++) {
+    &quotaPool($i, "1"); 
+  }
+  $qreset = ""; 
+}
+
 
 my $preq = $in{'swpool'};
 if ($preq ne "") {
   print "<td><big>Switching Pool Priority...</big><p><b>It will take a moment for the miner to switch, please stand by.</b></td>";
   &switchPool($preq);
   $preq = "";
-
 }
 
 my $apooln = $in{'npoolurl'};
@@ -34,14 +51,11 @@ if ($apooln ne "") {
     print "<td><big>Adding Pool...</big></td>";
     &addPool($apooln, $apoolu, $apoolp); 
     &saveConfig();
-    $apooln = "";
-    $apoolu = "";
-    $apoolp = "";
+    $apooln = ""; $apoolu = ""; $apoolp = "";
   } else { 
     print "<td bgcolor='yellow'><p><big>Duplicate Pool, not adding!</big></td>";
   }
 }
-
 
 my $dpool = $in{'delpool'};
 if ($dpool ne "") { 
@@ -74,13 +88,6 @@ if ($mstop eq "stop") {
   } else {
    print "<td bgcolor='red'><p><big>STOPPING MINER...</big></td>";
   }
-#  my $runcheck = `ps -eo command | grep [c]gminer | wc -l`;
-#  if ($runcheck > 0) {
-#    print "<td bgcolor='red'><p><big>STOPPING MINER...</big></td>";
-#    exec('sudo /usr/sbin/mine stop');
-#  } else {
-#    print "<td bgcolor='yellow'><p><big>MINER NOT RUNNING</big></td>";
-#  }
 }
 
 print "</tr></table></body></html>";
