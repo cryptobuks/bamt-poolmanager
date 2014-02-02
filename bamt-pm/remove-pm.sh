@@ -25,7 +25,9 @@ case "$input" in
     mv /usr/lib/cgi-bin/confedit.pl /var/www/IFMI/
     mv /usr/lib/cgi-bin/poolmanage.pl /var/www/IFMI/
     mv /opt/bamt/common.pl /var/www/IFMI/common.pl.ifmi
-    mv /opt/bamt/common.pl.bamt /opt/bamt/common.pl 
+    mv /opt/bamt/common.pl.bamt /opt/bamt/common.pl
+    mv /opt/bamt/mgpumon /var/www/IFMI/mgpumon.ifmi
+    mv /opt/bamt/mgpumon.bamt /opt/bamt/mgpumon
     mv /opt/bamt/sendstatus.pl /var/www/IFMI/sendstatus.pl.ifmi
     mv /opt/bamt/sendstatus.pl.bamt /opt/bamt/sendstatus.pl
     mv /etc/sudoers /etc/sudoers.ifmi

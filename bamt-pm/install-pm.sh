@@ -28,6 +28,8 @@ case "$input" in
       cp poolmanage.pl /usr/lib/cgi-bin/
       cp /opt/bamt/sendstatus.pl /opt/bamt/sendstatus.pl.back
       cp sendstatus.pl /opt/bamt/
+      cp /opt/bamt/mgpumon /opt/bamt/mgpumon.back
+      cp mgpumon /opt/bamt/
       cp /opt/bamt/common.pl /opt/bamt/common.pl.back
       cp common.pl /opt/bamt/
       echo "Done!";;
@@ -52,6 +54,8 @@ case "$input" in
     cp common.pl /opt/bamt/
     cp /opt/bamt/sendstatus.pl /opt/bamt/sendstatus.pl.bamt
     cp sendstatus.pl /opt/bamt/
+    cp /opt/bamt/mgpumon /opt/bamt/mgpumon.bamt
+    cp mgpumon /opt/bamt/
     echo "Modifying sudoers...."
     sed \$a"Defaults targetpw\n"\
 "www-data ALL=(ALL) /usr/sbin/mine,/bin/cp\n" /etc/sudoers > /etc/sudoers.ifmi

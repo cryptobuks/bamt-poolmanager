@@ -1,0 +1,1182 @@
+#!/usr/bin/perl
+
+#    This file is part of BAMT.
+#
+#    BAMT is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    BAMT is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with BAMT.  If not, see <http://www.gnu.org/licenses/>.
+
+# Modified for IFMI by Lily 
+
+
+use Socket;
+use IO::Handle;
+use IO::Select;
+use Term::ReadKey; 
+use Curses;
+use IO::Socket::INET;
+use JSON::XS;
+
+
+my $config = { screen => 1, listen_port => 54545, genhttp => 0, httpdir => '.', httpindex => 'index.html', httpimgpath => '/bamt', genhttp_last => 0, debug=>0, genhttp_interval => 30, genhttp_minwait => 5, monitor_temp_hi => 80, monitor_temp_lo => 45, monitor_load_lo => 90, monitor_hash_lo => 100, monitor_fan_lo => 3000, monitor_reject_hi => 3 };
+
+use Proc::PID::File;
+
+if (Proc::PID::File->running())
+{
+        # one at a time, gentlemen
+	print "Another mgpumon is already running.\n";
+        exit(0);
+}
+
+
+if (@ARGV)
+{
+	my $cfile = $ARGV[0];
+	
+	if (-e $cfile)
+	{
+		open(FH,"<$cfile");
+		
+		my $ctext = <FH>;
+		
+		close(FH);
+		
+		my $tc = JSON::XS->new->ascii->pretty(1)->decode($ctext);
+		
+		for my $k ( keys %{$tc} )
+		{
+			${$config}{$k} = ${$tc}{$k};
+		}
+	}
+	else
+	{
+		die("specified config file does not exist");
+	}
+}
+
+
+our %miners;
+
+if (${$config}{nodes})
+{
+	my @nodes = @{${$config}{nodes}};
+	
+	for (my $i = 0; $i < @nodes; $i++)
+	{
+		if (${$config}{debug})
+		{
+			print "add static node " . $nodes[$i] . "\n";
+		}
+		
+		$miners{$nodes[$i]}{id} = $nodes[$i];
+		$miners{$nodes[$i]}{loc} = 'Unheard static entries';
+		$miners{$nodes[$i]}{update} = time;
+	}
+}
+
+
+our $mode = 0;
+our $lasttime = time() + 30;
+our $packets = 0;
+our $refreshedpackets = 0;
+our $seendata = 0;
+our $starttime = time;
+
+if (${$config}{screen})
+{
+	initscr;
+	start_color();
+
+	init_pair(1, COLOR_GREEN, COLOR_BLACK);
+	init_pair(2, COLOR_YELLOW, COLOR_BLACK);
+	init_pair(3, COLOR_RED, COLOR_BLACK);
+	init_pair(4, COLOR_BLACK, COLOR_WHITE);
+}
+
+my $last_minerid = "";
+my $last_minedip = "";
+
+my $socket = IO::Socket::INET->new(Proto => 'udp', Type => SOCK_DGRAM, LocalPort => ${$config}{listen_port}, Blocking  => 0) or die "Cannot open socket";
+
+if (${$config}{screen})
+{
+	&drawMiners;
+}
+
+$sel = IO::Select->new();
+$sel->add($socket);
+
+
+while($socket)
+{
+
+ while(@ready = $sel->can_read(0))
+ {
+   foreach $fh (@ready) 
+   {
+     my $ip = $socket->recv(my $data, 4000);
+     my ($port, $ipaddr) = sockaddr_in($socket->peername);
+     my $host = inet_ntoa($ipaddr);
+     
+     $packets++;
+     
+     if ($data =~ m/^(.*?)\|(.*?)\|(.*)$/)
+     {
+      $last_minerid = $1;
+      $last_minerip = $host;
+
+      if (${$config}{debug})
+      {
+     	 print "recv packet from $host:$port ($1)\n";
+      }
+      
+      updateMiner($host,$1,$2,$3);
+     }
+     
+   }
+
+ }
+
+ if (${$config}{screen})
+ {
+	 my $key = ReadKey(2);
+	
+	 &drawMiners;
+	 
+	 if (defined($key))
+	 {
+	  &processKey($key);
+	 }
+	
+	 if ((time() - $lasttime) > 5)
+	 {
+	  $lasttime = time();
+	  if ($mode <6)
+	  {
+	   $mode++;
+	  }
+	  else
+	  {
+	   $mode = -1;
+	  }
+	 }
+ }
+ 
+ if (${$config}{genhttp})
+ {
+ 	 my $timesince = (time - ${$config}{genhttp_last});
+ 	 
+ 	 if ( ($timesince > ${$config}{genhttp_interval}) || ($packets && (!$seendata)) || ( ($timesince > ${$config}{genhttp_minwait}) && ($packets > $refreshedpackets) ) )
+ 	 {
+ 	 	 &genhttp;
+ 	 	 ${$config}{genhttp_last} = time;
+ 	 	 $refreshedpackets = $packets;
+ 	 }
+ 	 
+ 	 if ((!$seendata) && ($packets))
+ 	 {
+ 	 	 $seendata = 1;
+ 	 }
+ 	 
+ 	 if (! ${$config}{screen})
+ 	 {
+ 	 	 sleep(2);
+ 	 }
+ }
+ 
+}
+
+if (${$config}{screen})
+{
+	endwin;
+}
+
+
+sub genhttp
+{
+	
+	if (! -e ${$config}{httpdir})
+	{
+		mkdir ${$config}{httpdir}, 0777 or die("Cannot create htmldir");	
+		
+		if (${$config}{debug})
+		{
+			print "genhttp created httpdir " . ${$config}{httpdir} . "\n";
+		}
+		
+	}
+	
+	my $html = "";
+	
+	my $tothash = 0;
+	my $totaccept = 0;
+	my $totinvalid = 0;
+	
+	my $totproblems = 0;
+	my $problemgpus = 0;
+	my $okgpus = 0;
+	my $problemnodes = 0;
+	my $oknodes = 0;
+	
+	if (keys %miners)
+	{
+		
+	
+		$html .= "<div id='content'><TABLE>";
+		
+		# sort by loc..
+		my %locs;
+		
+		foreach $miner (sort keys %miners)
+		{
+			my $lk = $miners{$miner}{loc};
+			
+			push( @{ $locs{$lk} }, $miner);
+		
+		}
+
+		
+		foreach $loc (sort keys %locs)
+		{
+		
+		 $lochash = 0;
+		 $locaccept = 0;
+		 $locinvalid = 0;
+		 $locgpus = 0;
+		 $locproblems = 0;
+		 $locnodes = 0;
+		 $locpools = 0; 
+		
+		 $nhtml = "";
+		 
+		 foreach $miner (@{ $locs{$loc} })
+		 {
+		  
+			my @gpus;
+			my @pools;
+			my @nodemsg;
+
+			my $minerhash = 0; 
+			my $res = $miners{$miner}{gpus};
+  
+			$locnodes++;
+			
+			while ( $res =~ m/(\d+?)\:(\{.*?\})/g)
+			{
+				$locgpus++;
+				push(@gpus, decode_json $2);
+			}
+			
+			while ( $res =~ m/(\d+?) pool\:(\{.*?\})/g)
+			{
+				$locpools++;
+				push(@pools, decode_json $2);
+			}
+
+			my $statclass = 'node';
+			my $problems = 0;
+			my $checkin = (time() - $miners{$miner}{update});
+			
+			if ($checkin > 65)
+			{
+				my $missed = int($checkin/60);
+				push(@nodemsg, "Missed $missed update");
+				$problems++;
+				if ($missed > 1)
+				{
+					$problems++;
+					$nodemsg[@nodemsg-1] .= "s";
+				}
+				
+			}
+			
+
+			my $pput = ""; 
+
+			if (@pools)
+			{
+				$pput .= "<div class='gpudata'><TABLE>";
+				$pput .= "<TR class='ghdr'><TD class='ghdr'>Pool</TD>";
+				$pput .= "<TD class='ghdr'>Pool URL</TD>";
+				$pput .= "<TD class='ghdr'>Worker</TD>";
+				$pput .= "<TD class='ghdr'>Status</TD>";
+				$pput .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
+				$pput .= "<TD class='ghdr'>Active</TD>";
+				$pput .= "<TD class='ghdr'>Prio</TD>";
+				$pput .= "</TR>";
+
+		  		my $g0url = $gpus[0]{'pool_url'};
+			    for (my $i=0;$i<@pools;$i++) {
+				    $pimg = "Idle";
+				    $pname = ${@pools[$i]}{'url'};
+				    $pimg = "<img src='/bamt/ok16.png'>" if ($g0url eq $pname);
+				    $pusr = ${@pools[$i]}{'user'};
+				    $pstat = ${@pools[$i]}{'status'};
+				    if ($pstat eq "Dead") {
+				      $pstatus = "<td class='error'>" . $pstat . "</td>"
+				    } else {
+				      $pstatus = "<td>" . $pstat . "</td>";
+				    }
+				    $pimg = "<img src='/bamt/error16.png'>" if ($pstat ne "Alive");
+				    $ppri = ${@pools[$i]}{'priority'};
+				    $pimg = "<img src='/bamt/timeout16.png'>" if (($g0url ne $pname)&&(($ppri eq 0)&&($pstat eq "Alive")));
+				    $pacc = ${@pools[$i]}{'accepted'};
+				    $prej = ${@pools[$i]}{'rejected'};
+				    if ($prej ne "0") {
+				        $prr = sprintf("%.2f", $prej / ($pacc + $prej)*100);
+				    } else {
+				        $prr = "0.0";
+				    }
+				    if ($prr >= 5) {
+				        $prat = "<td class='error'>" . $prr . "%</td>";
+				    } else {
+				        $prat = "<td>" . $prr . "%</td>";
+				    }
+
+      				push(@nodemsg, "Reject ratio is too high") if ($prr >= 5);
+      				push(@nodemsg, "Pool is dead") if ($pstat eq "Dead");
+
+				    $pput .= "<tr><td>$i</td>";
+				    $pput .= "<td>" . $pname . "</td>";
+				    if (length($pusr) > 20) {
+				        $pusr = substr($pusr, 1, 6) . " ... " . substr($pusr, -6, 6) if (index($pusr, '.') < 0);
+				    }
+				    $pput .= "<td>" . $pusr . "</td>";
+				    $pput .= $pstatus;
+				    $pput .= "<td>" . $pacc . " / " . $prej . "</td>";
+				    $pput .= $prat;
+				    $pput .= "<td>" . $pimg . "</td>";
+				    $pput .= "<td>" . $ppri . "</td></tr>";      
+
+			    }
+
+			}
+
+			my $gput = "";
+			
+			if (@gpus)
+			{
+			
+				$gput .= "<div class='gpudata'><TABLE>";
+				
+				$gput .= "<TR class='ghdr'><TD class='ghdr'>GPU</TD>";
+				$gput .= "<TD class='ghdr'>Temp</TD>";
+				$gput .= "<TD class='ghdr'>Fan\% (rpm)</TD>";
+
+				$gput .= "<TD class='ghdr'>Load</TD>";
+				$gput .= "<TD class='ghdr'>Rate</TD>";
+				$gput .= "<TD class='ghdr' colspan=2>Accept/Invalid</TD>";
+				
+				$gput .= "<TD class='ghdr'>HW Errors</TD>";
+				$gput .= "<TD class='ghdr'>Core</TD>";
+				$gput .= "<TD class='ghdr'>Memory</TD>";
+				$gput .= "<TD class='ghdr'>Power</TD>";
+				
+				
+				$gput .= "</TR>";
+				
+				
+				for (my $i = 0; $i < @gpus;$i++)
+				{
+					my $problemsin = $problems;
+					
+					$gput .= '<TR><TD>';
+					
+					$gput .= $i . '</TD>';					
+					
+					if ($gpus[$i]{'current_temp_0'} > ${$config}{monitor_temp_hi})
+					{
+						$problems++;
+						push(@nodemsg, "GPU $i is over maximum temp");
+						
+						$gput .= "<td class='error'>";
+					}
+					elsif ($gpus[$i]{'current_temp_0'} < ${$config}{monitor_temp_lo})
+					{
+						$problems++;
+						push(@nodemsg, "GPU $i is below minimum temp");
+						
+						$gput .= "<td class='error'>";
+					}
+					else
+					{
+						$gput .= '<td>';
+					}
+					
+					$gput .= $gpus[$i]{'current_temp_0'} . 'c';
+					
+					$gput .= '</TD>';
+					
+					if (($gpus[$i]{'fan_rpm'} < ${$config}{monitor_fan_lo}) && (! $gpus[$i]{'fan_rpm'} eq 'na'))
+					{
+						$problems++;
+						push(@nodemsg, "GPU $i is below minimum fan rpm");
+						$gput .= "<td class='error'>";
+					}
+					else
+					{
+						$gput .= '<td>';
+					}
+						
+					$gput .= $gpus[$i]{'fan_speed'} . '% (' . $gpus[$i]{'fan_rpm'} . ')';
+					
+					$gput .= '</TD>';
+
+					if ($gpus[$i]{'current_load'} < ${$config}{monitor_load_lo})
+					{
+						$problems++;
+						push(@nodemsg, "GPU $i is below minimum load");
+						
+						$gput .= "<td class='error'>";
+					}
+					else
+					{
+						$gput .= '<td>';
+					}
+					
+					$gput .= $gpus[$i]{'current_load'} . "%";
+					
+					$gput .= '</TD>';
+					
+					
+					if ($gpus[$i]{'hashrate'} < ${$config}{monitor_hash_lo})
+					{
+						$problems++;
+						push(@nodemsg, "GPU $i is below minimum hash rate");
+						$gput .= "<td class='error'>";
+					}
+					else
+					{
+						$gput .= '<td>';
+					}
+					
+					$gput .= $gpus[$i]{'hashrate'} . " Kh/s";
+					
+					
+					$tothash += $gpus[$i]{'hashrate'};
+					$lochash += $gpus[$i]{'hashrate'};
+					$minerhash += $gpus[$i]{'hashrate'};
+					$totaccept += $gpus[$i]{'shares_accepted'};
+					$totinvalid += $gpus[$i]{'shares_invalid'};
+					$locaccept += $gpus[$i]{'shares_accepted'};
+					$locinvalid += $gpus[$i]{'shares_invalid'};
+
+					$gput .= "</TD><TD>";
+					$gput .= $gpus[$i]{'shares_accepted'} . " / " . $gpus[$i]{'shares_invalid'};
+					
+					$gput .= '</TD>';
+					
+					if ($gpus[$i]{'shares_accepted'} > 0)
+					{
+						my $rr = $gpus[$i]{'shares_invalid'}/($gpus[$i]{'shares_accepted'} + $gpus[$i]{'shares_invalid'})*100 ;
+						
+						if ($rr > ${$config}{monitor_reject_hi})
+						{
+							$problems++;
+							push(@nodemsg, "GPU $i is above maximum reject rate");
+							$gput .= "<td class='error'>";
+						}
+						else
+						{
+							$gput .= '<td>';
+						}
+						
+						$gput .= sprintf("%-2.2f%", $rr);
+					}
+					else
+					{
+						$gput .= '<td>n/a';
+					}
+					
+					$gput .= "</TD>";
+
+                    my $ghwe = $gpus[$i]{'hardware_errors'};
+        			if ($ghwe > 0) {
+        			  $gpuhwe = "<td class='error'>" . $ghwe . "</td>";
+        			} else {
+        			  $gpuhwe = "<td>" . $ghwe . "</td>";
+        			}
+        			$gput .= $gpuhwe;
+					
+					$gput .= "</TD><TD>";
+					
+					$gput .= $gpus[$i]{'current_core_clock'} . ' Mhz';
+					
+					$gput .= "</TD><TD>";
+					
+					$gput .= $gpus[$i]{'current_mem_clock'} . ' Mhz';
+					
+					$gput .= "</TD><TD>";
+					
+					$gput .= $gpus[$i]{'current_core_voltage'} . 'v';
+         
+					$gput .= "</TD></TR>";
+					
+					if ($problems > $problemsin)
+					{
+						$problemgpus++;
+					}
+					else
+					{
+						$okgpus++;
+					}
+				}
+				
+				$gput .= "</TABLE></div>";
+			}
+			else
+			{
+				$gput .= "<div class='nogpudata'>No GPU data is available</div>";
+			}
+			
+			my $simg = ${$config}{httpimgpath} . '/';
+			
+			if ($problems)
+			{
+				$totproblems += $problems;
+				$locproblems += $problems;
+				if ($checkin > 65)
+				{
+					$simg .= 'network-error.png';
+				}
+				else
+				{
+					$simg .= 'error.png';
+				}
+				
+				$problemnodes++;
+			}
+			else
+			{
+				$oknodes++;
+				$simg .= 'ok.png';
+			}
+			
+			
+			$nhtml .= "<TR><TD class='node'>";
+			$nhtml .= "<table class='nodename'><TR><td class='statusimg'><img src='$simg'></td><td><h1>";
+			
+			if ($miner eq $miners{$miner}{id}) 
+			{
+				$iptxt = "Never heard";
+				$nhtml .= $miners{$miner}{id};
+			}
+			else
+			{
+				if ($miner =~ m/^(.+)\|(.+)$/)
+				{
+					$iptxt = $1;
+					$nhtml .= "<A href=http://$iptxt/cgi-bin/status.pl>" . $miners{$miner}{id} . "</a>";
+			
+				}
+			}
+			
+			if ($minerhash) { $nhtml .= sprintf("<br>%.2f Mh/s",$minerhash / 1000); }
+			
+			$nhtml .= "</H1>";
+			
+			$nhtml .= $iptxt . '</td></tr></table>';
+			
+			
+			if (@nodemsg)
+			{
+				$nhtml .= "<P><h5>";
+				
+				for my $msg (@nodemsg)
+				{
+					$nhtml .= "$msg<br>";
+				}
+			}
+			
+			$nhtml .= "</TD>";
+			
+			$nhtml .= "<TD class='$statclass' style='padding: 5px;'>";
+			
+		    $nhtml .= "$pput</TD></TR>" if ($pput ne "");
+
+			$nhtml .= "$gput</TD></TR>";
+			
+			#blank
+			#$nhtml .= "<TR><TD colspan=2 class='blank'> </TD></TR>";
+			
+			#miner
+		 }
+		
+		 #loc
+		 $html .= "<TR><TD colspan=2 class='locsum'>";
+		 
+		 $html .= "<h2>$loc"; 
+		 $html .= sprintf("<br>%.2f Mh/s,",$lochash / 1000) . " $locnodes node"; 
+
+		 if ($locnodes != 1)
+		 {
+		 	 $html .= 's';
+		 }
+		 
+		 $html .= ' and ' . $locgpus . ' GPU';
+		 if ($locgpus != 1)
+		 {
+		 	 $html .= 's';
+		 }
+		 
+		 if ($locproblems)
+		 {
+		 	 $html .= ', ' . $locproblems . ' problem';
+		 	 if ($locproblems != 1)
+		 	 {
+		 	 	 $html .= 's';
+		 	 }
+		 }
+		 
+		 $html .= '</h2></TD></TR>';
+		 
+		 $html .= $nhtml;
+		  
+		 $html .= "<TR><TD colspan=2 class='space'>&nbsp; </TD></TR>";
+		 
+		}
+		
+		$html .= "</TABLE></div>";
+	}
+	else
+	{
+		$html .= "<div id='waiting'><h1>Waiting for miner data...</H1><P>&nbsp;<P>";
+		
+		$html .= "It can take up to 60 seconds for miner data to appear. ";
+		$html .= "If no data appears after a full minute, you may need to check your miner's configuration.<p>";
+		$html .= "<b>This mgpumon is listening for UDP packets on port " . ${$config}{listen_port} . "<p>";
+		my @ips = &getIPs;
+				
+		if (@ips)
+		{
+			if (@ips > 1)
+			{
+				$html .= "This machine has multiple active network interfaces:<P>";
+				for ($i = 0;$i < @ips;$i++)
+				{
+					$html .= @ips[$i] . "<br>";
+				}
+			}
+			else
+			{
+				$html .= "This machine's IP address is " . @ips[0]; 
+			}
+		}
+		else
+		{
+			$html .= "There don't seem to be any network interfaces (besides localhost) active.  Only status from the local machine can be seen.";
+		}
+		
+		$html .= "</b><P>";
+		$html .= "Your miners should either be set to broadcast status (the preferred method, but only works if mgpumon is running on same network as miners) ";
+		$html .= "or they should be set to direct their status to the machine mgpumon is running on.<P>";
+		$html .= "Check your /etc/bamt/bamt.conf or the <A HREF=http://aaronwolfe.com/bamt/support.html>support information</A> for more details.";
+
+	}
+	
+	$html .= "</BODY></HTML>";
+	
+	
+	my $head = "<HTML><HEAD>";
+	
+	if (keys %miners)
+	{
+		$head .= "<meta http-equiv=\"refresh\" content=\"" . ${$config}{genhttp_interval} . "\">";
+	}
+	else
+	{
+		# fast refresh till data heard
+		$head .= "<meta http-equiv=\"refresh\" content=5>";
+	}
+	
+	if (${$config}{httpcss})
+	{
+		$head .= "<LINK rel=\"stylesheet\" href=\"" . ${$config}{httpcss} . "\" type=\"text/css\">";
+	}
+	
+	$head .= "<TITLE>IFMI PoolManager - mgpumon</TITLE>";
+	$head .= "</HEAD><BODY>";
+	
+	# overview
+	
+	$head .= "<div id='overview'>";
+	
+	$head .= "<table><TR>";
+	
+	$head .= "<TD id='overviewlogo'><IMG src='" . ${$config}{httpimgpath} . "/IFMI-logo-small.png'></TD>" ;
+   
+	$head .= "<TD id='overviewhash'>Farm hashrate:<br><font size=6>";
+	$head .= sprintf("%.2f", $tothash / 1000 ) . " Mh/s</font></TD>";
+	$head .= "<TD id='overviewshares'>";
+	$head .= $totaccept . " total accepted shares<br>";
+	$head .= $totinvalid . " total invalid shares<br>";
+	if ($totaccept)
+	{
+		$head .= sprintf("%.3f%%", $totinvalid / ($totaccept + $totinvalid)*100);
+		$head .= " farm wide reject ratio";
+	}
+	
+    $head .= "</TD>";
+    
+    $head .= "<TD id='overviewnodes'>";
+    
+    $head .= ($oknodes + $problemnodes) . " node";
+    if (($oknodes + $problemnodes) != 1)
+    {
+    	$head .= 's';
+    }
+    $head .= " and " . ($okgpus + $problemgpus) . " GPU";
+    if (($okgpus + $problemgpus) != 1)
+    {
+    	$head .= 's';
+    }
+    $head .= " in farm<br>";
+    
+    $head .= $oknodes . " node";
+    if ($oknodes == 1)
+    {
+    	$head .= ' is OK<br>';
+    }
+    else
+    {
+     $head .= 's are OK<br>';
+    }
+    
+    $head .= $problemnodes . " node";
+    if ($problemnodes == 1)
+    {
+    	$head .= ' has an error<br>';
+    }
+    else
+    {
+     $head .= 's have errors<br>';
+    }
+    
+    $head .= "</TD>";
+    
+    $head .= "<TD id='overviewgpus'>";
+    
+    $head .= $okgpus . " GPU";
+    if ($okgpus == 1)
+    {
+    	$head .= ' is';
+    }
+    else
+    {
+    	$head .= 's are';
+    }
+    
+    $head .= " working fine<br>";
+    
+    $head .= $problemgpus . " GPU";
+    if ($problemgpus == 1)
+    {
+      $head .= ' has';
+    }
+    else
+    { 
+      $head .= 's have'; 
+    }
+    $head .= " issues<br>";
+    
+    $head .= $totproblems . " problem";
+    if ($totproblems != 1)
+    {
+    	$head .= 's';
+    }
+    $head .= " in the farm";
+    
+    $head .= "</TD>";
+    
+   
+	$head .= "</TR></TABLE>";
+	
+	$head .= "</div>";
+	
+	
+	open(FH,">" . ${$config}{httpdir} . '/' . ${$config}{httpindex}) or die("Cannot open httpindex for writing");
+	print FH $head;
+	print FH $html;
+	close(FH);
+	
+	if (${$config}{debug})
+	{
+		print "genhttp wrote " . ${$config}{httpdir} . '/' . ${$config}{httpindex} . "\n";
+	}
+	
+}
+
+
+sub updateMiner
+{
+ my ($host,$mid,$mloc,$res) = @_;
+ 
+ if (defined($miners{$host . '|' . $mid}))
+ {
+  # existing miner
+   $miners{$host . '|' . $mid}{lastgpus} =  $miners{$host . '|' . $mid}{gpus};
+ }
+ else
+ {
+ 	# check for predefined by minerid
+ 	if (defined($miners{$mid}))
+ 	{
+ 		# static entry, delete placeholder
+ 		delete $miners{$mid};
+ 		
+ 		if (${$config}{debug})
+ 		{
+ 			print "first status from static node '" . $mid . "' at $host\n";
+ 		}
+ 	}
+ 	elsif (defined($miners{$host}))
+ 	{
+ 		# static entry for ip, delete placeholder first time
+ 		delete $miners{$host};
+ 		
+ 		if (${$config}{debug})
+ 		{
+ 			print "first status from static node (ip) '" . $mid . "' at $host\n";
+ 		}
+ 	}
+ 	else
+ 	{
+ 		#dynamic entry
+ 		if (${$config}{debug})
+ 		{
+ 			print "first status from new dynamic node '" . $mid . "' at $host\n";
+ 		}
+ 	}
+ }
+
+ $miners{$host . '|' . $mid}{id} = $mid;
+ $miners{$host . '|' . $mid}{loc} = $mloc;
+ $miners{$host . '|' . $mid}{gpus} = $res; 
+ $miners{$host . '|' . $mid}{update} = time(); 
+}
+
+
+sub drawMiners
+{
+ my ($xsize,$ysize) = GetTerminalSize(); 
+# clear();
+ 
+ my $ts;
+
+ if ($last_minerid eq "")
+ {
+  $ts = "Waiting for status data...";
+ }
+ else
+ {
+  $ts = "Last update from $last_minerip ($last_minerid)";
+ }
+
+ $ts = sprintf("%-" . $xsize . "s",  ' ' .  localtime() . ' | ' . $ts);
+
+ attron(COLOR_PAIR(4));
+ addstr(0,0,$ts);
+ attroff(COLOR_PAIR(4));
+
+ addstr(2,0, "                   Temp    Load  Rate     Accept/Invalid    Status");
+
+ my $tothash = 0;
+ my $totaccept = 0;
+ my $totinvalid = 0;
+ my $pos = 0;
+
+ foreach $miner (sort keys %miners)
+ {
+  my @gpus;
+  my @lastgpus;
+
+  my $res = $miners{$miner}{gpus};
+  
+  while ( $res =~ m/(\d+?)\:(\{.*?\})/g)
+  {
+    push(@gpus, decode_json $2);
+  }
+
+  $res = $miners{$miner}{lastgpus};
+  
+  while ( $res =~ m/(\d+?)\:(\{.*?\})/g)
+  {
+    push(@lastgpus, decode_json $2);
+  }
+
+
+  for (my $gpu = 0;$gpu < @gpus;$gpu++)
+  {
+        my $ls = "";
+        my $errtxt = "";
+
+        $state = 0;        
+
+        if ($gpu == 0)
+        {
+          if ($miner =~ m/(.*)\|(.*)/)
+          {
+          	  $ls .= sprintf("%15s",$1);
+          }
+        }
+        else
+        {
+          $ls .= "               ";
+        }
+        $ls .= " $gpu: ";
+       
+        my $tmp = $gpus[$gpu]{'current_temp_0'};
+
+        my $ts = $tmp . 'c';
+
+        if ($tmp > $lastgpus[$gpu]{'current_temp_0'})
+        {
+          $ts .= "+";
+        }
+        elsif ($tmp < $lastgpus[$gpu]{'current_temp_0'})
+        {
+         $ts .= "-";
+        }
+
+        $ls .= sprintf("%-8s",$ts);
+
+        if ($tmp > 85)
+        {
+         $state++;
+         $errtxt .= " High Temp";
+        }
+        elsif ($tmp < 45)
+        {
+         $state++;          
+         $errtxt .= " Low Temp";
+        }
+       
+
+        $ls .= sprintf("%3d\%  ",$gpus[$gpu]{'current_load'});
+
+        if ($gpus[$gpu]{'current_load'} < 85)
+        {
+         $state++;
+         $errtxt .= " Low Load"
+        }
+
+        if ($gpus[$gpu]{'hashrate'} < 150)
+        {
+         $state++;
+         $errtxt .= " Low Khs";
+        }
+
+        $tothash += $gpus[$gpu]{'hashrate'};
+        $totaccept += $gpus[$gpu]{'shares_accepted'};
+        $totinvalid += $gpus[$gpu]{'shares_invalid'};
+
+        $ls .= sprintf("%-9s", sprintf("%3.0d",$gpus[$gpu]{'hashrate'}) . " Khs" );
+
+        $ts = $gpus[$gpu]{'shares_accepted'} . "/" . $gpus[$gpu]{'shares_invalid'} . " ";
+
+        if ($gpus[$gpu]{'shares_accepted'} > 0)
+        {
+                $ts .= sprintf("(%-2.2f%)", $gpus[$gpu]{'shares_invalid'}/($gpus[$gpu]{'shares_accepted'} + $gpus[$gpu]{'shares_invalid'})*100 );
+        }
+
+        $ls .= sprintf("%-17s",$ts);
+
+        my $url = $gpus[$gpu]{'pool_url'};
+
+        if ($url =~ m/.+\@(.+)/)
+        {
+          $url = $1;
+          if ($url =~ m/(.+):.*/)
+          {
+                $url = $1;
+          }
+        }
+
+        if ( (time() - $miners{$miner}{update}) > 65)
+        {
+         if ( (time() - $miners{$miner}{update}) > 125)
+         {
+          $state = $state + 2;
+          $errtxt .= " No Status";
+         }
+         else
+         {
+          $state++;
+          $errtxt .= " Late Status";
+         }
+        }
+
+
+        if (($state > 0) && ($mode == 1))
+        {
+         $ls .= $errtxt;
+        }
+        else
+        {
+          if ($mode < 1)
+          {
+           $ls .= " $url";
+          } 
+          elsif ($mode == 1)
+          {
+           $ls .= ' ' . $gpus[$gpu]{'desc'};
+          }
+          elsif ($mode == 2)
+          {
+           $ls .= ' ' . $gpus[$gpu]{'current_core_clock'} . '/' . $gpus[$gpu]{'current_mem_clock'} . 'Mhz ' . $gpus[$gpu]{'current_core_voltage'} . 'v';
+          }
+          elsif ($mode == 3)
+          {
+ 
+           $ts = 'Fan: ' . $gpus[$gpu]{'fan_speed'} . '% (' . $gpus[$gpu]{'fan_rpm'};
+
+           if ($gpus[$gpu]{'fan_rpm'} > $lastgpus[$gpu]{'fan_rpm'})
+           {
+            $ts .= '+';
+           }
+           elsif ($gpus[$gpu]{'fan_rpm'} < $lastgpus[$gpu]{'fan_rpm'})
+           {
+            $ts .= '-'; 
+           }
+
+           $ts .= ' rpm)';
+           $ls .= ' ' . $ts;           
+
+          }
+          elsif ($mode == 4)
+          {
+           if ($gpu == 0)
+           {
+            $ls .= ' ' . $miners{$miner}{id};
+           }
+           elsif ($gpu == 1)
+           {
+            $ls .= '  ' . $miners{$miner}{loc};
+           }
+          }
+          elsif ($mode == 5)
+          {
+           $ls .= ' ' . (time() - $miners{$miner}{update}) . ' seconds ago';
+          }
+          elsif ($mode == 6)
+          {
+           if (defined($gpus[$gpu]{'uptime'}))
+           {
+            if ($gpus[$gpu]{'uptime'} =~ m/\s[\d:]+\sup\s(.*?),\s\s.*load average(.*)/)
+            {
+                if ($gpu == 0)
+                {
+                 $ls .= ' up: ' . $1;
+                }
+                elsif ($gpu == 1)
+                {
+                 $ls .= ' load' . $2;
+                }
+            }
+           }
+          } 
+
+        }
+
+
+        
+        if ($state == 0)
+        {
+                attron(COLOR_PAIR(1));
+                addstr($pos+ 3,0, sprintf("%-" . $xsize . "s", $ls));
+                attroff(COLOR_PAIR(1));
+                $delay = 10;
+        } 
+        elsif ($state == 1)
+        {
+                attron(COLOR_PAIR(2));
+                addstr($pos + 3,0, sprintf("%-" . $xsize . "s", $ls));
+                attroff(COLOR_PAIR(2));
+                $delay = 5;
+        }
+        else
+        {
+                attron(COLOR_PAIR(3));
+                addstr($pos + 3,0,sprintf("%-" . $xsize . "s", $ls));
+                attroff(COLOR_PAIR(3));
+                $delay = 2;
+        }
+        $pos++;
+
+
+   }
+  }
+ 
+
+ my $ts = "Total: $tothash Mhash/s  $totaccept accepted, $totinvalid invalid ";
+
+ if ($totaccept > 0)
+ {
+  $ts .= sprintf("(%-2.2f%)  ", $totinvalid/($totaccept + $totinvalid)*100 );
+ }
+
+ addstr($ysize-1,0,$ts);
+
+ refresh;
+
+}
+
+
+
+sub processKey
+{
+ my ($key) = @_;
+
+ if ($key eq 'q')
+ {
+  endwin;
+  exit(0);
+ }
+
+ 
+
+ if ((ord($key) > 47) && (ord($key) < 58))
+ {
+  $mode = $key;
+  $lasttime = time() + 20;
+  &drawMiners;
+ }
+}
+
+
+
+sub getIPs
+{
+  my %ips;
+  my $interface;
+  my @res;
+  
+ foreach ( qx{ (LC_ALL=C /sbin/ifconfig -a 2>&1) } ) 
+ {
+  $interface = $1 if /^(\S+?):?\s/;
+  next unless defined $interface;
+  $ips{$interface}->{STATE}=uc($1) if /\b(up|down)\b/i;
+  $ips{$interface}->{IP}=$1 if /inet\D+(\d+\.\d+\.\d+\.\d+)/i;
+ }
+
+ for my $int ( keys %ips )
+ {
+	if (( $ips{$int}->{STATE} eq "UP" ) && defined($ips{$int}->{IP}) && !($int eq "lo"))
+	{
+		push(@res, $ips{$int}->{IP});
+	}
+ }
+ 
+ return(@res);
+}
+
