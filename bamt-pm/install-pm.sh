@@ -17,6 +17,8 @@ case "$input" in
       echo "Copying files..."
       cp /var/www/bamt/status.css /var/www/bamt/status.css.back
       cp status.css /var/www/bamt/
+      cp /var/www/bamt/mgpumon.css /var/www/bamt/mgpumon.css.back
+      cp mgpumon.css /var/www/bamt/
       cp ./*.png /var/www/bamt/
       cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.back
       cp status.pl /usr/lib/cgi-bin/
@@ -24,6 +26,8 @@ case "$input" in
       cp confedit.pl /usr/lib/cgi-bin/
       cp /usr/lib/cgi-bin/poolmanage.pl /usr/lib/cgi-bin/poolmanage.pl.back
       cp poolmanage.pl /usr/lib/cgi-bin/
+      cp /opt/bamt/sendstatus.pl /opt/bamt/sendstatus.pl.back
+      cp sendstatus.pl /opt/bamt/
       cp /opt/bamt/common.pl /opt/bamt/common.pl.back
       cp common.pl /opt/bamt/
       echo "Done!";;
@@ -37,6 +41,8 @@ case "$input" in
     cp IFMI-logo-small.png /var/www/IFMI/
     cp /var/www/bamt/status.css /var/www/bamt/status.css.bamt
     cp status.css /var/www/bamt/
+    cp /var/www/bamt/mgpumon.css /var/www/bamt/mgpumon.css.bamt
+    cp mgpumon.css /var/www/bamt/
     cp ./*.png /var/www/bamt/
     cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.bamt
     cp status.pl /usr/lib/cgi-bin/
@@ -44,6 +50,8 @@ case "$input" in
     cp poolmanage.pl /usr/lib/cgi-bin/
     cp /opt/bamt/common.pl /opt/bamt/common.pl.bamt
     cp common.pl /opt/bamt/
+    cp /opt/bamt/sendstatus.pl /opt/bamt/sendstatus.pl.bamt
+    cp sendstatus.pl /opt/bamt/
     echo "Modifying sudoers...."
     sed \$a"Defaults targetpw\n"\
 "www-data ALL=(ALL) /usr/sbin/mine,/bin/cp\n" /etc/sudoers > /etc/sudoers.ifmi

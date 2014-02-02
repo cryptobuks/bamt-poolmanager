@@ -18,12 +18,16 @@ case "$input" in
     mv /var/www/favicon.ico.bamt /var/www/favicon.ico
     mv /var/www/bamt/status.css /var/www/IFMI/status.css.ifmi
     mv /var/www/bamt/status.css.bamt /var/www/bamt/status.css
+    mv /var/www/bamt/mgpumon.css /var/www/IFMI/mgpumon.css.ifmi
+    mv /var/www/bamt/mgpumon.css.bamt /var/www/bamt/mgpumon.css
     mv /usr/lib/cgi-bin/status.pl /var/www/IFMI/status.pl.ifmi
     mv /usr/lib/cgi-bin/status.pl.bamt /usr/lib/cgi-bin/status.pl
     mv /usr/lib/cgi-bin/confedit.pl /var/www/IFMI/
     mv /usr/lib/cgi-bin/poolmanage.pl /var/www/IFMI/
     mv /opt/bamt/common.pl /var/www/IFMI/common.pl.ifmi
     mv /opt/bamt/common.pl.bamt /opt/bamt/common.pl 
+    mv /opt/bamt/sendstatus.pl /var/www/IFMI/sendstatus.pl.ifmi
+    mv /opt/bamt/sendstatus.pl.bamt /opt/bamt/sendstatus.pl
     mv /etc/sudoers /etc/sudoers.ifmi
     mv /etc/sudoers.bamt /etc/sudoers
     echo "Done!"
