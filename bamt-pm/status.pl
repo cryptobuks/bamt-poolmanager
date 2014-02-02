@@ -375,7 +375,7 @@ if (@pools) {
     }
     $pimg = "<img src='/bamt/error24.png'>" if ($pstat ne "Alive");
     $ppri = ${@pools[$i]}{'priority'};
-    $pimg = "<img src='/bamt/timeout32.png'>" if (($g0url ne $pname)&&(($ppri eq 0)&&($pstat eq "Alive")));
+    $pimg = "<img src='/bamt/timeout24.png'>" if (($g0url ne $pname)&&(($ppri eq 0)&&($pstat eq "Alive")));
     $pacc = ${@pools[$i]}{'accepted'};
     $prej = ${@pools[$i]}{'rejected'};
     if ($prej ne "0") {
@@ -468,7 +468,7 @@ $p1sum .= $p1add;
 
 print "<div id='overview'>";
 
-print "<table><TR><TD id='overviewlogo'><IMG src='/IFMI/IFMI-logo-small.png'></TD>";
+print "<table><TR><TD id='overviewlogo'><IMG src='/IFMI-logo-small.png'></TD>";
 
 print "<TD id='overviewhash'><b>" . $conf{'settings'}{'miner_id'} . "</b><br><font size=6>";
 print sprintf("%.2f", $tot_mhash / 1000);

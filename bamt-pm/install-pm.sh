@@ -35,10 +35,10 @@ case "$input" in
     esac
   else
     echo "Copying files..."
+    mkdir /var/www/IFMI
     cp /var/www/favicon.ico /var/www/favicon.ico.bamt
     cp favicon.ico /var/www/
-    mkdir /var/www/IFMI
-    cp IFMI-logo-small.png /var/www/IFMI/
+    cp IFMI-logo-small.png /var/www/bamt/
     cp /var/www/bamt/status.css /var/www/bamt/status.css.bamt
     cp status.css /var/www/bamt/
     cp /var/www/bamt/mgpumon.css /var/www/bamt/mgpumon.css.bamt
