@@ -343,8 +343,8 @@ sub genhttp
 				        $prat = "<td>" . $prr . "%</td>";
 				    }
 
-      				push(@nodemsg, "Reject ratio is too high") if ($prr >= 5);
-      				push(@nodemsg, "Pool is dead") if ($pstat eq "Dead");
+      				push(@nodemsg, "Reject ratio for pool $i is too high") if ($prr >= 5);
+      				push(@nodemsg, "Pool $i is dead") if ($pstat eq "Dead");
 
 				    $pput .= "<tr><td>$i</td>";
 				    $pput .= "<td>" . $pname . "</td>";
