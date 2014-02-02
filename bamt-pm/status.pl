@@ -468,7 +468,7 @@ $p1sum .= $p1add;
 
 print "<div id='overview'>";
 
-print "<table><TR><TD id='overviewlogo'><IMG src='/IFMI-logo-small.png'></TD>";
+print "<table><TR><TD id='overviewlogo'><IMG src='/bamt/IFMI-logo-small.png'></TD>";
 
 print "<TD id='overviewhash'><b>" . $conf{'settings'}{'miner_id'} . "</b><br><font size=6>";
 print sprintf("%.2f", $tot_mhash / 1000);
