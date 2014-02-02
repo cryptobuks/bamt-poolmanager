@@ -17,6 +17,7 @@ case "$input" in
       echo "Copying files..."
       cp /var/www/bamt/status.css /var/www/bamt/status.css.back
       cp status.css /var/www/bamt/
+      cp ./*.png /var/www/bamt/
       cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.back
       cp status.pl /usr/lib/cgi-bin/
       cp /usr/lib/cgi-bin/confedit.pl /usr/lib/cgi-bin/confedit.pl.back
@@ -36,6 +37,7 @@ case "$input" in
     cp IFMI-logo-small.png /var/www/IFMI/
     cp /var/www/bamt/status.css /var/www/bamt/status.css.bamt
     cp status.css /var/www/bamt/
+    cp ./*.png /var/www/bamt/
     cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.bamt
     cp status.pl /usr/lib/cgi-bin/
     cp confedit.pl /usr/lib/cgi-bin/
