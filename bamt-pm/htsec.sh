@@ -46,6 +46,17 @@ echo "It will optionally also set up a default site password."
   sed -i "s/ssl-cert-snakeoil.pem/apache.crt/g" /etc/apache2/sites-available/default-ssl.ifmi
   sed -i "s/ssl-cert-snakeoil.key/apache.key/g" /etc/apache2/sites-available/default-ssl.ifmi
   cp /etc/apache2/sites-available/default-ssl.ifmi /etc/apache2/sites-available/default-ssl
+  sed '/CustomLog /a\
+	\
+	Alias /mgpumon/ "/tmp/mgpumon/"\
+    	<Directory "/tmp/mgpumon/">\
+        Options Indexes MultiViews FollowSymLinks\
+        AllowOverride None\
+        Order allow,deny\
+        Allow from all\
+	</Directory>\
+' /etc/apache2/sites-available/default-ssl > /etc/apache2/sites-available/default-ssl.ifmi
+  cp /etc/apache2/sites-available/default-ssl.ifmi /etc/apache2/sites-available/default-ssl
   /usr/sbin/a2ensite default-ssl
   echo "Configuring Apache to use https only..."
   if [ ! -e /etc/apache2/sites-available/default.bamt ] ; then
