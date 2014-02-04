@@ -58,8 +58,9 @@ else
 	print start_html( -title=>'IFMI - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30; url=' . $url })  );
 }
 
-# pull gpu info
+# pull info
 my @gpus = &getFreshGPUData(1);
+my @pools = &getCGMinerPools(1);
 
 #gather totals
 my $tot_mhash = 0;
@@ -79,6 +80,7 @@ $g1put .= "<TD class='ghdr'>Temp</TD>";
 
 $g1put .= "<TD class='ghdr'>Fan\% (rpm)</TD>";
 $g1put .= "<TD class='ghdr'>Load</TD>";
+$g1put .= "<TD class='ghdr'>Pool</TD>";
 $g1put .= "<TD class='ghdr'>Rate</TD>";
 $g1put .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
 
@@ -96,6 +98,13 @@ for (my $i=0;$i<@gpus;$i++)
 	$tot_mhash += ${@gpus[$i]}{hashrate};	
 	$tot_accept += ${@gpus[$i]}{shares_accepted};	
 	$tot_invalid += ${@gpus[$i]}{shares_invalid};	
+
+    my $poolurl = $gpus[$i]{'pool_url'};
+
+    if ($poolurl =~ m/.+\@(.+)/)
+    {
+      $poolurl = $1;
+    }
 
     $gput .= '</TR></TABLE></TD>';
 
@@ -189,10 +198,22 @@ for (my $i=0;$i<@gpus;$i++)
 		}
 		
 		$gput .= '<td>';
-	}
+ 	}
 	
 	$gput .= $gpus[$i]{'current_load'} . '%</TD>';
 		
+        if ($poolurl =~ m|://\w*?\.?(\w+\.\w+:\d+)$|)
+        {
+           $shorturl = $1;
+        }
+               if ($i == $showgpu)
+                {
+                        $gsput .= "<tr><td>Pool:</td><td>" . $shorturl  . "</td></tr>";
+                }
+
+	$gput .= "<td>" . $shorturl . "</td>";
+
+	
 	if (defined($conf{'gpu'. $i}{monitor_hash_lo}) && ($gpus[$i]{'hashrate'} < $conf{'gpu'. $i}{monitor_hash_lo}))
 	{
 		$problems++;
@@ -323,7 +344,6 @@ for (my $i=0;$i<@gpus;$i++)
 	$problems = 0;
 }
 
-
 # EXTRA CONTROLS
 my $cgrc = 0;
 my $runtime = `ps -eo etime,command | grep [c]gminer`;
@@ -358,7 +378,6 @@ $p1sum .= "<TD class='ghdr'>Prio</TD>";
 $p1sum .= "</TR>";
 
 my @poolmsg; $pqb=0;
-my @pools = &getCGMinerPools(1);
 if (@pools) { 
   my $g0url = $gpus[0]{'pool_url'}; 
   for (my $i=0;$i<@pools;$i++) {
@@ -465,6 +484,7 @@ $p1add .= "</td></form>";
 $p1add .= "</tr></table><br>";
 $p1sum .= $p1add;
 # END EXTRA CONTROLS
+
 
 print "<div id='overview'>";
 

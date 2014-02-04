@@ -344,12 +344,12 @@ sub getFreshGPUData
 	my $conf = &getConfig;
     %conf = %{$conf}; 
 	
-    my @cgpools;
+	my @cgpools;
     
 	if (${$conf}{settings}{cgminer})
 	{
 		# cgminer gather pools
-		@cgpools = getCGMinerPools();
+		@cgpools = getCGMinerPools();			
 	}
 
 	#monster regex for atitweak        
@@ -357,6 +357,7 @@ sub getFreshGPUData
 	{
 		my $gpu = $1;
 		$gpus[$gpu] = ({ desc => $2, display => $3, current_core_clock => $4, current_mem_clock=>$5, current_core_voltage=>$6, current_performance_level => $7, current_load=>$8, current_temp_0=>$10, current_powertune=>$11 });
+
 
 		if ($9 =~ m/.*fan\sspeed\s(\d+)\%\s\((\d+)\sRPM\)/)
 		{
@@ -380,8 +381,6 @@ sub getFreshGPUData
 			{
 				# cgminer gather
 				${$gpus[$gpu]}{miner} = 'cgminer';
-				${$gpus[$gpu]}{poolnum} = ${@cgpools[$i]}{'poolid'};
-				
 				&getCGMinerStats($gpu, \%{$gpus[$gpu]}, @cgpools );
 				
 			}
@@ -442,7 +441,6 @@ sub getFreshGPUData
 		# system info
 		${$gpus[$gpu]}{uptime} = $uptime;
 
-		
 		# monitoring
 	
 		if (!defined(${$gc}{'disabled'}) || (${$gc}{'disabled'} == 0))
