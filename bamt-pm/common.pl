@@ -380,6 +380,7 @@ sub getFreshGPUData
 			{
 				# cgminer gather
 				${$gpus[$gpu]}{miner} = 'cgminer';
+				${$gpus[$gpu]}{poolnum} = ${@cgpools[$i]}{'poolid'};
 				
 				&getCGMinerStats($gpu, \%{$gpus[$gpu]}, @cgpools );
 				
