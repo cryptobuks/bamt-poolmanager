@@ -37,35 +37,40 @@ case "$input" in
       * ) echo "installation exited";;
     esac
   else
-    echo "Copying files..."
-    mkdir /var/www/IFMI
-    cp /var/www/favicon.ico /var/www/favicon.ico.bamt
-    cp favicon.ico /var/www/
-    cp IFMI-logo-small.png /var/www/bamt/
-    cp /var/www/bamt/status.css /var/www/bamt/status.css.bamt
-    cp status.css /var/www/bamt/
-    cp /var/www/bamt/mgpumon.css /var/www/bamt/mgpumon.css.bamt
-    cp mgpumon.css /var/www/bamt/
-    cp ./*.png /var/www/bamt/
-    cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.bamt
-    cp status.pl /usr/lib/cgi-bin/
-    cp confedit.pl /usr/lib/cgi-bin/
-    cp poolmanage.pl /usr/lib/cgi-bin/
-    cp /opt/bamt/common.pl /opt/bamt/common.pl.bamt
-    cp common.pl /opt/bamt/
-    cp /opt/bamt/sendstatus.pl /opt/bamt/sendstatus.pl.bamt
-    cp sendstatus.pl /opt/bamt/
-    cp /opt/bamt/mgpumon /opt/bamt/mgpumon.bamt
-    cp mgpumon /opt/bamt/
-    chmod +x /usr/lib/cgi-bin/*.pl
-    echo "Modifying sudoers...."
-    sed \$a"Defaults targetpw\n"\
+    if [ -d /var/www/bamt ] && [ -d /opt/bamt ]; then
+      echo "Copying files..."
+      mkdir /var/www/IFMI
+      cp /var/www/favicon.ico /var/www/favicon.ico.bamt
+      cp favicon.ico /var/www/
+      cp IFMI-logo-small.png /var/www/bamt/
+      cp /var/www/bamt/status.css /var/www/bamt/status.css.bamt
+      cp status.css /var/www/bamt/
+      cp /var/www/bamt/mgpumon.css /var/www/bamt/mgpumon.css.bamt
+      cp mgpumon.css /var/www/bamt/
+      cp ./*.png /var/www/bamt/
+      cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.bamt
+      cp status.pl /usr/lib/cgi-bin/
+      cp confedit.pl /usr/lib/cgi-bin/
+      cp poolmanage.pl /usr/lib/cgi-bin/
+      cp /opt/bamt/common.pl /opt/bamt/common.pl.bamt
+      cp common.pl /opt/bamt/
+      cp /opt/bamt/sendstatus.pl /opt/bamt/sendstatus.pl.bamt
+      cp sendstatus.pl /opt/bamt/
+      cp /opt/bamt/mgpumon /opt/bamt/mgpumon.bamt
+      cp mgpumon /opt/bamt/
+      chmod +x /usr/lib/cgi-bin/*.pl
+      echo "Modifying sudoers...."
+      sed \$a"Defaults targetpw\n"\
 "www-data ALL=(ALL) /usr/sbin/mine,/bin/cp\n" /etc/sudoers > /etc/sudoers.ifmi
-    cp /etc/sudoers /etc/sudoers.bamt
-    cp /etc/sudoers.ifmi /etc/sudoers
-    echo "Running Apache security script..."
-    ./htsec.sh
-    echo "Done! Please read the README and edit your conf file as required. Thank you for flying IFMI!"
+      cp /etc/sudoers /etc/sudoers.bamt
+      cp /etc/sudoers.ifmi /etc/sudoers
+      echo "Running Apache security script..."
+      ./htsec.sh
+      echo "Done! Please read the README and edit your conf file as required. Thank you for flying IFMI!"
+    else
+      echo "This doesn't appear to be a BAMT distribution! Quitting."
+      exit 1;
+    fi
   fi ;;
   * ) echo "installation exited";;
 esac
