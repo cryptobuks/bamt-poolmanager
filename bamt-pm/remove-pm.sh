@@ -10,7 +10,7 @@ read -p "Are you sure?(y/n)" input
 shopt -s nocasematch
 case "$input" in
   y|Y|Yes)
-  if [! -e /var/www/IFMI ]; then
+  if [ ! -e /var/www/IFMI ]; then
           echo "IFMI not installed"
           exit 1 ;
   else
