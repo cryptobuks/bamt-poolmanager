@@ -545,31 +545,6 @@ sub genhttp
 			}
 			
 			$sput .= "</tr>";
-
-
-			my $simg = ${$config}{httpimgpath} . '/';
-			
-			if ($problems)
-			{
-				$totproblems += $problems;
-				$locproblems += $problems;
-				if ($checkin > 65)
-				{
-#					$simg .= 'network-error.png';
-					$simg .= 'alarm16.png';
-				}
-				else
-				{
-					$simg .= 'error16.png';
-				}
-				
-				$problemnodes++;
-			}
-			else
-			{
-				$oknodes++;
-				$simg .= 'ok16.png';
-			}
 			
 			my $pput = ""; 
 
@@ -579,6 +554,7 @@ sub genhttp
 				$pput .= "<TD class='ghdr'>Messages</TD>";
 				$pput .= "<TD class='ghdr'>Pools</TD>";
 				$pput .= "<TD class='ghdr'>Active Pool</TD>";
+				$pput .= "<TD class='ghdr'>ID</TD>";
 				$pput .= "<TD class='ghdr'>Worker</TD>";
 				$pput .= "<TD class='ghdr'>Status</TD>";
 				$pput .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
@@ -586,9 +562,10 @@ sub genhttp
 
 		  		my $g0url = $gpus[0]{'pool_url'};
 			    for (my $i=0;$i<@pools;$i++) {
-				    $pname = ${@pools[$i]}{'url'};
-				    if ($pname = $g0url) {
-
+				    my $pmatch = ${@pools[$i]}{'url'};
+				    if ($pmatch eq $g0url) {
+					    $pname = ${@pools[$i]}{'url'};
+				    	$poid = ${@pools[$i]}{'poolid'}; 
 					    $pusr = ${@pools[$i]}{'user'};
 					    $pstat = ${@pools[$i]}{'status'};
 					    if ($pstat eq "Dead") {
@@ -616,12 +593,34 @@ sub genhttp
 
       			}
 
+				my $simg = ${$config}{httpimgpath} . '/';
+				if ($problems)
+				{
+					$totproblems += $problems;
+					$locproblems += $problems;
+					if ($checkin > 65)
+					{
+	#					$simg .= 'network-error.png';
+						$simg .= 'alarm16.png';
+					}
+					else
+					{
+						$simg .= 'error16.png';
+					}					
+					$problemnodes++;
+				}
+				else
+				{
+					$oknodes++;
+					$simg .= 'ok16.png';
+				}
 				$pput .= "<tr><td><img src='$simg'>";
+
 				if (@nodemsg)
 				{					
 					if (@nodemsg == 1) 
 					{
-						$pput .= "<b>" . $nodemsg[0] . "</b></td>";
+						$pput .= "<big>" . $nodemsg[0] . "</big></td>";
 					} else {
 						$pput .= " <big>Multiple Problems</big></td>";
 					}
@@ -631,6 +630,7 @@ sub genhttp
 
 			    $pput .= "<td>" . (@pools) . "</td>";
 			    $pput .= "<td>" . $pname . "</td>";
+			    $pput .= "<td>" . $poid . "</td>";
 			    if (length($pusr) > 20) {
 			        $pusr = substr($pusr, 1, 6) . " ... " . substr($pusr, -6, 6) if (index($pusr, '.') < 0);
 			    }
