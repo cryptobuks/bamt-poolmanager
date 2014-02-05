@@ -13,8 +13,13 @@ Install script enables SSL redirection (and optional default page password) for 
 Reqirements: BAMT linux running CGminer. Built and tested on litecoin-bamt 1.2, but should 
 work with any flavor of BAMT, including SMOS. 
 
-TO INSTALL: wget the repo zipfile to your miner and unzip it, then cd to the bamt-pm directory
-and run the ./install-pm.sh  
+
+EASY PEASY SURE FIRE INSTALL INSTRUCTIONS: 
+(Doing it this way ensures all the files will have the correct permissions.)
+1. ssh into your miner, so you are at the command prompt. be root (if you are user, do: sudo su - ).
+2 do: wget https://github.com/starlilyth/bamt-poolmanager/archive/master.zip
+3 do: unzip master.zip
+Now you can cd into the bamt-pm directory and run ./install.sh
 Please see the README to complete the setup. 
 
 See the Wiki for a screenshot.
