@@ -6,7 +6,7 @@ Extended from the BAMT miner web interface, which is in perl (no php).
 
 Add or Remove pools, or Switch priority, without stopping your miner. 
 Stop/start the miner, with password protection and run time display. 
-Extra system stats in the header (uptime, load, free mem). 
+Extra stats in the header (Work Util, HW errors, Uptime, Load, Free Mem). 
 Configuration editor.
 Install script enables SSL redirection (and optional default page password) for security. 
 
