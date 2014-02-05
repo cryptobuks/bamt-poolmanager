@@ -12,7 +12,7 @@ case "$input" in
   y|Y|Yes)
   if [! -e /var/www/IFMI ]; then
           echo "IFMI not installed"
-          exit 1 ;;
+          exit 1 ;
   else
     mv /var/www/favicon.ico /var/www/IFMI/favicon.ico.ifmi
     mv /var/www/favicon.ico.bamt /var/www/favicon.ico
