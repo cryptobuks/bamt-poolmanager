@@ -61,9 +61,9 @@ else
 # pull info
 my @gpus = &getFreshGPUData(1);
 my @pools = &getCGMinerPools(1);
+my @summary = &getCGMinerSummary;
 
 #gather totals
-my $tot_mhash = 0;
 my $tot_accept = 0;
 my $tot_invalid = 0;
 
@@ -95,7 +95,6 @@ for (my $i=0;$i<@gpus;$i++)
 {
 	my $gput = "";
 	
-	$tot_mhash += ${@gpus[$i]}{hashrate};	
 	$tot_accept += ${@gpus[$i]}{shares_accepted};	
 	$tot_invalid += ${@gpus[$i]}{shares_invalid};	
 
@@ -344,14 +343,22 @@ for (my $i=0;$i<@gpus;$i++)
 	$problems = 0;
 }
 
+if (@summary) {
+  for (my $i=0;$i<@summary;$i++) {
+    $minesum = ${@summary[$i]}{'elapsed'};
+    $minerate = ${@summary[$i]}{'hashrate'};
+    $mineacc = ${@summary[$i]}{'shares_accepted'};
+    $minerej = ${@summary[$i]}{'shares_invalid'};
+    $minewu = ${@summary[$i]}{'work_utility'};
+    $minehe = ${@summary[$i]}{'hardware_errors'};
+  }
+}
+
 # EXTRA CONTROLS
 my $cgrc = 0;
-my $runtime = `ps -eo etime,command | grep [c]gminer`;
-if ($runtime =~ /^\s+(.*?):\d+\s+\S+/) {
-  $cgrt = $1;
-  $cgrt =~ s/[\-]/ days, /;  
-  $cgrt =~ s/$cgrt/$cgrt min/ if (length $cgrt < 3);
-  $cgrun = "<td>$cgrt</td>";
+if ($minesum > 0) {
+  $minerun = sprintf("%d days, %d:%d.%d",(gmtime $minesum)[7,2,1,0]);
+  $cgrun = "<td>" . $minerun . "</td>";
   $cgrc = 1;
 } else { 
   $cgrun = "<td class='error'>Stopped</td>";
@@ -485,54 +492,34 @@ $p1add .= "</tr></table><br>";
 $p1sum .= $p1add;
 # END EXTRA CONTROLS
 
-
 print "<div id='overview'>";
-
 print "<table><TR><TD id='overviewlogo'><IMG src='/bamt/IFMI-logo-small.png'></TD>";
-
 print "<TD id='overviewhash'><b>" . $conf{'settings'}{'miner_id'} . "</b><br><font size=6>";
-print sprintf("%.2f", $tot_mhash / 1000);
-print " Mh/s</font></TD>";
-print "<TD id='overviewshares'> $tot_accept total accepted shares<br>";
-print" $tot_invalid total rejected shares<br>";
-if ($tot_accept)
+print $minerate . " Mh/s</font></br></TD>";
+print "<TD id='overviewshares'>" . $mineacc . " total accepted shares<br>";
+print $minerej . " total rejected shares<br>";
+if ($mineacc > 0)
 {
- print sprintf("%.3f%%", $tot_invalid / ($tot_accept + $tot_invalid)*100);
+ print sprintf("%.3f%%", $minerej / ($mineacc + $minerej)*100);
  print " reject ratio";
 }
 
 print "<TD id='overviewgpus'>";
-
-print @gpus . "";
-if (@gpus == 1)
-{
-	print " GPU configured<br>";
+if ($problemgpus > 1){
+  if ($problemgpus == 1) {
+  	print $problemgpus . " GPU has problems<br>";
+  } else {
+	print $problemgpus . " of " . @gpus . " GPUs have problems<br>";
+  }
+} else { 
+  if ($okgpus == 1) {
+	print $okgpus . " GPU is OK<br>";
+  } else {
+	print $okgpus . " of " . @gpus . " GPUs are OK<br>";
+  }
 }
-else
-{
-	print " GPUs configured<br>";
-}
-
-print $okgpus;
-if ($okgpus == 1)
-{
-	print " GPU is OK<br>";
-}
-else
-{
-	print " GPUs are OK<br>";
-}
-
-print $problemgpus;
-if ($problemgpus == 1)
-{
-	print " GPU has problems";
-}
-else
-{
-	print " GPUs have problems";
-}
-
+print $minehe . " HW Errors<br>";
+print $minewu . " Work Utility<br>";
 print "</td>";
 
 # EXTRA HEADER STATS
@@ -692,7 +679,6 @@ else
 	
 	print "<P><A href='/munin/" . $conf{'settings'}{'miner_id'} . "/index.html'>More system stats (munin)...</A>";
 }
-
 
 print "<p><a href='/cgi-bin/confedit.pl' target='_blank'>Configuration Editor</a>";
 

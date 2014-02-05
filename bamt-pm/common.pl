@@ -854,6 +854,55 @@ sub getCGMinerStats
 }
 
 
+# Oh hi! I cant believe this didnt exist yet..
+sub getCGMinerSummary
+{    
+    my $conf = &getConfig;
+    %conf = %{$conf}; 
+    
+    my $cgport = 4028;
+ 	if (defined(${$conf}{'settings'}{'cgminer_port'}))
+ 	{
+ 	  $cgport = ${$conf}{'settings'}{'cgminer_port'};
+ 	}
+    
+	my $sock = new IO::Socket::INET (
+                                  PeerAddr => '127.0.0.1',
+                                  PeerPort => $cgport,
+                                  Proto => 'tcp',
+                                  ReuseAddr => 1,
+                                  Timeout => 5,
+                                 );
+    
+    if ($sock)
+    {
+    	print $sock "summary|\n";
+    
+		my $res = "";
+		
+		while(<$sock>) 
+		{
+			$res .= $_;
+		}
+		
+		close($sock);
+
+
+	while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),MHS\s\ds=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Total\sMH=(.*?),Work\sUtility=(\d+\.\d+),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),Best\sShare=(\d+),/g)
+	{
+	  push(@summary,({ elapsed=>$1, hashavg=>$2, hashrate=>$3, found_blocks=>$4, getworks=>$5, shares_accepted=>$6, shares_invalid=>$7, hardware_errors=>$8, utility=>$9, discarded=>$10, stale=>$11, get_failures=>$12, local_work=>$13, remote_failures=>$14, network_blocks=>$15, total_mh=>$16, work_utility=>$17, diff_accepted=>$18, diff_rejected=>$19, diff_stale=>$20, best_share=>$21 }) );
+	}
+		
+	return(@summary);
+
+    }
+    else
+    {
+	$url = "cgminer socket failed";
+    }
+	
+}
+# taa taa
 
 sub stopMining
 {
