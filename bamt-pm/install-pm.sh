@@ -32,6 +32,7 @@ case "$input" in
       cp mgpumon /opt/bamt/
       cp /opt/bamt/common.pl /opt/bamt/common.pl.back
       cp common.pl /opt/bamt/
+      chmod +x /usr/lib/cgi-bin/*.pl
       echo "Done!";;
       * ) echo "installation exited";;
     esac
@@ -56,6 +57,7 @@ case "$input" in
     cp sendstatus.pl /opt/bamt/
     cp /opt/bamt/mgpumon /opt/bamt/mgpumon.bamt
     cp mgpumon /opt/bamt/
+    chmod +x /usr/lib/cgi-bin/*.pl
     echo "Modifying sudoers...."
     sed \$a"Defaults targetpw\n"\
 "www-data ALL=(ALL) /usr/sbin/mine,/bin/cp\n" /etc/sudoers > /etc/sudoers.ifmi
