@@ -734,7 +734,7 @@ sub getCGMinerPools
                                   PeerPort => $cgport,
                                   Proto => 'tcp',
                                   ReuseAddr => 1,
-                                  Timeout => 5,
+                                  Timeout => 10,
                                  );
     
     if ($sock)
@@ -779,7 +779,7 @@ sub getCGMinerStats
                                   PeerPort => $cgport,
                                   Proto => 'tcp',
                                   ReuseAddr => 1,
-                                  Timeout => 5,
+                                  Timeout => 10,
                                  );
     
     if ($sock)
@@ -871,7 +871,7 @@ sub getCGMinerSummary
                                   PeerPort => $cgport,
                                   Proto => 'tcp',
                                   ReuseAddr => 1,
-                                  Timeout => 5,
+                                  Timeout => 10,
                                  );
     
     if ($sock)
