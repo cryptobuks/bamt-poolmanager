@@ -558,7 +558,7 @@ sub genhttp
 					}
 					else
 					{
-						$gput .= '<td>n/a';
+						$gput .= '<td>N/A';
 					}
 					
 					$gput .= "</TD>";
@@ -571,7 +571,7 @@ sub genhttp
 
 				}
 
-				$gput .= "</tr>";
+				$gput .= "</tr></table>";
 
 				if ($problems > $problemsin)
 				{
@@ -586,8 +586,9 @@ sub genhttp
 			}
 			else
 			{
-				$gput .= "<div class='nogpudata'><td>No GPU data is available</td></div></tr>";
+				$gput .= "<td>No GPU data is available</td></tr></table>";
 			}
+
 
 			my $simg = ${$config}{httpimgpath} . '/';
 			if ($problems)
@@ -633,12 +634,11 @@ sub genhttp
 			$nhtml .= "<tr><TD class='$statclass' style='padding: 5px;'>";
 			$nhtml .= $sput;	
 			$nhtml .= $ghput;	
-		    $nhtml .= $mput; 
-		    $nhtml .= $gput;
+		    $nhtml .= $mput . $gput;
 		    $nhtml .= "</TD></TR>";
 			
 			#blank
-#			$nhtml .= "<TR><TD colspan=2 class='blank'> </TD></TR>";		
+			$nhtml .= "<TR><TD colspan=2 class='blank'> </TD></TR>";		
 
 # Location HTML starts here		
 		 }
