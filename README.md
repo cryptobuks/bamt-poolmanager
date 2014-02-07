@@ -7,7 +7,7 @@ Extended from the BAMT miner web interface, which is in perl (no php).
 Add or Remove pools, or Switch priority, without stopping your miner. 
 Stop/start the miner, with password protection and run time display. 
 Extra stats in the header (Work Util, HW errors, Uptime, Load, Free Mem). 
-Configuration editor.
+Configuration editor. Mgpumon enhancements.
 Install script enables SSL redirection (and optional default page password) for security. 
 
 Reqirements: BAMT linux running CGminer. Built and tested on litecoin-bamt 1.2, but should 
