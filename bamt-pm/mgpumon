@@ -304,10 +304,7 @@ sub genhttp
 				
 			}			
 
-		my $sput = "";
-
-		if (@summary)
-		{
+			my $sput = ""; 
 			$sput .= "<div class='gpudata'><TABLE><TR class='ghdr'>";
 			$sput .= "<TD class='ghdr'>Node</TD>";
 			$sput .= "<TD class='ghdr'>IP</TD>";
@@ -316,58 +313,13 @@ sub genhttp
 			$sput .= "<TD class='ghdr'>WU</TD>";
 			$sput .= "<TD class='ghdr'>Rej</TD>";
 			$sput .= "<TD class='ghdr'>HW</TD>";
-			$sput .= "<TD class='ghdr'>GPUs</TD>";
-
-			my $g = 0; 
-			while ($g < @gpus) { 
-				$sput .= "<TD class='ghdr'>temp $g</TD>";
-				$g++
-			}
-			my $g = 0; 
-			while ($g < @gpus) { 
-				$sput .= "<TD class='ghdr'>fan $g</TD>";
-				$g++
-			}	
-			
-			my $g = 0; 
-			while ($g < @gpus) { 	
-				$sput .= "<TD class='ghdr'>hash $g</TD>";
-				$g++
-			}
-
-			my $g = 0; 
-			while ($g < @gpus) { 
-				$sput .= "<TD class='ghdr'>rej $g</TD>";
-				$g++
-			}
-
-			$sput .= "</tr>";
-
-			for (my $i=0;$i<@summary;$i++) {
-				$mrt = ${@summary[$i]}{'elapsed'};
-				$mmhs = ${@summary[$i]}{'hashavg'} . " Mh/s";
-				$mwu = ${@summary[$i]}{'work_utility'};
-				$macc = ${@summary[$i]}{'shares_accepted'};
-				$mrej = ${@summary[$i]}{'shares_invalid'};
-				$mrat =  sprintf("%.3f%%", $mrej / ($macc + $mrej)*100);
-#					$msta = ${@summary[$i]}{'stale'};
-				$mhwe = ${@summary[$i]}{'hardware_errors'};
-			}
-
-			if ($mrt == 0) {
-			  $minert = "<td class='error'>" . $mrt . "</td>";
-			} else {
-			  $mrth = sprintf("%dd %d:%d.%d",(gmtime $mrt)[7,2,1,0]);
-			  $minert = "<td>" . $mrth . "</td>";
-			}
-
-			if ($mhwe > 0) {
-			  $minerhwe = "<td class='error'>" . $ghwe . "</td>";
-			} else {
-			  $minerhwe = "<td>" . $mhwe . "</td>";
-			}
-
-			$sput .= "<TR><td>";
+			$sput .= "<TD class='ghdr'>Pools</TD>";
+			$sput .= "<TD class='ghdr'>Active Pool</TD>";
+			$sput .= "<TD class='ghdr'>ID</TD>";
+			$sput .= "<TD class='ghdr'>Worker</TD>";
+			$sput .= "<TD class='ghdr'>Status</TD>";
+			$sput .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
+			$sput .= "</TR><TR><td>";
 
 			if ($miner eq $miners{$miner}{id}) 
 			{
@@ -382,184 +334,45 @@ sub genhttp
 					$sput .= "<big><A href=http://$iptxt/cgi-bin/status.pl>" . $miners{$miner}{id} . "</a></big>";			
 				}
 			}
-				$sput .= "</td><td>" . $iptxt . '</td>';
+			$sput .= "</td><td>" . $iptxt . '</td>';
+
+			if (@summary)
+			{
+				for (my $i=0;$i<@summary;$i++) {
+					$mrt = ${@summary[$i]}{'elapsed'};
+					$mmhs = ${@summary[$i]}{'hashavg'} . " Mh/s";
+					$mwu = ${@summary[$i]}{'work_utility'};
+					$macc = ${@summary[$i]}{'shares_accepted'};
+					$mrej = ${@summary[$i]}{'shares_invalid'};
+					$mrat =  sprintf("%.3f%%", $mrej / ($macc + $mrej)*100);
+					$mhwe = ${@summary[$i]}{'hardware_errors'};
+				}
+
+				if ($mrt == 0) {
+				  $minert = "<td class='error'>" . $mrt . "</td>";
+				} else {
+				  $mrth = sprintf("%dd %d:%d.%d",(gmtime $mrt)[7,2,1,0]);
+				  $minert = "<td>" . $mrth . "</td>";
+				}
 				$sput .= $minert ;
+				
 				$sput .= "<td>" . $mmhs . "</td>";
 				$sput .= "<td>" . $mwu . "</td>";
 				$sput .= "<td>" . $mrat . "</td>";
+
+				if ($mhwe > 0) {
+				  $minerhwe = "<td class='error'>" . $ghwe . "</td>";
+				} else {
+				  $minerhwe = "<td>" . $mhwe . "</td>";
+				}
 				$sput .= $minerhwe ;
-				$sput .= "<td>" . (@gpus) . "</td>";
+			
+			} else { 
+				$sput .= "<td colspan=5>Summary Not Available</td>";
 			}
-			
-			if (@gpus)
-			{
-				
-				my $problemsin = $problems;
-
-				for (my $i = 0; $i < @gpus;$i++)
-				{
-
-					if ($gpus[$i]{'current_temp_0'} > ${$config}{monitor_temp_hi})
-					{
-						$problems++;
-						push(@nodemsg, "GPU $i is over maximum temp");
-						
-						$sput .= "<td class='error'>";
-					}
-					elsif ($gpus[$i]{'current_temp_0'} < ${$config}{monitor_temp_lo})
-					{
-						$problems++;
-						push(@nodemsg, "GPU $i is below minimum temp");
-						
-						$sput .= "<td class='error'>";
-					}
-					else
-					{
-						$sput .= '<td>';
-					}
-				
-
-					$sput .= $gpus[$i]{'current_temp_0'} . 'C';
-				
-					$sput .= '</TD>';
-
-					if ($problems > $problemsin) {
-						$gpuproblems++;
-					} else {
-						$gpuoks++;
-					}
-					
-				}
-
-				for (my $i = 0; $i < @gpus;$i++)
-				{
-
-					if (($gpus[$i]{'fan_rpm'} < ${$config}{monitor_fan_lo}) && (! $gpus[$i]{'fan_rpm'} eq 'na'))
-					{
-						$problems++;
-						push(@nodemsg, "GPU $i is below minimum fan rpm");
-						$sput .= "<td class='error'>";
-					}
-					else
-					{
-						$sput .= '<td>';
-					}
-						
-					$sput .= $gpus[$i]{'fan_speed'} . '%';
-					
-					$sput .= '</TD>';
-
-					if ($problems > $problemsin) {
-						$gpuproblems++;
-					} else {
-						$gpuoks++;
-					}
-
-				}
-
-				for (my $i = 0; $i < @gpus;$i++)
-				{
-
-					if ($gpus[$i]{'hashrate'} < ${$config}{monitor_hash_lo})
-					{
-						$problems++;
-						push(@nodemsg, "GPU $i is below minimum hash rate");
-						$sput .= "<td class='error'>";
-					}
-					else
-					{
-						$sput .= '<td>';
-					}
-					
-					$sput .= $gpus[$i]{'hashrate'};					
-					
-					$tothash += $gpus[$i]{'hashrate'};
-					$lochash += $gpus[$i]{'hashrate'};
-					$minerhash += $gpus[$i]{'hashrate'};
-
-					$gput .= '</TD>';
-					
-					if ($problems > $problemsin) {
-						$gpuproblems++;
-					} else {
-						$gpuoks++;
-					}
-					
-				}	
-
-				for (my $i = 0; $i < @gpus;$i++)
-				{
-
-					if ($gpus[$i]{'shares_accepted'} > 0)
-					{
-						my $rr = $gpus[$i]{'shares_invalid'}/($gpus[$i]{'shares_accepted'} + $gpus[$i]{'shares_invalid'})*100 ;
-						
-						if ($rr > ${$config}{monitor_reject_hi})
-						{
-							$problems++;
-							push(@nodemsg, "GPU $i is above maximum reject rate");
-							$sput .= "<td class='error'>";
-						}
-						else
-						{
-							$sput .= '<td>';
-						}
-						
-						$sput .= sprintf("%-2.2f%", $rr);
-
-					$totaccept += $gpus[$i]{'shares_accepted'};
-					$totinvalid += $gpus[$i]{'shares_invalid'};
-					$locaccept += $gpus[$i]{'shares_accepted'};
-					$locinvalid += $gpus[$i]{'shares_invalid'};
-
-					}
-					else
-					{
-						$sput .= '<td>n/a';
-					}
-					
-					$sput .= "</TD>";
-
-					if ($problems > $problemsin) {
-						$gpuproblems++;
-					} else {
-						$gpuoks++;
-					}
-				
-				}
-
-				if ($problems > $problemsin)
-				{
-					$problemgpus = ($gpuproblems / 4);
-				}
-				else
-				{
-					$okgpus = ($gpuoks / 4);
-				}
-				$gpuproblems = 0; $gpuoks = 0;		
-			
-			}
-			else
-			{
-				$sput .= "<div class='nogpudata'>No GPU data is available</div>";
-			}
-			
-			$sput .= "</tr>";
-			
-			my $pput = ""; 
 
 			if (@pools)
 			{
-				$pput .= "<div class='gpudata'><TABLE><TR class='ghdr'>";
-				$pput .= "<TD class='ghdr'>Messages</TD>";
-				$pput .= "<TD class='ghdr'>Pools</TD>";
-				$pput .= "<TD class='ghdr'>Active Pool</TD>";
-				$pput .= "<TD class='ghdr'>ID</TD>";
-				$pput .= "<TD class='ghdr'>Worker</TD>";
-				$pput .= "<TD class='ghdr'>Status</TD>";
-				$pput .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
-				$pput .= "</TR>";
-
 		  		my $g0url = $gpus[0]{'pool_url'};
 			    for (my $i=0;$i<@pools;$i++) {
 				    my $pmatch = ${@pools[$i]}{'url'};
@@ -585,95 +398,266 @@ sub genhttp
 					    } else {
 					        $prat = "<td>" . $prr . "%</td>";
 					    }
-
 	      				push(@nodemsg, "Reject ratio for pool $i is too high") if ($prr >= 5);
-	      				push(@nodemsg, "Pool $i is dead") if ($pstat eq "Dead");
-	      			
+	      				push(@nodemsg, "Pool $i is dead") if ($pstat eq "Dead");	      			
 	      			}
+	      		}
 
-      			}
-
-				my $simg = ${$config}{httpimgpath} . '/';
-				if ($problems)
-				{
-					$totproblems += $problems;
-					$locproblems += $problems;
-					if ($checkin > 65)
-					{
-	#					$simg .= 'network-error.png';
-						$simg .= 'alarm16.png';
-					}
-					else
-					{
-						$simg .= 'error16.png';
-					}					
-					$problemnodes++;
-				}
-				else
-				{
-					$oknodes++;
-					$simg .= 'ok16.png';
-				}
-				$pput .= "<tr><td><img src='$simg'>";
-
-				if (@nodemsg)
-				{					
-					if (@nodemsg == 1) 
-					{
-						$pput .= "<big>" . $nodemsg[0] . "</big></td>";
-					} else {
-						$pput .= " <big>Multiple Problems</big></td>";
-					}
-				} else { 
-					$pput .= " <big>No problems reported</big></td>";
-				}
-
-			    $pput .= "<td>" . (@pools) . "</td>";
-			    $pput .= "<td>" . $pname . "</td>";
-			    $pput .= "<td>" . $poid . "</td>";
+			    $sput .= "<td>" . (@pools) . "</td>";
+			    $sput .= "<td>" . $pname . "</td>";
+			    $sput .= "<td>" . $poid . "</td>";
 			    if (length($pusr) > 20) {
 			        $pusr = substr($pusr, 1, 6) . " ... " . substr($pusr, -6, 6) if (index($pusr, '.') < 0);
 			    }
-			    $pput .= "<td>" . $pusr . "</td>";
-			    $pput .= $pstatus;
-			    $pput .= "<td>" . $pacc . " / " . $prej . "</td>";
-			    $pput .= $prat;
-			    $pput .= "</tr>";      
+			    $sput .= "<td>" . $pusr . "</td>";
+			    $sput .= $pstatus;
+			    $sput .= "<td>" . $pacc . " / " . $prej . "</td>";
+			    $sput .= $prat;
+			    $sput .= "</tr>";      
 
+			} else { 
+				$sput .= "<td colspan=7>Pool Info Not Available</td></tr></table>";
+   			}
+
+   			my $ghput = ""; 
+			$ghput .= "<div class='gpudata'><table><TR class='ghdr'>";
+			$ghput .= "<TD class='ghdr'>Messages</TD>";
+			$ghput .= "<TD class='ghdr'>GPUs</TD>";
+			$ghput .= "<TD class='ghdr'>  </TD>" if (@gpus < 1); 
+
+			my $g = 0; 
+			while ($g < @gpus) { 
+				$ghput .= "<TD class='ghdr'>temp $g</TD>";
+				$g++
+			}
+			my $g = 0; 
+			while ($g < @gpus) { 
+				$ghput .= "<TD class='ghdr'>fan $g</TD>";
+				$g++
+			}				
+			my $g = 0; 
+			while ($g < @gpus) { 	
+				$ghput .= "<TD class='ghdr'>hash $g</TD>";
+				$g++
+			}
+			my $g = 0; 
+			while ($g < @gpus) { 
+				$ghput .= "<TD class='ghdr'>rej $g</TD>";
+				$g++
+			}
+			$ghput .= "</tr>";
+
+			my $gput = ""; 
+			if (@gpus)
+			{				
+				my $problemsin = $problems;
+				
+				for (my $i = 0; $i < @gpus;$i++)
+				{
+					if ($gpus[$i]{'current_temp_0'} > ${$config}{monitor_temp_hi})
+					{
+						$problems++;
+						push(@nodemsg, "GPU $i is over maximum temp");
+						
+						$gput .= "<td class='error'>";
+					}
+					elsif ($gpus[$i]{'current_temp_0'} < ${$config}{monitor_temp_lo})
+					{
+						$problems++;
+						push(@nodemsg, "GPU $i is below minimum temp");
+						
+						$gput .= "<td class='error'>";
+					}
+					else
+					{
+						$gput .= '<td>';
+					}
+				
+					$gput .= $gpus[$i]{'current_temp_0'} . 'C </TD>';
+
+					if ($problems > $problemsin) {
+						$gpuproblems++;
+					} else {
+						$gpuoks++;
+					}					
+				}
+
+				for (my $i = 0; $i < @gpus;$i++)
+				{
+					if (($gpus[$i]{'fan_rpm'} < ${$config}{monitor_fan_lo}) && (! $gpus[$i]{'fan_rpm'} eq 'na'))
+					{
+						$problems++;
+						push(@nodemsg, "GPU $i is below minimum fan rpm");
+						$gput .= "<td class='error'>";
+					}
+					else
+					{
+						$gput .= '<td>';
+					}
+						
+					$gput .= $gpus[$i]{'fan_speed'} . '% </TD>';
+
+					if ($problems > $problemsin) {
+						$gpuproblems++;
+					} else {
+						$gpuoks++;
+					}
+
+				}
+
+				for (my $i = 0; $i < @gpus;$i++)
+				{
+					if ($gpus[$i]{'hashrate'} < ${$config}{monitor_hash_lo})
+					{
+						$problems++;
+						push(@nodemsg, "GPU $i is below minimum hash rate");
+						$gput .= "<td class='error'>";
+					}
+					else
+					{
+						$gput .= '<td>';
+					}					
+					$gput .= $gpus[$i]{'hashrate'} . '</TD>';
+				
+					$tothash += $gpus[$i]{'hashrate'};
+					$lochash += $gpus[$i]{'hashrate'};
+					$minerhash += $gpus[$i]{'hashrate'};
+					
+					if ($problems > $problemsin) {
+						$gpuproblems++;
+					} else {
+						$gpuoks++;
+					}
+					
+				}	
+
+				for (my $i = 0; $i < @gpus;$i++)
+				{
+					if ($gpus[$i]{'shares_accepted'} > 0)
+					{
+						my $rr = $gpus[$i]{'shares_invalid'}/($gpus[$i]{'shares_accepted'} + $gpus[$i]{'shares_invalid'})*100 ;
+						
+						if ($rr > ${$config}{monitor_reject_hi})
+						{
+							$problems++;
+							push(@nodemsg, "GPU $i is above maximum reject rate");
+							$gput .= "<td class='error'>";
+						}
+						else
+						{
+							$gput .= '<td>';
+						}
+						
+						$gput .= sprintf("%-2.2f%", $rr);
+
+						$totaccept += $gpus[$i]{'shares_accepted'};
+						$totinvalid += $gpus[$i]{'shares_invalid'};
+						$locaccept += $gpus[$i]{'shares_accepted'};
+						$locinvalid += $gpus[$i]{'shares_invalid'};
+
+					}
+					else
+					{
+						$gput .= '<td>n/a';
+					}
+					
+					$gput .= "</TD>";
+
+					if ($problems > $problemsin) {
+						$gpuproblems++;
+					} else {
+						$gpuoks++;
+					}
+
+				}
+
+				$gput .= "</tr>";
+
+				if ($problems > $problemsin)
+				{
+					$problemgpus = ($gpuproblems / 4);
+				}
+				else
+				{
+					$okgpus = ($gpuoks / 4);
+				}
+				$gpuproblems = 0; $gpuoks = 0;		
+			
+			}
+			else
+			{
+				$gput .= "<div class='nogpudata'><td>No GPU data is available</td></div></tr>";
 			}
 
+			my $simg = ${$config}{httpimgpath} . '/';
+			if ($problems)
+			{
+				$totproblems += $problems;
+				$locproblems += $problems;
+				if ($checkin > 65)
+				{
+#					$simg .= 'network-error.png';
+					$simg .= 'alarm16.png';
+				}
+				else
+				{
+					$simg .= 'error16.png';
+				}					
+				$problemnodes++;
+			}
+			else
+			{
+				$oknodes++;
+				$simg .= 'ok16.png';
+			}
 
-# Node HTML starts here			
-			$nhtml .= "<TR><TD class='node'>";
-			
-			$nhtml .= "<TD class='$statclass' style='padding: 5px;'>";
+			my $mput = ""; 
+			$mput .= "<tr><td><img src='$simg'> ";
 
-			$nhtml .= "$sput</TD></TR>";
+			if (@nodemsg)
+			{					
+				if (@nodemsg == 1) 
+				{
+					$mput .= "<big>" . $nodemsg[0] . "</big></td>";
+				} else {
+					$mput .= " <big>Multiple Problems</big></td>";
+				}
+			} else { 
+				$mput .= " <big>No problems reported</big></td>";
+			}
+
+			$mput .= "<td>" . (@gpus) . "</td>";
+
+# Node HTML starts here	
 			
-		    $nhtml .= "$pput</TD></TR>" if ($pput ne "");
+			$nhtml .= "<tr><TD class='$statclass' style='padding: 5px;'>";
+			$nhtml .= $sput;	
+			$nhtml .= $ghput;	
+		    $nhtml .= $mput; 
+		    $nhtml .= $gput;
+		    $nhtml .= "</TD></TR>";
 			
 			#blank
-			$nhtml .= "<TR><TD colspan=2 class='blank'> </TD></TR>";
-			
-		 }
+#			$nhtml .= "<TR><TD colspan=2 class='blank'> </TD></TR>";		
 
 # Location HTML starts here		
-		 $html .= "<TR><TD colspan=2 class='locsum'>";
-		 
+		 }
+		 $html .= "<TR><TD class='locsum'>";
+			 
 		 $html .= "<h2>$loc"; 
 		 $html .= sprintf("<br>%.2f Mh/s,",$lochash / 1000) . " $locnodes node"; 
 
 		 if ($locnodes != 1)
 		 {
-		 	 $html .= 's';
+			 $html .= 's';
 		 }
-		 
+			
 		 $html .= ' and ' . $locgpus . ' GPU';
 		 if ($locgpus != 1)
 		 {
-		 	 $html .= 's';
+			 $html .= 's';
 		 }
-		 
+			 
 		 if ($locproblems)
 		 {
 		 	 $html .= ', ' . $locproblems . ' problem';
@@ -682,13 +666,11 @@ sub genhttp
 		 	 	 $html .= 's';
 		 	 }
 		 }
-		 
+			 
 		 $html .= '</h2></TD></TR>';
-		 
+			 
 		 $html .= $nhtml;
 		  
-#		 $html .= "<TR><TD colspan=2 class='space'>&nbsp; </TD></TR>";
-		 
 		}
 		
 		$html .= "</TABLE></div>";
