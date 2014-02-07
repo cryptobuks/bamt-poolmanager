@@ -37,6 +37,13 @@ sub bcastStatus
   $ts .= "|$p pool:" . encode_json $pools[$p];
  }
 
+ my @summary = &getCGMinerSummary;
+
+ for ($s = 0;$s < @summary;$s++)
+ {
+  $ts .= "|$s sum:" . encode_json $summary[$s];
+ }
+
  my $port = 54545;
 
  if (defined(${$conf}{settings}{status_port}))
@@ -52,6 +59,7 @@ sub bcastStatus
  	$socket->send($ts, 0);
 	 close $socket;
  }
+
 }
 
 
@@ -77,6 +85,13 @@ sub directStatus
  for ($p = 0;$p < @pools;$p++)
  {
   $ts .= "|$p pool:" . encode_json $pools[$p];
+ }
+
+ my @summary = &getCGMinerSummary;
+
+ for ($s = 0;$s < @summary;$s++)
+ {
+  $ts .= "|$s sum:" . encode_json $summary[$s];
  }
 
  my $port = 54545;
