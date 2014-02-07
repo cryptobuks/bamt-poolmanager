@@ -349,6 +349,8 @@ sub genhttp
 				}
 
 				if ($mrt == 0) {
+				  $problems++;
+				  push(@nodemsg, "Miner Stopped");
 				  $minert = "<td class='error'>" . $mrt . "</td>";
 				} else {
 				  $mrth = sprintf("%dd %d:%d.%d",(gmtime $mrt)[7,2,1,0]);
@@ -361,7 +363,9 @@ sub genhttp
 				$sput .= "<td>" . $mrat . "</td>";
 
 				if ($mhwe > 0) {
-				  $minerhwe = "<td class='error'>" . $ghwe . "</td>";
+				  $problems++;
+				  push(@nodemsg, "Hardware Errors");
+				  $minerhwe = "<td class='error'>" . $mhwe . "</td>";
 				} else {
 				  $minerhwe = "<td>" . $mhwe . "</td>";
 				}
@@ -398,8 +402,8 @@ sub genhttp
 					    } else {
 					        $prat = "<td>" . $prr . "%</td>";
 					    }
-	      				push(@nodemsg, "Reject ratio for pool $i is too high") if ($prr >= 5);
-	      				push(@nodemsg, "Pool $i is dead") if ($pstat eq "Dead");	      			
+	      				push(@nodemsg, "Active pool reject ratio high") if ($prr >= 5);
+	      				push(@nodemsg, "Active pool is dead") if ($pstat eq "Dead");	      			
 	      			}
 	      		}
 
@@ -517,7 +521,9 @@ sub genhttp
 					{
 						$gput .= '<td>';
 					}					
-					$gput .= $gpus[$i]{'hashrate'} . '</TD>';
+					$gput .= $gpus[$i]{'hashrate'};
+
+					$gput .= '</TD>';
 				
 					$tothash += $gpus[$i]{'hashrate'};
 					$lochash += $gpus[$i]{'hashrate'};
@@ -638,7 +644,7 @@ sub genhttp
 		    $nhtml .= "</TD></TR>";
 			
 			#blank
-			$nhtml .= "<TR><TD colspan=2 class='blank'> </TD></TR>";		
+#			$nhtml .= "<TR><TD colspan=2 class='blank'> </TD></TR>";		
 
 # Location HTML starts here		
 		 }
