@@ -50,23 +50,21 @@ if ($showpool > -1)
 print header;
 if ($url eq "?")
 {
-	print start_html( -title=>'IFMI - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30'})  );
+	print start_html( -title=>'PoolManager - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30'})  );
 }
 else
 {
 	$url .= "tok=1";
-	print start_html( -title=>'IFMI - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30; url=' . $url })  );
+	print start_html( -title=>'PoolManager - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30; url=' . $url })  );
 }
 
 # pull info
+my @version = &getCGMinerVersion;
 my @gpus = &getFreshGPUData(1);
 my @pools = &getCGMinerPools(1);
 my @summary = &getCGMinerSummary;
 
-#gather totals
-my $tot_accept = 0;
-my $tot_invalid = 0;
-
+# do GPUs
 my $gput = "";
 my $problems = 0;
 my $okgpus = 0;
@@ -77,13 +75,11 @@ my @gpumsg;
 $g1put .= "<TR class='ghdr'><TD class='ghdr'>GPU</TD>";
 $g1put .= "<TD class='ghdr'>Status</TD>";
 $g1put .= "<TD class='ghdr'>Temp</TD>";
-
 $g1put .= "<TD class='ghdr'>Fan\% (rpm)</TD>";
 $g1put .= "<TD class='ghdr'>Load</TD>";
 $g1put .= "<TD class='ghdr'>Pool</TD>";
 $g1put .= "<TD class='ghdr'>Rate</TD>";
 $g1put .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
-
 $g1put .= "<TD class='ghdr'>HW Errors</TD>";
 $g1put .= "<TD class='ghdr'>Core</TD>";
 $g1put .= "<TD class='ghdr'>Memory</TD>";
@@ -93,11 +89,8 @@ my $gsput = "";
 
 for (my $i=0;$i<@gpus;$i++)
 {
-	my $gput = "";
+    my $gput = "";
 	
-	$tot_accept += ${@gpus[$i]}{shares_accepted};	
-	$tot_invalid += ${@gpus[$i]}{shares_invalid};	
-
     my $poolurl = $gpus[$i]{'pool_url'};
 
     if ($poolurl =~ m/.+\@(.+)/)
@@ -353,19 +346,26 @@ if (@summary) {
     $minehe = ${@summary[$i]}{'hardware_errors'};
   }
 }
-
 # EXTRA CONTROLS
+if (@version) {
+  for (my $i=0;$i<@version;$i++) {
+    $mvers = ${@version[$i]}{'miner'};
+  }
+} else { 
+	$mvers = "Unknown";
+}
 my $cgrc = 0;
+
+$mcontrol .= "<table><tr>";
 if ($minesum > 0) {
-  $minerun = sprintf("%d days, %d:%d.%d",(gmtime $minesum)[7,2,1,0]);
-  $cgrun = "<td>" . $minerun . "</td>";
+  $mcontrol .= "<td>Miner version: $mvers</td>";
+  $mcontrol .= "<td>Run time: " . sprintf("%d days, %02d:%02d.%02d",(gmtime $minesum)[7,2,1,0]) . "</td>";
   $cgrc = 1;
 } else { 
-  $cgrun = "<td class='error'>Stopped</td>";
+  $mcontrol .= "<td class='error'>Miner Stopped</td>";
   $cgrc = 0;
 }
-$mcontrol .= "<table><tr>";
-$mcontrol .= "<td>Miner run time:</td>$cgrun";
+
 if ($cgrc eq 1) { 
   $mcontrol .= "<td><form name='mstop' action='poolmanage.pl' method='text'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></td>";
 } else {
@@ -388,7 +388,7 @@ my @poolmsg; $pqb=0;
 if (@pools) { 
   my $g0url = $gpus[0]{'pool_url'}; 
   for (my $i=0;$i<@pools;$i++) {
-    $pimg = "<form name='pselect' action='poolmanage.pl' method='text'><input type='hidden' name='swpool' value='$i'><input type='submit' value='Switch'> </form>";
+    $pimg = "<form name='pselect' action='poolmanage.pl' method='text'><input type='hidden' name='swpool' value='$i'><button type='submit'>Switch</button></form>";
     $pnum = ${@pools[$i]}{'poolid'};
     $pname = ${@pools[$i]}{'url'};
     $pimg = "<img src='/bamt/ok24.png'>" if ($g0url eq $pname);
@@ -466,19 +466,16 @@ if (@pools) {
 #      $psum .= "<input type='text' size='3' name='qval' required>";
 #      $psum .= "<input type='hidden' name='qpool' value='$i'>";
 #      $psum .= "<input type='submit' value='Set'></form></td></tr>";
-
     }
+
   }
-} else { 
-    $psum .= "<TR><TD colspan='7'><big>Active Pool Information Unavailable</big></td></tr>";
-}
-$p1sum .= $psum;
-$p1add .= "<tr><form name='padd' action='poolmanage.pl' method='text'>";
-$p1add .= "<td colspan='2'><input type='text' size='45' placeholder='MiningURL:portnumber' name='npoolurl' required>";
-$p1add .= "</td><td colspan='2'><input type='text' placeholder='username.worker' name='npooluser' required>";
-$p1add .= "</td><td colspan='2'><input type='text' size='15' placeholder='worker password' name='npoolpw'>";
-$p1add .= "</td><td colspan='2'><input type='submit' value='Add'>"; 
-$p1add .= "</td></form>";
+
+$psum .= "<tr><form name='padd' action='poolmanage.pl' method='text'>";
+$psum .= "<td colspan='2'><input type='text' size='45' placeholder='MiningURL:portnumber' name='npoolurl' required>";
+$psum .= "</td><td colspan='2'><input type='text' placeholder='username.worker' name='npooluser' required>";
+$psum .= "</td><td colspan='2'><input type='text' size='15' placeholder='worker password' name='npoolpw'>";
+$psum .= "</td><td colspan='2'><input type='submit' value='Add'>"; 
+$psum .= "</td></form></tr>";
 
 #if ($pqb ne "0") {
 #  $p1add .= "<td colspan='3'><form name='qreset' action='poolmanage.pl' method='text'>";
@@ -488,21 +485,31 @@ $p1add .= "</td></form>";
 #  $p1add .= "<td colspan='3'><small>Failover Mode</small></td>"; 
 #}
 
-$p1add .= "</tr></table><br>";
-$p1sum .= $p1add;
+} else { 
+    $psum .= "<TR><TD colspan='8'><big>Active Pool Information Unavailable</big></td></tr>";
+}
+
+$psum .= "</table><br>";
+
+$p1sum .= $psum;
 # END EXTRA CONTROLS
 
 print "<div id='overview'>";
 print "<table><TR><TD id='overviewlogo'><IMG src='/bamt/IFMI-logo-small.png'></TD>";
 print "<TD id='overviewhash'><b>" . $conf{'settings'}{'miner_id'} . "</b><br><font size=6>";
+$minerate = "0" if ($minerate eq ""); 
 print $minerate . " Mh/s</font></br></TD>";
+$mineacc = "0" if ($mineacc eq ""); 
 print "<TD id='overviewshares'>" . $mineacc . " total accepted shares<br>";
+$minerej = "0" if ($minerej eq ""); 
 print $minerej . " total rejected shares<br>";
 if ($mineacc > 0)
 {
  print sprintf("%.3f%%", $minerej / ($mineacc + $minerej)*100);
- print " reject ratio";
+} else { 
+ print "0"
 }
+print " reject ratio";
 
 print "<TD id='overviewgpus'>";
 if ($problemgpus > 1){
@@ -518,7 +525,9 @@ if ($problemgpus > 1){
 	print $okgpus . " of " . @gpus . " GPUs are OK<br>";
   }
 }
+$minehe = "0" if ($minehe eq ""); 
 print $minehe . " HW Errors<br>";
+$minewu = "0" if ($minewu eq ""); 
 print $minewu . " Work Utility<br>";
 print "</td>";
 
