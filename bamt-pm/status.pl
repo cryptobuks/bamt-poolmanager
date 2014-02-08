@@ -350,9 +350,11 @@ if (@summary) {
 if (@version) {
   for (my $i=0;$i<@version;$i++) {
     $mvers = ${@version[$i]}{'miner'};
+    $avers = ${@version[$i]}{'api'};
   }
 } else { 
 	$mvers = "Unknown";
+	$avers = "0"; 
 }
 my $cgrc = 0;
 
@@ -376,7 +378,9 @@ $mcontrol .= "</form></tr></table><br>";
 $p1sum .= "<table id='pcontent'>";
 $p1sum .= "<TR class='ghdr'><TD class='ghdr'>Pool</TD>";
 $p1sum .= "<TD class='ghdr'>Pool URL</TD>";
-$p1sum .= "<TD class='ghdr'>Worker</TD>";
+if ($avers > 16) {
+  $p1sum .= "<TD class='ghdr'>Worker</TD>"; 
+}
 $p1sum .= "<TD class='ghdr'>Status</TD>";
 $p1sum .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
 $p1sum .= "<TD class='ghdr'>Active</TD>";
@@ -436,7 +440,9 @@ if (@pools) {
       $psput .= "<td><form name='pdelete' action='poolmanage.pl' method='text'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
       }
       $psput .= "<tr><td>Mining URL:</td><td>" . $pname . "</td></tr>";
-      $psput .= "<tr><td>Worker:</td><td>" . $pusr . "</td></tr>";
+	  if ($avers > 16) {
+        $psput .= "<tr><td>Worker:</td><td>" . $pusr . "</td></tr>";
+      }  
       $psput .= "<tr><td>Priority:</td><td>" . $ppri . "</td></tr>";
       $psput .= "<tr><td>Quota:</td><td>" . $ppri . "</td></tr>";
       $psput .= "<tr><td>Status:</td>" . $pstatus . "</tr>";
@@ -455,7 +461,9 @@ if (@pools) {
       if (length($pusr) > 20) { 
         $pusr = substr($pusr, 1, 6) . " ... " . substr($pusr, -6, 6) if (index($pusr, '.') < 0);
       }
-      $psum .= "<td>" . $pusr . "</td>";
+      if ($avers > 16) {
+        $psum .= "<td>" . $pusr . "</td>";
+      }
       $psum .= $pstatus;
       $psum .= "<td>" . $pacc . " / " . $prej . "</td>";
       $psum .= $prat;

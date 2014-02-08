@@ -716,12 +716,21 @@ sub getPhoenixStatsSU
 
 
 sub getCGMinerPools
-{
-	 
+{	 
 	my @pools;
 	
 	my $conf = &getConfig;
-    %conf = %{$conf}; 
+    	%conf = %{$conf}; 
+    
+	my @version = &getCGMinerVersion;
+	if (@version) {
+  	  for (my $i=0;$i<@version;$i++) {
+	    $avers = ${@version[$i]}{'api'};
+  	  }
+	} else { 
+	  $avers = "0";
+	}
+
     
     my $cgport = 4028;
  	if (defined(${$conf}{'settings'}{'cgminer_port'}))
@@ -750,12 +759,22 @@ sub getCGMinerPools
 		
 		close($sock);
 	
-		
-while ($res =~ m/\|POOL=(\d+),URL=(.+?),Status=(.+?),Priority=(\d+),Quota=(\d+),Long Poll=(.+?),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Works=(\d+),Discarded=(\d+),Stale=(\d+),Get Failures=(\d+),Remote Failures=(\d+),User=(.+?),/g)
-{
-	push(@pools, ({ poolid=>$1, url=>$2, status=>$3, priority=>$4, quota=>$5, lp=>$6, getworks=>$7, accepted=>$8, rejected=>$9, works=>$10, discarded=>$11, stale=>$12, getfails=>$13, remotefailures=>$14, user=>$15 }) );
-}		
+
+# Per https://github.com/ckolivas/cgminer/blob/master/API-README		
+	if ($avers > 7) {
+	  while ($res =~ m/\|POOL=(\d+),URL=(.+?),Status=(.+?),Priority=(\d+),Quota=(\d+),Long Poll=(.+?),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Works=(\d+),Discarded=(\d+),Stale=(\d+),Get Failures=(\d+),Remote Failures=(\d+),User=(.+?),/g)
+	  {
+	  push(@pools, ({ poolid=>$1, url=>$2, status=>$3, priority=>$4, quota=>$5, lp=>$6, getworks=>$7, accepted=>$8, rejected=>$9, works=>$10, discarded=>$11, stale=>$12, getfails=>$13, remotefailures=>$14, user=>$15 }) );
+	  }
+	} else { 
+	  while ($res =~ m/\|POOL=(\d+),URL=(.+?),Status=(.+?),Priority=(\d+),Quota=(\d+),Long Poll=(.+?),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Works=(\d+),Discarded=(\d+),Stale=(\d+),Get Failures=(\d+),Remote Failures=(\d+),/g)
+	  {
+	  push(@pools, ({ poolid=>$1, url=>$2, status=>$3, priority=>$4, quota=>$5, lp=>$6, getworks=>$7, accepted=>$8, rejected=>$9, works=>$10, discarded=>$11, stale=>$12, getfails=>$13, remotefailures=>$14 }) );
+	  }
+
 	}
+
+    }
 	
 	return(@pools);
 		
@@ -888,7 +907,8 @@ sub getCGMinerVersion
 
                 close($sock);
 
-        while ($res =~ m/CGMiner=(.+?),API=(.+?)/g) 
+#This will need to be changed if the API is ever changed to v2.x v0.7 should return null 
+        while ($res =~ m/CGMiner=(\d+\.\d+\.\d+),API=1\.(\d+)/g) 
         {
           push(@version,({ miner=>$1, api=>$2 }) );
         }
