@@ -855,6 +855,54 @@ sub getCGMinerStats
 
 
 # Oh hi! I cant believe this didnt exist yet..
+sub getCGMinerVersion
+{
+    my $conf = &getConfig;
+    %conf = %{$conf};
+
+    my $cgport = 4028;
+        if (defined(${$conf}{'settings'}{'cgminer_port'}))
+        {
+          $cgport = ${$conf}{'settings'}{'cgminer_port'};
+        }
+
+        my $sock = new IO::Socket::INET (
+                                  PeerAddr => '127.0.0.1',
+                                  PeerPort => $cgport,
+                                  Proto => 'tcp',
+                                  ReuseAddr => 1,
+                                  Timeout => 10,
+                                 );
+
+    if ($sock)
+    {
+
+        print $sock "version|\n";
+
+                my $res = "";
+
+                while(<$sock>)
+                {
+                        $res .= $_;
+                }
+
+                close($sock);
+
+        while ($res =~ m/CGMiner=(.+?),API=(.+?)/g) 
+        {
+          push(@version,({ miner=>$1, api=>$2 }) );
+        }
+
+        return(@version);
+
+    }
+    else
+    {
+        $url = "cgminer socket failed";
+    }
+
+}
+
 sub getCGMinerSummary
 {    
     my $conf = &getConfig;
