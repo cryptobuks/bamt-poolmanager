@@ -232,6 +232,15 @@ sub genhttp
 	{
 			
 		$html .= "<div id='content'><TABLE>";
+
+
+		$html .= "<tr><td class='refreshtime'>";
+		use POSIX;
+		$now = POSIX::strftime( "%A, %T %Z", localtime());
+			 
+		$html .= "<p>Last refresh: $now</p>";
+	
+		$html .= "</td></tr>";
 		
 		# sort by loc..
 		my %locs;
@@ -262,6 +271,7 @@ sub genhttp
 		  
 			my @gpus;
 			my @pools;
+			my @summary;
 			my @nodemsg;
 
 			my $minerhash = 0; 
@@ -319,7 +329,7 @@ sub genhttp
 			$sput .= "<TD class='ghdr'>Worker</TD>";
 			$sput .= "<TD class='ghdr'>Status</TD>";
 			$sput .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
-			$sput .= "</TR><TR><td>";
+			$sput .= "</TR><TR><td class='sumdata'>";
 
 			if ($miner eq $miners{$miner}{id}) 
 			{
@@ -331,7 +341,7 @@ sub genhttp
 				if ($miner =~ m/^(.+)\|(.+)$/)
 				{
 					$iptxt = $1;
-					$sput .= "<big><A href=http://$iptxt/cgi-bin/status.pl>" . $miners{$miner}{id} . "</a></big>";			
+					$sput .= "<A href=http://$iptxt/cgi-bin/status.pl>" . $miners{$miner}{id} . "</a>";			
 				}
 			}
 			$sput .= "</td><td>" . $iptxt . '</td>';
@@ -386,6 +396,8 @@ sub genhttp
 					    $pusr = ${@pools[$i]}{'user'};
 					    $pstat = ${@pools[$i]}{'status'};
 					    if ($pstat eq "Dead") {
+					      $problems++;
+					      push(@nodemsg, "Active pool is dead");
 					      $pstatus = "<td class='error'>" . $pstat . "</td>"
 					    } else {
 					      $pstatus = "<td>" . $pstat . "</td>";
@@ -397,13 +409,13 @@ sub genhttp
 					    } else {
 					        $prr = "0.0";
 					    }
-					    if ($prr >= 5) {
+					    if ($prr > ${$config}{monitor_reject_hi}) {
+					    	$problems++;
+					    	push(@nodemsg, "Active pool reject ratio high");
 					        $prat = "<td class='error'>" . $prr . "%</td>";
 					    } else {
 					        $prat = "<td>" . $prr . "%</td>";
 					    }
-	      				push(@nodemsg, "Active pool reject ratio high") if ($prr >= 5);
-	      				push(@nodemsg, "Active pool is dead") if ($pstat eq "Dead");	      			
 	      			}
 	      		}
 
@@ -592,7 +604,7 @@ sub genhttp
 			}
 			else
 			{
-				$gput .= "<td>No GPU data is available</td></tr></table>";
+				$gput .= "<td >No GPU data is available</td></tr></table>";
 			}
 
 
@@ -619,18 +631,18 @@ sub genhttp
 			}
 
 			my $mput = ""; 
-			$mput .= "<tr><td><img src='$simg'> ";
+			$mput .= "<tr><td class='sumdata'><img src='$simg'> ";
 
 			if (@nodemsg)
 			{					
 				if (@nodemsg == 1) 
 				{
-					$mput .= "<big>" . $nodemsg[0] . "</big></td>";
+					$mput .= $nodemsg[0] . "</td>";
 				} else {
-					$mput .= " <big>Multiple Problems</big></td>";
+					$mput .= " Multiple Problems</td>";
 				}
 			} else { 
-				$mput .= " <big>No problems reported</big></td>";
+				$mput .= " No problems reported</td>";
 			}
 
 			$mput .= "<td>" . (@gpus) . "</td>";
@@ -644,14 +656,15 @@ sub genhttp
 		    $nhtml .= "</TD></TR>";
 			
 			#blank
-#			$nhtml .= "<TR><TD colspan=2 class='blank'> </TD></TR>";		
+			$nhtml .= "<TR><TD colspan=2 class='space'> </TD></TR>";		
 
 # Location HTML starts here		
 		 }
 		 $html .= "<TR><TD class='locsum'>";
 			 
-		 $html .= "<h2>$loc"; 
-		 $html .= sprintf("<br>%.2f Mh/s,",$lochash / 1000) . " $locnodes node"; 
+		 $html .= "<p>$loc - ";
+		 $html .= sprintf("%.2f Mh/s",$lochash / 1000); 
+		 $html .= "<br> $locnodes node"; 
 
 		 if ($locnodes != 1)
 		 {
@@ -673,8 +686,8 @@ sub genhttp
 		 	 }
 		 }
 			 
-		 $html .= '</h2></TD></TR>';
-			 
+		 $html .= '</p></TD></TR>';
+
 		 $html .= $nhtml;
 		  
 		}
@@ -835,8 +848,7 @@ sub genhttp
 	$head .= "</TR></TABLE>";
 	
 	$head .= "</div>";
-	
-	
+
 	open(FH,">" . ${$config}{httpdir} . '/' . ${$config}{httpindex}) or die("Cannot open httpindex for writing");
 	print FH $head;
 	print FH $html;

@@ -19,6 +19,7 @@ padding: 0px;
  top: 120px;
 }
 
+
 #content
 {
  background-color: rgb(255,255,255);
@@ -26,7 +27,7 @@ padding: 0px;
  margin: 0px;
  vertical-align: top;
  position: absolute;
- top: 100px;
+ top: 75px;
  
 }
 
@@ -55,6 +56,8 @@ a
 	border: 0px;
 	padding: 5px;
 	vertical-align: top;
+	font-size: 16px;
+        font-weight: bold;	
 }
 
 #content td.node
@@ -74,25 +77,20 @@ a
 	vertical-align: top;
 }
 
-
-#content td.lochdr
+#content td.sumdata
 {
-	background-color: rgb(245,245,215);
-	border: 0px;
+	background-color: rgb(224,255,255);
 	padding: 5px;
-	
-	vertical-align: top;
+        font-weight: bold;
+        font-size: 14px;
 }
 
-
-.nogpudata
+#content td.refreshtime
 {
-	vertical-align: middle;
-	padding: 30px;
-	font-family: "Trebuchet MS", Helvetica, sans-serif;
-	font-size: 12px;
+	background-color: rgb(255,255,240);
+	padding: 5px;
+        font-size: 16px;
 }
-
 
 .gpudata
 {
@@ -108,8 +106,6 @@ a
 	margin: 0px;
 }
 
-
-
 .gpudata td
 {
 	padding: 0px;
@@ -117,36 +113,31 @@ a
 	border: 1px solid #bbbbbb;
 	margin: 0px;
 	font-family: "Trebuchet MS", Helvetica, sans-serif;
-	font-size: 12px;
+	font-size: 13px;
         text-align: center;
 }
 
 #content td.ghdr
 {
 	vertical-align: top;
-	
 	color: rgb(255,255,255);
-	background-color: rgb(80,80,80);
-	
+	background-color: rgb(80,80,80);	
 	padding: 2px;
 	padding-left: 5px;
 	padding-right: 5px;
-	
 	margin: 0px;
 	font-family: "Trebuchet MS", Helvetica, sans-serif;
 	font-size: 12px;
-	
+        font-weight: bold;	
 }
 
 #content td.error
 {
-	color: rgb(0,0,0);
-	background-color: rgb(255,80,80);
-
+	color: rgb(255,255,255);
+        background-color: rgb(200,0,0);
 	font-family: "Trebuchet MS", Helvetica, sans-serif;
-	font-size: 14px;
-	font-weight: bold;
-	
+	font-size: 12px;
+#	font-weight: bold;	
 }
 
 #content td.blank
@@ -163,7 +154,7 @@ a
 	border: 0px;
 	margin: 0px;
 	padding: 0px;
-	height: 30px;
+	height: 2px;
 }
 
 #overview
