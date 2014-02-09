@@ -466,12 +466,13 @@ sub genhttp
 			my $gput = ""; 
 			if (@gpus)
 			{				
-				my $problemsin = $problems;
-				
 				for (my $i = 0; $i < @gpus;$i++)
 				{
-					if ($gpus[$i]{'current_temp_0'} > ${$config}{monitor_temp_hi})
+					$gproblem{$i} = 0; 	
+ 					if ($gpus[$i]{'current_temp_0'} > ${$config}{monitor_temp_hi})
 					{
+						$gpuid = $i; 
+						$gproblem{$gpuid}++;
 						$problems++;
 						push(@nodemsg, "GPU $i is over maximum temp");
 						
@@ -479,6 +480,8 @@ sub genhttp
 					}
 					elsif ($gpus[$i]{'current_temp_0'} < ${$config}{monitor_temp_lo})
 					{
+						$gpuid = $i; 
+						$gproblem{$gpuid}++;
 						$problems++;
 						push(@nodemsg, "GPU $i is below minimum temp");
 						
@@ -491,17 +494,14 @@ sub genhttp
 				
 					$gput .= $gpus[$i]{'current_temp_0'} . 'C </TD>';
 
-					if ($problems > $problemsin) {
-						$gpuproblems++;
-					} else {
-						$gpuoks++;
-					}					
 				}
 
 				for (my $i = 0; $i < @gpus;$i++)
 				{
 					if (($gpus[$i]{'fan_rpm'} < ${$config}{monitor_fan_lo}) && (! $gpus[$i]{'fan_rpm'} eq 'na'))
 					{
+						$gpuid = $i; 
+						$gproblem{$gpuid}++;
 						$problems++;
 						push(@nodemsg, "GPU $i is below minimum fan rpm");
 						$gput .= "<td class='error'>";
@@ -513,18 +513,14 @@ sub genhttp
 						
 					$gput .= $gpus[$i]{'fan_speed'} . '% </TD>';
 
-					if ($problems > $problemsin) {
-						$gpuproblems++;
-					} else {
-						$gpuoks++;
-					}
-
 				}
 
 				for (my $i = 0; $i < @gpus;$i++)
 				{
 					if ($gpus[$i]{'hashrate'} < ${$config}{monitor_hash_lo})
 					{
+						$gpuid = $i; 
+						$gproblem{$gpuid}++;
 						$problems++;
 						push(@nodemsg, "GPU $i is below minimum hash rate");
 						$gput .= "<td class='error'>";
@@ -540,13 +536,7 @@ sub genhttp
 					$tothash += $gpus[$i]{'hashrate'};
 					$lochash += $gpus[$i]{'hashrate'};
 					$minerhash += $gpus[$i]{'hashrate'};
-					
-					if ($problems > $problemsin) {
-						$gpuproblems++;
-					} else {
-						$gpuoks++;
-					}
-					
+										
 				}	
 
 				for (my $i = 0; $i < @gpus;$i++)
@@ -557,7 +547,9 @@ sub genhttp
 						
 						if ($rr > ${$config}{monitor_reject_hi})
 						{
-							$problems++;
+						$gpuid = $i; 
+						$gproblem{$gpuid}++;
+					    $problems++;
 							push(@nodemsg, "GPU $i is above maximum reject rate");
 							$gput .= "<td class='error'>";
 						}
@@ -581,32 +573,24 @@ sub genhttp
 					
 					$gput .= "</TD>";
 
-					if ($problems > $problemsin) {
-						$gpuproblems++;
-					} else {
-						$gpuoks++;
-					}
-
 				}
 
 				$gput .= "</tr></table>";
 
-				if ($problems > $problemsin)
+				for (my $i = 0; $i < @gpus;$i++) 
 				{
-					$problemgpus = ($gpuproblems / 4);
+					if ($gproblem{$i} > 0) {
+					 $problemgpus++
+					} else {
+					 $okgpus++
+					} 
 				}
-				else
-				{
-					$okgpus = ($gpuoks / 4);
-				}
-				$gpuproblems = 0; $gpuoks = 0;		
 			
 			}
 			else
 			{
 				$gput .= "<td >No GPU data is available</td></tr></table>";
 			}
-
 
 			my $simg = ${$config}{httpimgpath} . '/';
 			if ($problems)
@@ -801,7 +785,7 @@ sub genhttp
     $head .= $problemnodes . " node";
     if ($problemnodes == 1)
     {
-    	$head .= ' has an error<br>';
+    	$head .= ' has errors<br>';
     }
     else
     {
