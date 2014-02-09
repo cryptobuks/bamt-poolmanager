@@ -369,9 +369,9 @@ if ($minesum > 0) {
 }
 
 if ($cgrc eq 1) { 
-  $mcontrol .= "<td><form name='mstop' action='poolmanage.pl' method='text'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></td>";
+  $mcontrol .= "<td><form name='mstop' action='poolmanage.pl' method='POST'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></td>";
 } else {
-  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='text'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
+  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
 }
 $mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required>";
 $mcontrol .= "</form></tr></table><br>";
@@ -392,7 +392,7 @@ my @poolmsg; $pqb=0;
 if (@pools) { 
   my $g0url = $gpus[0]{'pool_url'}; 
   for (my $i=0;$i<@pools;$i++) {
-    $pimg = "<form name='pselect' action='poolmanage.pl' method='text'><input type='hidden' name='swpool' value='$i'><button type='submit'>Switch</button></form>";
+    $pimg = "<form name='pselect' action='poolmanage.pl' method='POST'><input type='hidden' name='swpool' value='$i'><button type='submit'>Switch</button></form>";
     $pnum = ${@pools[$i]}{'poolid'};
     $pname = ${@pools[$i]}{'url'};
     $pimg = "<img src='/bamt/ok24.png'>" if ($g0url eq $pname);
@@ -437,7 +437,7 @@ if (@pools) {
       }
       $psput .= "<tr><td>$current</td>";
       if ($g0url ne $pname) {
-      $psput .= "<td><form name='pdelete' action='poolmanage.pl' method='text'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
+      $psput .= "<td><form name='pdelete' action='poolmanage.pl' method='POST'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
       }
       $psput .= "<tr><td>Mining URL:</td><td>" . $pname . "</td></tr>";
 	  if ($avers > 16) {
@@ -478,7 +478,7 @@ if (@pools) {
 
   }
 
-$psum .= "<tr><form name='padd' action='poolmanage.pl' method='text'>";
+$psum .= "<tr><form name='padd' action='poolmanage.pl' method='POST'>";
 $psum .= "<td colspan='2'><input type='text' size='45' placeholder='MiningURL:portnumber' name='npoolurl' required>";
 $psum .= "</td><td colspan='2'><input type='text' placeholder='username.worker' name='npooluser' required>";
 $psum .= "</td><td colspan='2'><input type='text' size='15' placeholder='worker password' name='npoolpw'>";
@@ -553,7 +553,7 @@ print "Mem free: $rigmem GB<br>";
 # END EXTRA STATS
 
 my $mcheck = `ps -eo command | grep [m]gpumon | wc -l`;
-print "<td><A href=/mgpumon/>Back to <br>mgpumon..</A></td>" if ($mcheck >0);
+print "<td><A href=/mgpumon/>Farm Overview</A></td>" if ($mcheck >0);
 
 print "</TR></table></div>";
 
