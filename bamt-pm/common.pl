@@ -725,7 +725,7 @@ sub getCGMinerPools
 	my @version = &getCGMinerVersion;
 	if (@version) {
   	  for (my $i=0;$i<@version;$i++) {
-	    $avers = ${@version[$i]}{'api'};
+	    $avers = ${$version[$i]}{'api'};
   	  }
 	} else { 
 	  $avers = "0";
