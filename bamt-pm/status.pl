@@ -194,14 +194,16 @@ for (my $i=0;$i<@gpus;$i++)
 	
 	$gput .= $gpus[$i]{'current_load'} . '%</TD>';
 		
-        if ($poolurl =~ m|://\w*?\.?(\w+\.\w+:\d+)$|)
-        {
-           $shorturl = $1;
-        }
-               if ($i == $showgpu)
-                {
-                        $gsput .= "<tr><td>Pool:</td><td>" . $shorturl  . "</td></tr>";
-                }
+    if ($poolurl =~ m|://\w*?\.?(\w+\.\w+:\d+)$|)
+    {
+       $shorturl = $1;
+    }
+ 	$shorturl = "N/A" if ($shorturl eq ""); 
+
+    if ($i == $showgpu)
+    {
+        $gsput .= "<tr><td>Pool:</td><td>" . $shorturl  . "</td></tr>";
+    }
 
 	$gput .= "<td>" . $shorturl . "</td>";
 
@@ -228,13 +230,16 @@ for (my $i=0;$i<@gpus;$i++)
 	$gput .= sprintf("%d", $gpus[$i]{'hashrate'}) . " Kh/s";
 		
 	$gput .= "</TD><TD>";
-	$gput .= $gpus[$i]{'shares_accepted'} . " / " . $gpus[$i]{'shares_invalid'};
+
+	my $gsha = $gpus[$i]{'shares_accepted'}; $gsha = 0 if ($gsha eq "");
+	my $gshi = $gpus[$i]{'shares_invalid'}; $gshi = 0 if ($gshi eq "");
+	$gput .= $gsha . " / " . $gshi;
+
+#	$gput .= $gpus[$i]{'shares_accepted'} . " / " . $gpus[$i]{'shares_invalid'};
 	
 	$gput .= '</TD>';
-	
-	
-	
-	if ($gpus[$i]{'shares_accepted'} > 0)
+		
+	if ($gsha > 0)
 	{
 		my $rr = $gpus[$i]{'shares_invalid'}/($gpus[$i]{'shares_accepted'} + $gpus[$i]{'shares_invalid'})*100 ;
 		
@@ -270,15 +275,16 @@ for (my $i=0;$i<@gpus;$i++)
 				$gsput .= "<tr><td>Shares A/R:</td><td>" .  $gpus[$i]{'shares_accepted'} . ' / ' . $gpus[$i]{'shares_invalid'} . "</td></tr>";
 		}
 		
-		$gput .= '<td>n/a';
+		$gput .= '<td>N/A';
 	}
 	
 	$gput .= "</TD>";
 	
-        my $ghwe = $gpus[$i]{'hardware_errors'};	
+    my $ghwe = $gpus[$i]{'hardware_errors'};	
 	if ($ghwe > 0) { 
 	  $gpuhwe = "<td class='error'>" . $ghwe . "</td>";
 	} else { 
+	  $ghwe = "N/A" if ($ghwe eq ""); 
 	  $gpuhwe = "<td>" . $ghwe . "</td>";
 	}
         $gput .= $gpuhwe;
@@ -299,10 +305,10 @@ for (my $i=0;$i<@gpus;$i++)
 
 	if ($i == $showgpu)
 	{
-                push(@gpumsg, "GPU $i has Hardware Errors") if ($ghwe > 0);		
+        push(@gpumsg, "GPU $i has Hardware Errors") if ($ghwe > 0);		
 		$gsput .= "<tr><td>HW Errors:</td>" . $gpuhwe . "</tr>"; 
-                $gsput .= "<tr><td>Powertune:</td><td>" . $gpus[$i]{'current_powertune'} . "%</td></tr>";
-                $gsput .= "<tr><td>Intensity:</td><td>" . $gpus[$i]{'intensity'} . "</td></tr>";
+        $gsput .= "<tr><td>Powertune:</td><td>" . $gpus[$i]{'current_powertune'} . "%</td></tr>";
+        $gsput .= "<tr><td>Intensity:</td><td>" . $gpus[$i]{'intensity'} . "</td></tr>";
 		$gsput .= "<tr><td>Core clock:</td><td>" . $gpus[$i]{'current_core_clock'} . ' Mhz</td></tr>'; 
 		$gsput .= "<tr><td>Mem clock:</td><td>" . $gpus[$i]{'current_mem_clock'} . ' Mhz</td></tr>';
 		$gsput .= "<tr><td>Core power:</td><td>" . $gpus[$i]{'current_core_voltage'} . "v</td></tr>";
