@@ -44,6 +44,13 @@ sub bcastStatus
   $ts .= "|$s sum:" . encode_json $summary[$s];
  }
 
+ my @version = &getCGMinerVersion;
+
+ for ($v = 0;$v < @version;$v++)
+ {
+  $ts .= "|$v ver:" . encode_json $version[$v];
+ }
+
  my $port = 54545;
 
  if (defined(${$conf}{settings}{status_port}))
@@ -92,6 +99,13 @@ sub directStatus
  for ($s = 0;$s < @summary;$s++)
  {
   $ts .= "|$s sum:" . encode_json $summary[$s];
+ }
+
+ my @version = &getCGMinerVersion;
+
+ for ($v = 0;$v < @version;$v++)
+ {
+  $ts .= "|$v ver:" . encode_json $version[$v];
  }
 
  my $port = 54545;

@@ -260,9 +260,12 @@ sub genhttp
 		 $locaccept = 0;
 		 $locinvalid = 0;
 		 $locgpus = 0;
+		 $locpools = 0;
+		 $locsummary = 0; 
 		 $locproblems = 0;
 		 $locnodes = 0;
 		 $locpools = 0; 
+		 $locversion = 0; 
 		
 		 $nhtml = "";
 		 
@@ -272,6 +275,7 @@ sub genhttp
 			my @gpus;
 			my @pools;
 			my @summary;
+			my @version; 
 			my @nodemsg;
 
 			my $minerhash = 0; 
@@ -293,8 +297,12 @@ sub genhttp
 
 			while ( $res =~ m/(\d+?) sum\:(\{.*?\})/g)
 			{
-				$locsummary++;
 				push(@summary, decode_json $2);
+			}
+
+			while ( $res =~ m/(\d+?) ver\:(\{.*?\})/g)
+			{
+				push(@version, decode_json $2);
 			}
 
 			my $statclass = 'node';
@@ -318,6 +326,7 @@ sub genhttp
 			$sput .= "<div class='gpudata'><TABLE><TR class='ghdr'>";
 			$sput .= "<TD class='ghdr'>Node</TD>";
 			$sput .= "<TD class='ghdr'>IP</TD>";
+			$sput .= "<TD class='ghdr'>Version</TD>";
 			$sput .= "<TD class='ghdr'>Runtime</TD>";
 			$sput .= "<TD class='ghdr'>Hashrate</TD>";
 			$sput .= "<TD class='ghdr'>WU</TD>";
@@ -346,8 +355,20 @@ sub genhttp
 			}
 			$sput .= "</td><td>" . $iptxt . '</td>';
 
+			if (@version)
+			{
+				for (my $i=0;$i<@version;$i++) {
+					$mvers = ${@version[$i]}{'miner'};
+					$mapi = ${@version[$i]}{'api'};
+				}
+				$sput .= "<td>" . $mvers . "</td>";
+			} else {
+				$sput .= "<td>unknown</td>";
+			}
+
 			if (@summary)
 			{
+				my $mrt = 0; 
 				for (my $i=0;$i<@summary;$i++) {
 					$mrt = ${@summary[$i]}{'elapsed'};
 					$mmhs = ${@summary[$i]}{'hashavg'} . " Mh/s";
@@ -358,15 +379,15 @@ sub genhttp
 					$mhwe = ${@summary[$i]}{'hardware_errors'};
 				}
 
-				if ($mrt == 0) {
+				if ($mrt > 0) {
+				  $mrth = sprintf("%dd %02d:%02d.%02d",(gmtime $mrt)[7,2,1,0]);
+				  $minert = "<td>" . $mrth . "</td>";
+				} else {
 				  $problems++;
 				  push(@nodemsg, "Miner Stopped");
-				  $minert = "<td class='error'>" . $mrt . "</td>";
-				} else {
-				  $mrth = sprintf("%dd %d:%d.%d",(gmtime $mrt)[7,2,1,0]);
-				  $minert = "<td>" . $mrth . "</td>";
+				  $minert = "<td class='error'>stopped</td>";
 				}
-				$sput .= $minert ;
+				$sput .= $minert;
 				
 				$sput .= "<td>" . $mmhs . "</td>";
 				$sput .= "<td>" . $mwu . "</td>";
