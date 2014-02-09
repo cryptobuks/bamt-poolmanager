@@ -27,7 +27,6 @@ if ($qreset eq "reset") {
   $qreset = ""; 
 }
 
-
 my $preq = $in{'swpool'};
 if ($preq ne "") {
   print "<td><big>Switching Pool Priority...</big><p><b>It will take a moment for the miner to switch, please stand by.</b></td>";
@@ -87,6 +86,18 @@ if ($mstop eq "stop") {
     print "<td bgcolor='yellow'><p><big>$status</big>";
   } else {
    print "<td bgcolor='red'><p><big>STOPPING MINER...</big></td>";
+  }
+}
+
+my $reboot = $in{'reboot'};
+if ($reboot eq "reboot") { 
+  if (system("echo $in{'ptext'} | sudo -S /sbin/coldreboot")!=0) {
+     $status = "Failed!";
+  }
+  if ($status ne "") {
+    print "<td bgcolor='yellow'><p><big>$status</big>";
+  } else {
+   print "<td bgcolor='red'><p><big>REBOOTING...</big><small>why... why would you do such a thing... I just dont know...</small></td>";
   }
 }
 
