@@ -233,13 +233,10 @@ sub genhttp
 			
 		$html .= "<div id='content'><TABLE>";
 
-
 		$html .= "<tr><td class='refreshtime'>";
 		use POSIX;
-		$now = POSIX::strftime( "%A, %T %Z", localtime());
-			 
+		$now = POSIX::strftime( "%A, %T %Z", localtime());			 
 		$html .= "<p>Last refresh: $now</p>";
-	
 		$html .= "</td></tr>";
 		
 		# sort by loc..
@@ -312,11 +309,13 @@ sub genhttp
 			if ($checkin > 65)
 			{
 				my $missed = int($checkin/60);
-				push(@nodemsg, "Missed $missed update");
 				$problems++;
+				undef @pools;
+				undef @summary;
+				undef @gpus; 
+				push(@nodemsg, "Missed $missed update");
 				if ($missed > 1)
 				{
-					$problems++;
 					$nodemsg[@nodemsg-1] .= "s";
 				}
 				
@@ -733,13 +732,11 @@ sub genhttp
 		$html .= "or they should be set to direct their status to the machine mgpumon is running on.<P>";
 		$html .= "Check your /etc/bamt/bamt.conf or the <A HREF=http://aaronwolfe.com/bamt/support.html>support information</A> for more details.";
 
-	}
-	
+	}	
 	$html .= "</BODY></HTML>";
 	
 	
 	my $head = "<HTML><HEAD>";
-	
 	if (keys %miners)
 	{
 		$head .= "<meta http-equiv=\"refresh\" content=\"" . ${$config}{genhttp_interval} . "\">";
@@ -749,38 +746,31 @@ sub genhttp
 		# fast refresh till data heard
 		$head .= "<meta http-equiv=\"refresh\" content=5>";
 	}
-	
 	if (${$config}{httpcss})
 	{
 		$head .= "<LINK rel=\"stylesheet\" href=\"" . ${$config}{httpcss} . "\" type=\"text/css\">";
 	}
-	
 	$head .= "<TITLE>IFMI PoolManager - mgpumon</TITLE>";
 	$head .= "</HEAD><BODY>";
 	
 	# overview
 	
 	$head .= "<div id='overview'>";
-	
-	$head .= "<table><TR>";
-	
-	$head .= "<TD id='overviewlogo'><IMG src='" . ${$config}{httpimgpath} . "/IFMI-logo-small.png'></TD>" ;
-   
-	$head .= "<TD id='overviewhash'>Farm hashrate:<br><font size=6>";
-	$head .= sprintf("%.2f", $tothash / 1000 ) . " Mh/s</font></TD>";
-	$head .= "<TD id='overviewshares'>";
+	$head .= "<table><TR>";	
+	$head .= "<TD id='overviewlogo' rowspan=2><IMG src='" . ${$config}{httpimgpath} . "/IFMI-logo-small.png'></TD>" ;	
+	$head .= "<td><table><tr><TD>Farm hashrate:</td></tr>";
+	$head .= "<tr><TD class='overviewhash'>";
+	$head .= sprintf("%.2f", $tothash / 1000 ) . " Mh/s</TD></tr></table></td>";
+	$head .= "<TD class='overviewshares'>";
 	$head .= $totaccept . " total accepted shares<br>";
 	$head .= $totinvalid . " total invalid shares<br>";
 	if ($totaccept)
 	{
 		$head .= sprintf("%.3f%%", $totinvalid / ($totaccept + $totinvalid)*100);
 		$head .= " farm wide reject ratio";
-	}
-	
+	}	
     $head .= "</TD>";
-    
-    $head .= "<TD id='overviewnodes'>";
-    
+    $head .= "<TD id='overviewnodes'>";    
     $head .= ($oknodes + $problemnodes) . " node";
     if (($oknodes + $problemnodes) != 1)
     {
@@ -791,8 +781,7 @@ sub genhttp
     {
     	$head .= 's';
     }
-    $head .= " in farm<br>";
-    
+    $head .= " in farm<br>";   
     $head .= $oknodes . " node";
     if ($oknodes == 1)
     {
@@ -801,8 +790,7 @@ sub genhttp
     else
     {
      $head .= 's are OK<br>';
-    }
-    
+    }    
     $head .= $problemnodes . " node";
     if ($problemnodes == 1)
     {
@@ -811,12 +799,9 @@ sub genhttp
     else
     {
      $head .= 's have errors<br>';
-    }
-    
-    $head .= "</TD>";
-    
+    }    
+    $head .= "</TD>";    
     $head .= "<TD id='overviewgpus'>";
-    
     $head .= $okgpus . " GPU";
     if ($okgpus == 1)
     {
@@ -825,10 +810,8 @@ sub genhttp
     else
     {
     	$head .= 's are';
-    }
-    
-    $head .= " working fine<br>";
-    
+    }    
+    $head .= " working fine<br>";    
     $head .= $problemgpus . " GPU";
     if ($problemgpus == 1)
     {
@@ -838,20 +821,15 @@ sub genhttp
     { 
       $head .= 's have'; 
     }
-    $head .= " issues<br>";
-    
+    $head .= " issues<br>";    
     $head .= $totproblems . " problem";
     if ($totproblems != 1)
     {
     	$head .= 's';
     }
-    $head .= " in the farm";
-    
-    $head .= "</TD>";
-    
-   
+    $head .= " in the farm";    
+    $head .= "</TD>";   
 	$head .= "</TR></TABLE>";
-	
 	$head .= "</div>";
 
 	open(FH,">" . ${$config}{httpdir} . '/' . ${$config}{httpindex}) or die("Cannot open httpindex for writing");

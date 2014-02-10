@@ -205,15 +205,17 @@ a
 	padding-right: 30px;
 	vertical-align: top;
 	text-wrap: none;
+#        font-size: 14px;	
 	color: rgb(255,255,255);
 	
 }
 
 
-#overview #overviewhash
+#overview td.overviewhash
 {
 	vertical-align: middle;
 	text-wrap:none;
+        font-size: 30px;
 }
 
 
