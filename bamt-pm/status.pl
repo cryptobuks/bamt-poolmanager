@@ -255,6 +255,11 @@ for (my $i=0;$i<@gpus;$i++)
 	
     my $ghwe = $gpus[$i]{'hardware_errors'};	
 	if ($ghwe > 0) { 
+	  $problems++;
+	  push(@nodemsg, "GPU $i has hardware errors");
+	  if ($i == $showgpu) {
+		push(@gpumsg, "Hardware errors");
+	  }
 	  $gpuhwe = "<td class='error'>" . $ghwe . "</td>";
 	} else { 
 	  $ghwe = "N/A" if ($ghwe eq ""); 
@@ -577,7 +582,11 @@ if ($problemgpus > 1){
   }
 }
 $minehe = "0" if ($minehe eq ""); 
-print $minehe . " HW Errors<br>";
+if ($minehe == 1) {
+  print $minehe . " HW Error<br>";
+} else {
+  print $minehe . " HW Errors<br>";
+}
 $minewu = "0" if ($minewu eq ""); 
 print $minewu . " Work Utility<br>";
 print "</td>";
