@@ -338,14 +338,25 @@ if (@summary) {
 #   	$msdkv = "1";
 #      	$msput .= "<tr><td>SDK Version:</td><td>" . $msdkv . "</td></tr>";
 		
-      	$msput .= "<tr><td colspan=2><a href='/cgi-bin/confedit.pl' target='_blank'><font size=3>Configuration Editor</font></a></td></tr>";
+      	$msput .= "<tr><td> </td><td><a href='/cgi-bin/confedit.pl' target='_blank'><font size=3>Configuration Editor</font></a></td></tr>";
+
 		$msput .= "<form name='reboot' action='poolmanage.pl' method='POST'><input type='hidden' name='reboot' value='reboot'>";
-		$msput .= "<tr><td><input type='password' placeholder='root password' name='ptext' required></td><td>";
-		$msput .= "<input type='submit' value='Reboot' onclick='this.disabled=true;this.form.submit();' ></td></tr></form>";
+		$msput .= "<tr><td><input type='submit' value='Reboot' onclick='this.disabled=true;this.form.submit();' ></td><td>";
+		$msput .= "<input type='password' placeholder='root password' name='ptext' required></td></tr></form>";
+
 		$msput .= "<tr><td colspan=2><hr></td></tr>";
 		$avers = " (1." . $avers . ")" if ($avers ne "");
   		$msput .= "<tr><td>Miner Version (API)</td><td>" . $mvers . $avers . "</td></tr>";
       	$msput .= "<tr><td>Run time:</td><td>" . $mrunt . "</td></tr>";
+
+		if ($melapsed > 0) {  	  
+		  $msput .= "<td><form name='mstop' action='poolmanage.pl' method='POST'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></td>";
+		} else { 
+		  $msput .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
+		}
+		$msput .= "<td><input type='password' placeholder='root password' name='ptext' required></form></tr>";
+
+
 		$mtm = ${@summary[$i]}{'total_mh'};
 		$minetm = sprintf("%.2f", $mtm); 
       	$msput .= "<tr><td>Total MH:</td><td>" . $minetm . "</td></tr>";
@@ -393,7 +404,7 @@ if (@summary) {
 		  $mcontrol .= "<td>Run time: " . $mrunt . "</td>";
 		  $mcontrol .= "<td><form name='mstop' action='poolmanage.pl' method='POST'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></td>";
 		} else { 
-		  $mcontrol .= "<td class='error'>Miner Stopped</td>";
+		  $mcontrol .= "<td class='error'>Stopped</td>";
 		  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
 		}
 		$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required></form></tr>";
