@@ -304,10 +304,20 @@ for (my $i=0;$i<@gpus;$i++)
 }
 $g1put .= "</table>";
 
-
 $mcontrol .= "<table><tr>";
 my $surl = "?"; $surl .= "miner=$i";
-$mcontrol .= '<TD class="bigger"><A href="' . $surl . '">Miner</a></td>';    
+$mcontrol .= '<TD class="bigger"><A href="' . $surl . '">Miner</a></td>';
+if (@version) {
+  for (my $i=0;$i<@version;$i++) {
+    $mvers = ${@version[$i]}{'miner'};
+    $avers = ${@version[$i]}{'api'};
+  }
+} else { 
+	$mvers = "Unknown";
+	$avers = "0"; 
+}
+$mcontrol .= "<td>version: $mvers</td>";
+
 if (@summary) {
   for (my $i=0;$i<@summary;$i++) {
     $melapsed = ${@summary[$i]}{'elapsed'};
@@ -317,46 +327,31 @@ if (@summary) {
     $minerej = ${@summary[$i]}{'shares_invalid'};
     $minewu = ${@summary[$i]}{'work_utility'};
     $minehe = ${@summary[$i]}{'hardware_errors'};
-	if (@version) {
-	  for (my $i=0;$i<@version;$i++) {
-	    $mvers = ${@version[$i]}{'miner'};
-	    $avers = ${@version[$i]}{'api'};
-	  }
-	} else { 
-		$mvers = "Unknown";
-		$avers = "0"; 
-	}
-
   	if ($showminer == $i) {
   		$getmlinv = `cat /proc/version`;
   		$mlinv = $1 if ($getmlinv =~ /version\s(.*?\s+\(.*?\))\s+\(/);
       	$msput .= "<tr><td class='big'>Linux Version:</td><td>" . $mlinv . "</td></tr>";
+# It is unclear how relevant this information is, and it is difficult to extract. 
 #  		$madlv = "1";
 #      	$msput .= "<tr><td>ADL Version:</td><td>" . $madlv . "</td></tr>";
 #  		$mcatv = "1";
 #      	$msput .= "<tr><td>Catalyst Version:</td><td>" . $mcatv . "</td></tr>";
 #   	$msdkv = "1";
-#      	$msput .= "<tr><td>SDK Version:</td><td>" . $msdkv . "</td></tr>";
-		
+#      	$msput .= "<tr><td>SDK Version:</td><td>" . $msdkv . "</td></tr>";		
       	$msput .= "<tr><td> </td><td class='big'><a href='/cgi-bin/confedit.pl' target='_blank'>Configuration Editor</a></td></tr>";
-
 		$msput .= "<form name='reboot' action='poolmanage.pl' method='POST'><input type='hidden' name='reboot' value='reboot'>";
 		$msput .= "<tr><td><input type='submit' value='Reboot' onclick='this.disabled=true;this.form.submit();' ></td><td>";
 		$msput .= "<input type='password' placeholder='root password' name='ptext' required></td></tr></form>";
-
 		$msput .= "<tr><td colspan=2><hr></td></tr>";
 		$avers = " (1." . $avers . ")" if ($avers ne "");
   		$msput .= "<tr><td>Miner Version (API)</td><td>" . $mvers . $avers . "</td></tr>";
       	$msput .= "<tr><td>Run time:</td><td>" . $mrunt . "</td></tr>";
-
 		if ($melapsed > 0) {  	  
 		  $msput .= "<td><form name='mstop' action='poolmanage.pl' method='POST'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></td>";
 		} else { 
 		  $msput .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
 		}
 		$msput .= "<td><input type='password' placeholder='root password' name='ptext' required></form></tr>";
-
-
 		$mtm = ${@summary[$i]}{'total_mh'};
 		$minetm = sprintf("%.2f", $mtm); 
       	$msput .= "<tr><td>Total MH:</td><td>" . $minetm . "</td></tr>";
@@ -397,21 +392,27 @@ if (@summary) {
 #      	$msput .= "<tr><td>Utility:</td><td>" . $mineut . "</td></tr>";
 #		$minelw = ${@summary[$i]}{'local_work'};
 #      	$msput .= "<tr><td>Local Work:</td><td>" . $minelw . "</td></tr>";
-
   	} else {		
 		if ($melapsed > 0) {  	  
-		  $mcontrol .= "<td>version: $mvers</td>";
 		  $mcontrol .= "<td>Run time: " . $mrunt . "</td>";
 		  $mcontrol .= "<td><form name='mstop' action='poolmanage.pl' method='POST'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></td>";
 		} else { 
 		  $mcontrol .= "<td class='error'>Stopped</td>";
 		  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
 		}
-		$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required></form></tr>";
+		$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required></td></form>";
 	}
   }
+} else {
+  	if ($showminer == 0) {
+  		$getmlinv = `cat /proc/version`;
+  		$mlinv = $1 if ($getmlinv =~ /version\s(.*?\s+\(.*?\))\s+\(/);
+      	$msput .= "<tr><td class='big'>Linux Version:</td><td>" . $mlinv . "</td></tr>";
+		$avers = " (1." . $avers . ")" if ($avers ne "");
+  		$msput .= "<tr><td>Miner Version (API)</td><td>" . $mvers . $avers . "</td></tr>";
+  	}
 }
-$mcontrol .= "</table><br>";
+$mcontrol .= "</tr></table><br>";
 
 $p1sum .= "<table id='pcontent'>";
 $p1sum .= "<TR class='ghdr'><TD class='ghdr'>Pool</TD>";
