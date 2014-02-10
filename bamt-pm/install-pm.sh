@@ -33,6 +33,9 @@ case "$input" in
       cp /opt/bamt/common.pl /opt/bamt/common.pl.back
       cp common.pl /opt/bamt/
       chmod +x /usr/lib/cgi-bin/*.pl
+      if ! grep coldreboot /etc/sudoers ; then
+       sed '/\/bin\/cp/ s/$/,\/sbin\/coldreboot\n/' /etc/sudoers
+      fi
       echo "Done!";;
       * ) echo "installation exited";;
     esac
@@ -61,7 +64,7 @@ case "$input" in
       chmod +x /usr/lib/cgi-bin/*.pl
       echo "Modifying sudoers...."
       sed \$a"Defaults targetpw\n"\
-"www-data ALL=(ALL) /usr/sbin/mine,/bin/cp\n" /etc/sudoers > /etc/sudoers.ifmi
+"www-data ALL=(ALL) /usr/sbin/mine,/bin/cp,/sbin/coldreboot\n" /etc/sudoers > /etc/sudoers.ifmi
       cp /etc/sudoers /etc/sudoers.bamt
       cp /etc/sudoers.ifmi /etc/sudoers
       echo "Running Apache security script..."
