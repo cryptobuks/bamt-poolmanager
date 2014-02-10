@@ -648,10 +648,10 @@ given($x) {
         my $psacc = ${@pools[$showpool]}{'accepted'};
         my $psrej = ${@pools[$showpool]}{'rejected'};
 		if ($psacc ne "0") { 
- 	      print sprintf("%.2f%%", $psrej / ($psacc + $psrej)*100);
-          print "<br> reject ratio";
+ 	      print sprintf("%.2f%%", $psrej / ($psacc + $psrej)*100) . "</td></tr><tr><td>";
+          print "reject ratio";
 		} else {
-		  print " 0 <br>Shares submitted";
+		  print "0 Shares";
 		}
 		print "</td></tr><tr><td>";
         if (@poolmsg) {
@@ -681,7 +681,7 @@ given($x) {
 		if ($minerate ne "0") { 
  	      print sprintf("%.1f%%", ($minewu / $minerate) / 10);
 		} else { print "0"; }
-		print "<br>Efficiency</td></tr><tr><td>(WU / Hashrate)</td></tr>"; 
+		print "</td></tr><tr><td>Efficiency (WU / Hashrate)</td></tr>"; 
 		print "<tr><td>";
         if (@nodemsg) {
                 print "<img src='/bamt/error.png'><p>";
