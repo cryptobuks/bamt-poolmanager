@@ -21,7 +21,7 @@ a
  margin: 0px;
  vertical-align: top;
  position: absolute;
- top: 100px;
+ top: 80px;
  
 }
 
@@ -80,9 +80,6 @@ img
         vertical-align: top;
 }
 
-#
-
-
 #content td.gpudata
 {
         background-color: rgb(255,255,255);
@@ -92,23 +89,25 @@ img
 }
 
 
-#content td.lochdr
+#content td.big
 {
-        background-color: rgb(245,245,215);
-        border: 0px;
-        padding: 5px;
-
-        vertical-align: top;
+         font-size: 18px;
+         vertical-align: top;
+#        font-weight: bold;
 }
 
-
+#content td.bigger
+{
+        background-color: rgb(224,255,255);
+        padding: 5px;
+        font-size: 25px;
+}
 
 #showgpu table
 {
         border: 0px;
         border-collapse:collapse;
 }
-
 
 #showgpu td
 {
@@ -122,9 +121,6 @@ img
 	border: 0px solid #cccccc;
 
 }
-
-
-
 
 .nogpudata
 {
@@ -256,10 +252,25 @@ img
 
 }
 
+#overview td.overview
+{
+        vertical-align: top;
+        text-wrap:none;
+        font-size: 16px;
+}
 
-#overview #overviewhash
+#overview td.overviewhash
+{
+        vertical-align: top;
+        text-wrap:none;
+        font-size: 30px;
+}
+
+#overview td.overviewid
 {
         vertical-align: middle;
+        text-wrap:none;
+        font-size: 18px;
 }
 
 h1

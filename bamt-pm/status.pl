@@ -291,12 +291,12 @@ for (my $i=0;$i<@gpus;$i++)
 	
 	if ($problems)
 	{
-		$gput = '<TR><TD><font size=5><A href="' . $gpuurl . '">' . $i . '</TD><TD><img src=/bamt/error24.png></td>' . $gput;
+		$gput = '<TR><TD class="bigger"><A href="' . $gpuurl . '">' . $i . '</TD><TD><img src=/bamt/error24.png></td>' . $gput;
 		$problemgpus++;
 	}
 	else
 	{
-		$gput = '<TR><TD><font size=5><A href="' . $gpuurl . '">' . $i . '</TD><TD><img src=/bamt/ok24.png></td>' . $gput;
+		$gput = '<TR><TD class="bigger"><A href="' . $gpuurl . '">' . $i . '</TD><TD><img src=/bamt/ok24.png></td>' . $gput;
 		$okgpus++;
 	}
 	$g1put .= $gput;
@@ -307,7 +307,7 @@ $g1put .= "</table>";
 
 $mcontrol .= "<table><tr>";
 my $surl = "?"; $surl .= "miner=$i";
-$mcontrol .= '<TD><font size=5><A href="' . $surl . '">Miner</a></font></td>';    
+$mcontrol .= '<TD class="bigger"><A href="' . $surl . '">Miner</a></td>';    
 if (@summary) {
   for (my $i=0;$i<@summary;$i++) {
     $melapsed = ${@summary[$i]}{'elapsed'};
@@ -330,7 +330,7 @@ if (@summary) {
   	if ($showminer == $i) {
   		$getmlinv = `cat /proc/version`;
   		$mlinv = $1 if ($getmlinv =~ /version\s(.*?\s+\(.*?\))\s+\(/);
-      	$msput .= "<tr><td><font size=3>Linux Version:</font></td><td>" . $mlinv . "</td></tr>";
+      	$msput .= "<tr><td class='big'>Linux Version:</td><td>" . $mlinv . "</td></tr>";
 #  		$madlv = "1";
 #      	$msput .= "<tr><td>ADL Version:</td><td>" . $madlv . "</td></tr>";
 #  		$mcatv = "1";
@@ -338,7 +338,7 @@ if (@summary) {
 #   	$msdkv = "1";
 #      	$msput .= "<tr><td>SDK Version:</td><td>" . $msdkv . "</td></tr>";
 		
-      	$msput .= "<tr><td> </td><td><a href='/cgi-bin/confedit.pl' target='_blank'><font size=3>Configuration Editor</font></a></td></tr>";
+      	$msput .= "<tr><td> </td><td class='big'><a href='/cgi-bin/confedit.pl' target='_blank'>Configuration Editor</a></td></tr>";
 
 		$msput .= "<form name='reboot' action='poolmanage.pl' method='POST'><input type='hidden' name='reboot' value='reboot'>";
 		$msput .= "<tr><td><input type='submit' value='Reboot' onclick='this.disabled=true;this.form.submit();' ></td><td>";
@@ -469,11 +469,11 @@ if (@pools) {
       $psgf = ${@pools[$i]}{'getfails'}; 
       $psrf = ${@pools[$i]}{'remotefailures'};
       if ($g0url eq $pname) {
-	$current = "<font size=4>Active</font>";
+	$current = "Active";
       } else { 
-	$current = "<font size=4>Not Active</font>";
+	$current = "Not Active";
       }
-      $psput .= "<tr><td>$current</td>";
+      $psput .= "<tr><td class='big'>$current</td>";
       if ($g0url ne $pname) {
       $psput .= "<td><form name='pdelete' action='poolmanage.pl' method='POST'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
       }
@@ -494,7 +494,7 @@ if (@pools) {
     } else {
       my $purl = "?";
       $purl .= "pool=$i";
-      $psum .= '<TR><TD><font size=5><A href="' . $purl . '">' . $i . '</TD>';
+      $psum .= '<TR><TD class="bigger"><A href="' . $purl . '">' . $i . '</TD>';
       $psum .= "<td>" . $pname . "</td>";
       if (length($pusr) > 20) { 
         $pusr = substr($pusr, 1, 6) . " ... " . substr($pusr, -6, 6) if (index($pusr, '.') < 0);
@@ -541,12 +541,16 @@ $p1sum .= $psum;
 # Overview starts here
 
 print "<div id='overview'>";
-print "<table><TR><TD id='overviewlogo'><IMG src='/bamt/IFMI-logo-small.png'></TD>";
-print "<TD id='overviewhash'><b>" . $conf{'settings'}{'miner_id'} . "</b><br><font size=6>";
+print "<table><TR><TD>";
+print "<table><TR><TD id='overviewlogo' rowspan=2><IMG src='/bamt/IFMI-logo-small.png'></TD>";
+print "<TD class='overviewid'>" . $conf{'settings'}{'miner_id'} . "</td></tr>";
+print "<tr><TD class='overviewhash'>";
 $minerate = "0" if ($minerate eq ""); 
-print $minerate . " Mh/s</font></br></TD>";
+print $minerate . " Mh/s</TD></tr></table></td>";
+
+
 $mineacc = "0" if ($mineacc eq ""); 
-print "<TD id='overviewshares'>" . $mineacc . " total accepted shares<br>";
+print "<TD class='overview'>" . $mineacc . " total accepted shares<br>";
 $minerej = "0" if ($minerej eq ""); 
 print $minerej . " total rejected shares<br>";
 if ($mineacc > 0)
@@ -557,7 +561,7 @@ if ($mineacc > 0)
 }
 print " reject ratio";
 
-print "<TD id='overviewgpus'>";
+print "<TD class='overview'>";
 if ($problemgpus > 1){
   if ($problemgpus == 1) {
   	print $problemgpus . " GPU has problems<br>";
@@ -578,7 +582,7 @@ print $minewu . " Work Utility<br>";
 print "</td>";
 
 # EXTRA HEADER STATS
-print "<TD id='overviewsys'>";
+print "<TD class='overview'>";
 my $uptime = `uptime`;
 $rigup = $1 if ($uptime =~ /up\s+(.*?),\s+\d+\s+users,/);
 $rigload = $1 if ($uptime =~ /average:\s+(.*?),/);
@@ -607,12 +611,12 @@ given($x) {
 		}	
 		print "tok=1> << Back to overview</A>";
 		print "<P>";	
-		print "<table>";
-		print "<tr><td id='showgpustats'>";	
-		print "<table><tr><td width=200px>";
-		print "<font size=5>GPU $showgpu<br>";	
-		print sprintf("%d", $gpus[$showgpu]{'hashrate'}) . " Kh/s";	
-		print "</font><P>";	
+
+		print "<table><tr><td>";
+		print "<table><tr><td id='showgpustats'>";	
+		print "<table><tr><td width=200px class='bigger'>GPU $showgpu<br>";	
+		print sprintf("%d", $gpus[$showgpu]{'hashrate'}) . " Kh/s</td></tr>";	
+		print "<tr><td>";
 		if (@gpumsg) {
 			print "<img src='/bamt/error.png'><p>";
 			foreach my $l (@gpumsg) {
@@ -622,8 +626,11 @@ given($x) {
 			print "<img src='/bamt/ok.png'><p>";
 			print "All parameters OK";
 		}
-		print "</td><td><table>$gsput</table></td></tr></table>";
+		print "</td></tr></table>";
+
+		print "</td><td><table><tr><td>$gsput</td></tr></table></td></tr></table>";
 		print "</td>";	
+
 		print "<td><img src='/munin/" .  $conf{'settings'}{'miner_id'} .'/'. $conf{'settings'}{'miner_id'} . "/gpuhash$showgpu-day.png'></td></tr>";
 		print "<tr><td style='vertical-align: bottom;'><img src='/munin/" .  $conf{'settings'}{'miner_id'} .'/'. $conf{'settings'}{'miner_id'} . "/gputemp$showgpu-day.png'></td>";
 		print "<td><img src='/munin/" .  $conf{'settings'}{'miner_id'} .'/'. $conf{'settings'}{'miner_id'} . "/gpushares$showgpu-day.png'></td></tr></table>";	
@@ -633,18 +640,20 @@ given($x) {
         print "<div id='showgpu'>";
         print "<A HREF=?";
         print "tok=1> << Back to overview</A>";
-        print "<P><table>";
-        print "<tr><td id='showgpustats'>";
-        print "<table><tr><td width=200px>";
-        print "<font size=5>Pool $showpool<br>";
+        print "<P>";
+#		print "<table><tr><td>";
+# Because someday munin
+        print "<table><tr><td id='showgpustats'>";
+        print "<table><tr><td width=200px class='bigger'>Pool $showpool<br>";
         my $psacc = ${@pools[$showpool]}{'accepted'};
         my $psrej = ${@pools[$showpool]}{'rejected'};
 		if ($psacc ne "0") { 
  	      print sprintf("%.2f%%", $psrej / ($psacc + $psrej)*100);
-          print "</font><br> reject ratio";
+          print "<br> reject ratio";
 		} else {
-		  print "0</font><br>Shares submitted";
+		  print "<br> 0 <br>Shares submitted";
 		}
+		print "</td></tr><tr><td>";
         if (@poolmsg) {
                 print "<p><img src='/bamt/error.png'><p>";
                 foreach my $l (@poolmsg)
@@ -655,23 +664,27 @@ given($x) {
                 print "<p><img src='/bamt/ok.png'><p>";
                 print "All OK";
         }
-        print "</td><td><table>$psput</table></td></tr></table>";
-        print "</td></table></div>";
+   		print "</td></tr></table>";
+		print "</td><td><table><tr><td>$psput</td></tr></table></td></tr></table>";
+#		print "</td></tr></table>";
+		print "</div>";
 	}
 	when ($showminer > -1) {
         print "<div id='showgpu'>";
         print "<A HREF=?";
         print "tok=1> << Back to overview</A>";
-        print "<P><table>";
-        print "<tr><td id='showgpustats'>";
-        print "<table><tr><td width=200px>";
-        print "<font size=5>" . $conf{'settings'}{'miner_id'} . "<br>";
+        print "<P>";
+#		print "<table><tr><td>";
+# Because someday munin
+        print "<table><tr><td id='showgpustats'>";
+        print "<table><tr><td width=200px class='bigger'>" . $conf{'settings'}{'miner_id'} . "<br>";
 		if ($minerate ne "0") { 
  	      print sprintf("%.1f%%", ($minewu / $minerate) / 10);
 		} else { print "0"; }
-		print "</font><br>Efficiency<br>(WU / Hashrate)"; 
+		print "<br>Efficiency</td></tr><tr><td>(WU / Hashrate)</td></tr>"; 
+		print "<tr><td>";
         if (@nodemsg) {
-                print "<p><img src='/bamt/error.png'><p>";
+                print "<img src='/bamt/error.png'><p>";
                 foreach my $l (@nodemsg)
                 {
                         print "$l<br>";
@@ -680,8 +693,10 @@ given($x) {
                 print "<p><img src='/bamt/ok.png'><p>";
                 print "All OK";
         }
-        print "</td><td><table>$msput</table></td></tr></table>";
-        print "</td></table></div>";
+   		print "</td></tr></table>";        
+        print "</td><td><table><tr><td>$msput</td></tr></table></td></tr></table>";
+#        print "</td></tr></table>";
+    	print "</div>";
 	}
 	default {
 		print "<div class='gpudata'>";	
