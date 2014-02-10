@@ -14,6 +14,9 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with BAMT.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Modified for IFMI PoolManager by Lily
+#
 
 $SIG{__DIE__} = sub { &handleDeath(@_); };
 
@@ -29,6 +32,7 @@ use IO::Socket::INET;
 use Sys::Hostname;
 use Sys::Syslog qw( :DEFAULT setlogsock);
 use POSIX;
+use feature qw(switch);
 
 setlogsock('unix');
 
@@ -731,8 +735,7 @@ sub getCGMinerPools
 	  $avers = "0";
 	}
 
-    
-    my $cgport = 4028;
+  my $cgport = 4028;
  	if (defined(${$conf}{'settings'}{'cgminer_port'}))
  	{
  	  $cgport = ${$conf}{'settings'}{'cgminer_port'};
@@ -759,20 +762,19 @@ sub getCGMinerPools
 		
 		close($sock);
 	
+      # Per https://github.com/ckolivas/cgminer/blob/master/API-README		
+    	if ($avers > 7) {
+    	  while ($res =~ m/\|POOL=(\d+),URL=(.+?),Status=(.+?),Priority=(\d+),Quota=(\d+),Long Poll=(.+?),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Works=(\d+),Discarded=(\d+),Stale=(\d+),Get Failures=(\d+),Remote Failures=(\d+),User=(.+?),/g)
+    	  {
+    	  push(@pools, ({ poolid=>$1, url=>$2, status=>$3, priority=>$4, quota=>$5, lp=>$6, getworks=>$7, accepted=>$8, rejected=>$9, works=>$10, discarded=>$11, stale=>$12, getfails=>$13, remotefailures=>$14, user=>$15 }) );
+    	  }
+    	} else { 
+    	  while ($res =~ m/\|POOL=(\d+),URL=(.+?),Status=(.+?),Priority=(\d+),Quota=(\d+),Long Poll=(.+?),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Works=(\d+),Discarded=(\d+),Stale=(\d+),Get Failures=(\d+),Remote Failures=(\d+),/g)
+    	  {
+    	  push(@pools, ({ poolid=>$1, url=>$2, status=>$3, priority=>$4, quota=>$5, lp=>$6, getworks=>$7, accepted=>$8, rejected=>$9, works=>$10, discarded=>$11, stale=>$12, getfails=>$13, remotefailures=>$14 }) );
+    	  }
 
-# Per https://github.com/ckolivas/cgminer/blob/master/API-README		
-	if ($avers > 7) {
-	  while ($res =~ m/\|POOL=(\d+),URL=(.+?),Status=(.+?),Priority=(\d+),Quota=(\d+),Long Poll=(.+?),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Works=(\d+),Discarded=(\d+),Stale=(\d+),Get Failures=(\d+),Remote Failures=(\d+),User=(.+?),/g)
-	  {
-	  push(@pools, ({ poolid=>$1, url=>$2, status=>$3, priority=>$4, quota=>$5, lp=>$6, getworks=>$7, accepted=>$8, rejected=>$9, works=>$10, discarded=>$11, stale=>$12, getfails=>$13, remotefailures=>$14, user=>$15 }) );
-	  }
-	} else { 
-	  while ($res =~ m/\|POOL=(\d+),URL=(.+?),Status=(.+?),Priority=(\d+),Quota=(\d+),Long Poll=(.+?),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Works=(\d+),Discarded=(\d+),Stale=(\d+),Get Failures=(\d+),Remote Failures=(\d+),/g)
-	  {
-	  push(@pools, ({ poolid=>$1, url=>$2, status=>$3, priority=>$4, quota=>$5, lp=>$6, getworks=>$7, accepted=>$8, rejected=>$9, works=>$10, discarded=>$11, stale=>$12, getfails=>$13, remotefailures=>$14 }) );
-	  }
-
-	}
+    	}
 
     }
 	
@@ -927,7 +929,16 @@ sub getCGMinerSummary
 {    
     my $conf = &getConfig;
     %conf = %{$conf}; 
-    
+
+    my @version = &getCGMinerVersion;
+    if (@version) {
+        for (my $i=0;$i<@version;$i++) {
+        $avers = ${$version[$i]}{'api'};
+        }
+    } else { 
+      $avers = "0";
+    }
+ 
     my $cgport = 4028;
  	if (defined(${$conf}{'settings'}{'cgminer_port'}))
  	{
@@ -955,18 +966,43 @@ sub getCGMinerSummary
 		
 		close($sock);
 
-
-	while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),MHS\s\ds=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Total\sMH=(.*?),Work\sUtility=(\d+\.\d+),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),Best\sShare=(\d+),/g)
-	{
-	  push(@summary,({ elapsed=>$1, hashavg=>$2, hashrate=>$3, found_blocks=>$4, getworks=>$5, shares_accepted=>$6, shares_invalid=>$7, hardware_errors=>$8, utility=>$9, discarded=>$10, stale=>$11, get_failures=>$12, local_work=>$13, remote_failures=>$14, network_blocks=>$15, total_mh=>$16, work_utility=>$17, diff_accepted=>$18, diff_rejected=>$19, diff_stale=>$20, best_share=>$21 }) );
-	}
-		
-	return(@summary);
-
+    # Per https://github.com/ckolivas/cgminer/blob/master/API-README
+    # Not pulling any data added in 1.28, so not testing for it.  
+    given ($x) {
+      when ($avers >= 31) {
+        while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),MHS\s\ds=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Total\sMH=(.*?),Work\sUtility=(\d+\.\d+),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),Best\sShare=(\d+),/g)
+        {
+          push(@summary,({ elapsed=>$1, hashavg=>$2, hashrate=>$3, found_blocks=>$4, getworks=>$5, shares_accepted=>$6, shares_invalid=>$7, hardware_errors=>$8, utility=>$9, discarded=>$10, stale=>$11, get_failures=>$12, local_work=>$13, remote_failures=>$14, network_blocks=>$15, total_mh=>$16, work_utility=>$17, diff_accepted=>$18, diff_rejected=>$19, diff_stale=>$20, best_share=>$21 }) );
+        }
+      }
+      when ($avers >= 21) {
+        while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Total\sMH=(.*?),Work\sUtility=(\d+\.\d+),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),Best\sShare=(\d+),/g)
+        {
+          push(@summary,({ elapsed=>$1, hashavg=>$2, found_blocks=>$3, getworks=>$4, shares_accepted=>$5, shares_invalid=>$6, hardware_errors=>$7, utility=>$8, discarded=>$9, stale=>$10, get_failures=>$11, local_work=>$12, remote_failures=>$13, network_blocks=>$14, total_mh=>$15, work_utility=>$16, diff_accepted=>$17, diff_rejected=>$18, diff_stale=>$19, best_share=>$20 }) );
+        }
+      }
+      when ($avers >= 17) {
+        while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Total\sMH=(.*?),Work\sUtility=(\d+\.\d+),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),/g)
+        {
+          push(@summary,({ elapsed=>$1, hashavg=>$2, found_blocks=>$3, getworks=>$4, shares_accepted=>$5, shares_invalid=>$6, hardware_errors=>$7, utility=>$8, discarded=>$9, stale=>$10, get_failures=>$11, local_work=>$12, remote_failures=>$13, network_blocks=>$14, total_mh=>$15, work_utility=>$16, diff_accepted=>$17, diff_rejected=>$18, diff_stale=>$19 }) );
+        }
+      }
+      when ($avers >= 3) {
+        while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Total\sMH=(.*?),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),/g)
+        {
+          push(@summary,({ elapsed=>$1, hashavg=>$2, found_blocks=>$3, getworks=>$4, shares_accepted=>$5, shares_invalid=>$6, hardware_errors=>$7, utility=>$8, discarded=>$9, stale=>$10, get_failures=>$11, local_work=>$12, remote_failures=>$13, network_blocks=>$14, total_mh=>$15, diff_accepted=>$16, diff_rejected=>$17, diff_stale=>$18 }) );
+        }
+      }
+      default {
+        while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),/g)
+        {
+          push(@summary,({ elapsed=>$1, hashavg=>$2, found_blocks=>$3, getworks=>$4, shares_accepted=>$5, shares_invalid=>$6, hardware_errors=>$7, utility=>$8, discarded=>$9, stale=>$10, get_failures=>$11, local_work=>$12, remote_failures=>$13, network_blocks=>$14, diff_accepted=>$15, diff_rejected=>$16, diff_stale=>$17 }) );
+        }
+      }
     }
-    else
-    {
-	$url = "cgminer socket failed";
+    return(@summary);
+    } else {
+    	$url = "cgminer socket failed";
     }
 	
 }

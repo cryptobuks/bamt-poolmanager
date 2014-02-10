@@ -322,7 +322,7 @@ if (@summary) {
   for (my $i=0;$i<@summary;$i++) {
     $melapsed = ${@summary[$i]}{'elapsed'};
     $mrunt = sprintf("%d days, %02d:%02d.%02d",(gmtime $melapsed)[7,2,1,0]);
-    $minerate = ${@summary[$i]}{'hashrate'};
+    $minerate = ${@summary[$i]}{'hashavg'};
     $mineacc = ${@summary[$i]}{'shares_accepted'};
     $minerej = ${@summary[$i]}{'shares_invalid'};
     $minewu = ${@summary[$i]}{'work_utility'};
