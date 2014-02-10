@@ -651,7 +651,7 @@ given($x) {
  	      print sprintf("%.2f%%", $psrej / ($psacc + $psrej)*100);
           print "<br> reject ratio";
 		} else {
-		  print "<br> 0 <br>Shares submitted";
+		  print " 0 <br>Shares submitted";
 		}
 		print "</td></tr><tr><td>";
         if (@poolmsg) {
