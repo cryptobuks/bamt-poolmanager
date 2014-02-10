@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Bamt-poolmanager by starlilyth</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Bamt-poolmanager</h1>
+        <p>BAMT web based pool and miner manager</p>
+
+        <p class="view"><a href="https://github.com/starlilyth/bamt-poolmanager">View the Project on GitHub <small>starlilyth/bamt-poolmanager</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/starlilyth/bamt-poolmanager/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/starlilyth/bamt-poolmanager/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/starlilyth/bamt-poolmanager">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>
+<a name="bamt-poolmanager" class="anchor" href="#bamt-poolmanager"><span class="octicon octicon-link"></span></a>bamt-poolmanager</h1>
+
+<p>Web based pool and miner manager for BAMT linux running CGminer.
+Extended from the BAMT miner web interface, which is in perl (no php). </p>
+
+<ul>
+<li>Add or Remove pools, or Switch priority, from the web GUI without stopping your miner. </li>
+<li>Stop/start the miner, with password protection and version/run time display. </li>
+<li>Extra stats in the header (Work Util, HW errors, Uptime, Load, Free Mem). </li>
+<li>Refactored GPU stats on overview and details pages. Pool details page.</li>
+<li>Miner details page with reboot control and Configuration Editor. </li>
+<li>Farm Overview (mgpumon) is much improved with more information in less space. </li>
+<li>Install script enables SSL redirection (and optional default page password) for security. </li>
+</ul><p>See the wiki page for screenshots.</p>
+
+<p>Reqirements: BAMT linux running cgminer/sgminer. 
+API version detection should now prevent breakage on various miner build versions. 
+Built and tested on litecoin-bamt 1.2, but should work with any flavor of BAMT, including SMOS. </p>
+
+<p>EASY PEASY SURE FIRE INSTALL INSTRUCTIONS: </p>
+
+<p>(Doing it this way ensures all the files will have the correct permissions.)</p>
+
+<ol>
+<li>ssh into your miner, so you are at the command prompt. be root (if you are user, do: sudo su - ).</li>
+<li>do: wget <a href="https://github.com/starlilyth/bamt-poolmanager/archive/master.zip">https://github.com/starlilyth/bamt-poolmanager/archive/master.zip</a>
+</li>
+<li>do: unzip master.zip</li>
+<li>cd to 'bamt-poolmanager-master/bamt-pm' directory and run: ./install.sh</li>
+<li>add an API line to your .conf. (please see the README). </li>
+</ol><p>Absolutely NO hidden donate code! 
+You can trust the IFMI brand to never include any kind of auto donate or hash theft code. </p>
+
+<p>If you love it, please donate! </p>
+
+<p>BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6</p>
+
+<p>LTC: LdMJB36zEfTo7QLZyKDB55z9epgN78hhFb</p>
+
+<p>Donate your hashpower directly at <a href="http://wafflepool.com/">http://wafflepool.com/</a></p>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/starlilyth">starlilyth</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
