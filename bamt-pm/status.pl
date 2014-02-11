@@ -14,7 +14,7 @@ $showgpu = -1;
 $showpool = -1;
 $showminer = -1;
 
-$mgpumon = $q->param('mgpumon') or $mgpumon = "";
+#$mgpumon = $q->param('mgpumon') or $mgpumon = "";
 
 if (defined($q->param('gpu')))
 {
@@ -29,19 +29,19 @@ if (defined($q->param('miner')))
 	$showminer = $q->param('miner');
 }
 
-$refer = $q->referer();
+#$refer = $q->referer();
 
-if ($refer =~ m/.*\/mgpumon\/$/)
-{
-	$mgpumon = $refer;
-}
+#if ($refer =~ m/.*\/mgpumon\/$/)
+#{
+#	$mgpumon = $refer;
+#}
 
 my $url = "?";
 
-if (! $mgpumon eq "")
-{
-	$url .= "mgpumon=$mgpumon&";
-}
+#if (! $mgpumon eq "")
+#{
+#	$url .= "mgpumon=$mgpumon&";
+#}
 
 if ($showgpu > -1)
 {
@@ -288,10 +288,10 @@ for (my $i=0;$i<@gpus;$i++)
 	}
 		
 	my $gpuurl = "?";	
-	if (! $mgpumon eq "")
-	{
-		$gpuurl .= "mgpumon=$mgpumon&";
-	}
+#	if (! $mgpumon eq "")
+#	{
+#		$gpuurl .= "mgpumon=$mgpumon&";
+#	}
 	$gpuurl .= "gpu=$i";
 	
 	if ($problems)
@@ -443,7 +443,12 @@ if (@pools) {
     $pusr = ${@pools[$i]}{'user'};
     $pstat = ${@pools[$i]}{'status'};
     if ($pstat eq "Dead") {
-      $pstatus = "<td class='error'>" . $pstat . "</td>" 
+      $problems++;
+      push(@nodemsg, "Pool $i is dead"); 
+      $pstatus = "<td class='error'>" . $pstat . "</td>";
+	  if ($i == $showpool) {
+	  	push(@poolmsg, "Pool is dead"); 
+	  }	
     } else {
       $pstatus = "<td>" . $pstat . "</td>";
     }
@@ -453,21 +458,24 @@ if (@pools) {
     $pacc = ${@pools[$i]}{'accepted'};
     $prej = ${@pools[$i]}{'rejected'};
     if ($prej ne "0") {
-        $prr = sprintf("%.2f", $prej / ($pacc + $prej)*100);
+      $prr = sprintf("%.2f", $prej / ($pacc + $prej)*100);
     } else { 
-	$prr = "0.0";
+	   $prr = "0.0";
     }
-    if ($prr >= 5) { 
-	$prat = "<td class='error'>" . $prr . "%</td>";
+	if (defined(${$config}{monitor_reject_hi}) && ($prr > ${$config}{monitor_reject_hi})) {
+      $problems++;
+      push(@nodemsg, "Pool $i reject ratio too high"); 
+  	  $prat = "<td class='error'>" . $prr . "%</td>";
+	  if ($i == $showpool) {
+        push(@poolmsg, "Reject ratio is too high"); 
+	  }	
     } else { 
-        $prat = "<td>" . $prr . "%</td>";
+      $prat = "<td>" . $prr . "%</td>";
     }
-    $pquo = ${@pools[$i]}{'quota'};
-    $pqb++ if ($pquo ne "1");
-    
+#    $pquo = ${@pools[$i]}{'quota'};
+#    $pqb++ if ($pquo ne "1");
+
       if ($showpool == $i) { 
-      push(@poolmsg, "Reject ratio is too high") if ($prr >= 5); 
-      push(@poolmsg, "Pool is dead") if ($pstat eq "Dead");
       $psgw = ${@pools[$i]}{'getworks'};
       $psw = ${@pools[$i]}{'works'}; 
       $psd = ${@pools[$i]}{'discarded'}; 
@@ -615,10 +623,10 @@ given($x) {
 	when ($showgpu > -1) {
 		print "<div id='showgpu'>";
 		print "<A HREF=?";	
-		if (! $mgpumon eq "")
-		{
-			$gpuurl .= "mgpumon=$mgpumon&";
-		}	
+#		if (! $mgpumon eq "")
+#		{
+#			$gpuurl .= "mgpumon=$mgpumon&";
+#		}	
 		print "tok=1> << Back to overview</A>";
 		print "<P>";	
 
