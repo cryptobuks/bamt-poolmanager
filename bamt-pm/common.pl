@@ -242,6 +242,43 @@ sub delPool
     }
 }
 
+sub zeroStats
+{
+ my $conf = &getConfig;
+ %conf = %{$conf};
+   &blog("zeroing stats!");
+   if (${$conf}{'settings'}{'cgminer'})
+   {
+         my $cgport = 4028;
+         if (defined(${$conf}{'settings'}{'cgminer_port'}))
+         {
+                 $cgport = ${$conf}{'settings'}{'cgminer_port'};
+         }
+         my $sock = new IO::Socket::INET (
+                                  PeerAddr => '127.0.0.1',
+                                  PeerPort => $cgport,
+                                  Proto => 'tcp',
+                                  ReuseAddr => 1,
+                                  Timeout => 10,
+                                 );
+        if ($sock)
+        {
+        &blog("sending zero command to cgminer api");
+        print $sock "zero|all,false\n";
+                my $res = "";
+                while(<$sock>)
+                {
+                        $res .= $_;
+                }
+                close($sock);
+          &blog("success!");
+        }
+        else
+        {
+          &blog("failed to get socket for cgminer api");
+        }
+    }
+}
 
 # Thanks~
 
