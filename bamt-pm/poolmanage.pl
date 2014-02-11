@@ -9,24 +9,6 @@ print "<style type='text/css'> body {font-family: 'Trebuchet MS', Helvetica, san
 print "<style type='text/css'> table { border: 2px solid #cccccc; margin-left: auto; margin-right: auto; } td { text-align:center; padding:10px; ) </style>"; 
 print "<br><br><br><table><tr>";
 
-my $qval = $in{'qval'};
-if ($qval ne "") {
-  $qpool = $in{'qpool'};
-  print "<td><big>Setting pool $qpool to quota $qval... </big></td>";
-  &quotaPool($qpool, $qval); 
-  $qval = ""; $qpool = ""; 
-}
-
-my $qreset = $in{'qreset'};
-if ($qreset eq "reset") {
-  print "<td><big>Unsetting pool quotas ... </big></td>";
-  my @pools = &getCGMinerPools(1);
-  for (my $i=0;$i<@pools;$i++) {
-    &quotaPool($i, "1"); 
-  }
-  $qreset = ""; 
-}
-
 my $preq = $in{'swpool'};
 if ($preq ne "") {
   print "<td><big>Switching Pool Priority...</big><p><b>It will take a moment for the miner to switch, please stand by.</b></td>";
@@ -67,38 +49,50 @@ if ($dpool ne "") {
 my $status = ""; 
 my $mstart = $in{'mstart'};
 if ($mstart eq "start") { 
-  if (system("echo $in{'ptext'} | sudo -S /usr/sbin/mine start")!=0) {
-    $status = "Failed!";
-  }
+  $status = `echo $in{'ptext'} | sudo -S /usr/sbin/mine start`;
   if ($status ne "") {
-    print "<td bgcolor='yellow'><p><big>$status</big>";
+    print "<td><p><big>$status</big>";
   } else {
-    print "<td bgcolor='green'><p><big><font color='white'>STARTING MINER...</big></td>";
+    print "<td bgcolor='yellow'><p><big>Failed!</big>";
   }
 }
 
 my $mstop = $in{'mstop'};
 if ($mstop eq "stop") { 
-  if (system("echo $in{'ptext'} | sudo -S /usr/sbin/mine stop")!=0) {
-    $status = "Failed!";
-  }
+  $status = `echo $in{'ptext'} | sudo -S /usr/sbin/mine stop`;
   if ($status ne "") {
-    print "<td bgcolor='yellow'><p><big>$status</big>";
+    print "<td><p><big>$status</big>";
   } else {
-   print "<td bgcolor='red'><p><big>STOPPING MINER...</big></td>";
+    print "<td bgcolor='yellow'><p><big>Failed!</big>";
   }
 }
 
 my $reboot = $in{'reboot'};
 if ($reboot eq "reboot") { 
-  if (system("echo $in{'ptext'} | sudo -S /sbin/coldreboot")!=0) {
-     $status = "Failed!";
-  }
+  $status = `echo $in{'ptext'} | sudo -S /sbin/coldreboot`;
   if ($status ne "") {
-    print "<td bgcolor='yellow'><p><big>$status</big>";
+   print "<td bgcolor='red'><p><big>$status...</big><br><small>why... why would you do such a thing... I just dont know...</small></td>";
   } else {
-   print "<td bgcolor='red'><p><big>REBOOTING...</big><small>why... why would you do such a thing... I just dont know...</small></td>";
+   print "<td bgcolor='yellow'><p><big>Failed!</big>";
   }
+}
+
+# Someday, maybe. 
+my $qval = $in{'qval'};
+if ($qval ne "") {
+  $qpool = $in{'qpool'};
+  print "<td><big>Setting pool $qpool to quota $qval... </big></td>";
+  &quotaPool($qpool, $qval); 
+  $qval = ""; $qpool = ""; 
+}
+my $qreset = $in{'qreset'};
+if ($qreset eq "reset") {
+  print "<td><big>Unsetting pool quotas ... </big></td>";
+  my @pools = &getCGMinerPools(1);
+  for (my $i=0;$i<@pools;$i++) {
+    &quotaPool($i, "1"); 
+  }
+  $qreset = ""; 
 }
 
 print "</tr></table></body></html>";
