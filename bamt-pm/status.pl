@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-use CGI qw(:standard);
+use CGI qw(:cgi-lib :standard);
 use feature qw(switch);
 use Data::Dumper;
 
@@ -64,7 +64,18 @@ if ($url eq "?")
 else
 {
 	$url .= "tok=1";
+#	print start_html( -title=>'PoolManager - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -script=>{-type=>'text', -src=>'poolmanage.pl?name=zero'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30; url=' . $url })  );
 	print start_html( -title=>'PoolManager - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30; url=' . $url })  );
+
+}
+
+# Take care of business
+&ReadParse(%in);
+
+my $zreq = $in{'zero'};
+if ($zreq ne "") {
+  &zeroStats;
+  $zreq = "";
 }
 
 # pull info
@@ -327,11 +338,13 @@ if (@summary) {
   for (my $i=0;$i<@summary;$i++) {
     $melapsed = ${@summary[$i]}{'elapsed'};
     $mrunt = sprintf("%d days, %02d:%02d.%02d",(gmtime $melapsed)[7,2,1,0]);
-    $minerate = ${@summary[$i]}{'hashavg'};
+    $mratem = ${@summary[$i]}{'hashavg'};
+    $minerate = sprintf("%.2f", $mratem);
     $mineacc = ${@summary[$i]}{'shares_accepted'};
     $minerej = ${@summary[$i]}{'shares_invalid'};
     $minewu = ${@summary[$i]}{'work_utility'};
     $minehe = ${@summary[$i]}{'hardware_errors'};
+
   	if ($showminer == $i) {
   		$getmlinv = `cat /proc/version`;
   		$mlinv = $1 if ($getmlinv =~ /version\s(.*?\s+\(.*?\))\s+\(/);
@@ -406,17 +419,20 @@ if (@summary) {
 		  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
 		}
 		$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required></td></form>";
+		$mcontrol .= "<td><form name='zero' action='status.pl' method='POST'><input type='hidden' name='zero' value='zero'><small>stats</small><br><button type='submit'>0</form></td>";
 	}
   }
-} else {
-  	if ($showminer == 0) {
-  		$getmlinv = `cat /proc/version`;
-  		$mlinv = $1 if ($getmlinv =~ /version\s(.*?\s+\(.*?\))\s+\(/);
-      	$msput .= "<tr><td class='big'>Linux Version:</td><td>" . $mlinv . "</td></tr>";
+} 
+else {
+ 	if ($showminer == 0) {
+ 		$getmlinv = `cat /proc/version`;
+ 		$mlinv = $1 if ($getmlinv =~ /version\s(.*?\s+\(.*?\))\s+\(/);
+     	$msput .= "<tr><td class='big'>Linux Version:</td><td>" . $mlinv . "</td></tr>";
 		$avers = " (1." . $avers . ")" if ($avers ne "");
-  		$msput .= "<tr><td>Miner Version (API)</td><td>" . $mvers . $avers . "</td></tr>";
-  	}
+ 		$msput .= "<tr><td>Miner Version (API)</td><td>" . $mvers . $avers . "</td></tr>";
+ 	}
 }
+
 $mcontrol .= "</tr></table><br>";
 
 $p1sum .= "<table id='pcontent'>";
@@ -474,7 +490,6 @@ if (@pools) {
     }
 #    $pquo = ${@pools[$i]}{'quota'};
 #    $pqb++ if ($pquo ne "1");
-
       if ($showpool == $i) { 
       $psgw = ${@pools[$i]}{'getworks'};
       $psw = ${@pools[$i]}{'works'}; 
@@ -527,7 +542,6 @@ if (@pools) {
 #      $psum .= "<input type='hidden' name='qpool' value='$i'>";
 #      $psum .= "<input type='submit' value='Set'></form></td></tr>";
     }
-
   }
   $psum .= "<tr><form name='padd' action='poolmanage.pl' method='POST'>";
   $psum .= "<td colspan='2'><input type='text' size='45' placeholder='MiningURL:portnumber' name='npoolurl' required>";
@@ -561,8 +575,6 @@ print "<TD class='overviewid'>" . $conf{'settings'}{'miner_id'} . "</td></tr>";
 print "<tr><TD class='overviewhash'>";
 $minerate = "0" if ($minerate eq ""); 
 print $minerate . " Mh/s</TD></tr></table></td>";
-
-
 $mineacc = "0" if ($mineacc eq ""); 
 print "<TD class='overview'>" . $mineacc . " total accepted shares<br>";
 $minerej = "0" if ($minerej eq ""); 

@@ -242,10 +242,11 @@ sub delPool
     }
 }
 
-sub zeroStats
+sub zeroStats 
 {
  my $conf = &getConfig;
  %conf = %{$conf};
+ my $delreq = $_[0];
    &blog("zeroing stats!");
    if (${$conf}{'settings'}{'cgminer'})
    {
@@ -264,7 +265,7 @@ sub zeroStats
         if ($sock)
         {
         &blog("sending zero command to cgminer api");
-        print $sock "zero|all,false\n";
+        print $sock "zero|all,false\n"; 
                 my $res = "";
                 while(<$sock>)
                 {
@@ -275,7 +276,7 @@ sub zeroStats
         }
         else
         {
-          &blog("failed to get socket for cgminer api");
+                &blog("failed to get socket for cgminer api");
         }
     }
 }
@@ -947,7 +948,7 @@ sub getCGMinerVersion
                 close($sock);
 
 #This will need to be changed if the API is ever changed to v2.x v0.7 should return null 
-        while ($res =~ m/CGMiner=(\d+\.\d+\.\d+),API=1\.(\d+)/g) 
+        while ($res =~ m/Miner=(\d+\.\d+\.\d+),API=1\.(\d+)/g) 
         {
           push(@version,({ miner=>$1, api=>$2 }) );
         }
@@ -967,14 +968,7 @@ sub getCGMinerSummary
     my $conf = &getConfig;
     %conf = %{$conf}; 
 
-    my @version = &getCGMinerVersion;
-    if (@version) {
-        for (my $i=0;$i<@version;$i++) {
-        $avers = ${$version[$i]}{'api'};
-        }
-    } else { 
-      $avers = "0";
-    }
+  my @summary; 
  
     my $cgport = 4028;
  	if (defined(${$conf}{'settings'}{'cgminer_port'}))
@@ -1003,40 +997,77 @@ sub getCGMinerSummary
 		
 		close($sock);
 
-    # Per https://github.com/ckolivas/cgminer/blob/master/API-README
-    # Not pulling any data added in 1.28, so not testing for it.  
-    given ($x) {
-      when ($avers >= 31) {
-        while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),MHS\s\ds=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Total\sMH=(.*?),Work\sUtility=(\d+\.\d+),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),Best\sShare=(\d+),/g)
-        {
-          push(@summary,({ elapsed=>$1, hashavg=>$2, hashrate=>$3, found_blocks=>$4, getworks=>$5, shares_accepted=>$6, shares_invalid=>$7, hardware_errors=>$8, utility=>$9, discarded=>$10, stale=>$11, get_failures=>$12, local_work=>$13, remote_failures=>$14, network_blocks=>$15, total_mh=>$16, work_utility=>$17, diff_accepted=>$18, diff_rejected=>$19, diff_stale=>$20, best_share=>$21 }) );
-        }
-      }
-      when ($avers >= 21) {
-        while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Total\sMH=(.*?),Work\sUtility=(\d+\.\d+),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),Best\sShare=(\d+),/g)
-        {
-          push(@summary,({ elapsed=>$1, hashavg=>$2, found_blocks=>$3, getworks=>$4, shares_accepted=>$5, shares_invalid=>$6, hardware_errors=>$7, utility=>$8, discarded=>$9, stale=>$10, get_failures=>$11, local_work=>$12, remote_failures=>$13, network_blocks=>$14, total_mh=>$15, work_utility=>$16, diff_accepted=>$17, diff_rejected=>$18, diff_stale=>$19, best_share=>$20 }) );
-        }
-      }
-      when ($avers >= 17) {
-        while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Total\sMH=(.*?),Work\sUtility=(\d+\.\d+),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),/g)
-        {
-          push(@summary,({ elapsed=>$1, hashavg=>$2, found_blocks=>$3, getworks=>$4, shares_accepted=>$5, shares_invalid=>$6, hardware_errors=>$7, utility=>$8, discarded=>$9, stale=>$10, get_failures=>$11, local_work=>$12, remote_failures=>$13, network_blocks=>$14, total_mh=>$15, work_utility=>$16, diff_accepted=>$17, diff_rejected=>$18, diff_stale=>$19 }) );
-        }
-      }
-      when ($avers >= 3) {
-        while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Total\sMH=(.*?),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),/g)
-        {
-          push(@summary,({ elapsed=>$1, hashavg=>$2, found_blocks=>$3, getworks=>$4, shares_accepted=>$5, shares_invalid=>$6, hardware_errors=>$7, utility=>$8, discarded=>$9, stale=>$10, get_failures=>$11, local_work=>$12, remote_failures=>$13, network_blocks=>$14, total_mh=>$15, diff_accepted=>$16, diff_rejected=>$17, diff_stale=>$18 }) );
-        }
-      }
-      default {
-        while ($res =~ m/.*,Elapsed=(\d+),MHS\sav=(\d+\.\d+),Found\sBlocks=(\d+),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Hardware\sErrors=(\d+),Utility=(.+?),Discarded=(\d+),Stale=(\d+),Get\sFailures=(\d+),Local\sWork=(\d+),Remote\sFailures=(\d+),Network\sBlocks=(\d+),Difficulty\sAccepted=(\d+\.\d+),Difficulty\sRejected=(\d+\.\d+),Difficulty\sStale=(\d+\.\d+),/g)
-        {
-          push(@summary,({ elapsed=>$1, hashavg=>$2, found_blocks=>$3, getworks=>$4, shares_accepted=>$5, shares_invalid=>$6, hardware_errors=>$7, utility=>$8, discarded=>$9, stale=>$10, get_failures=>$11, local_work=>$12, remote_failures=>$13, network_blocks=>$14, diff_accepted=>$15, diff_rejected=>$16, diff_stale=>$17 }) );
-        }
-      }
+    if ($res =~ m/Elapsed=(\d+),/g) {
+      $melapsed = $1;
     }
+    if ($res =~ m/MHS\sav=(\d+\.\d+),/g) {
+      $mhashav = $1;
+    }
+    if ($res =~ m/MHS\s\ds=(\d+\.\d+),/g) {
+      $mhashrate = $1;
+    }
+    if ($res =~ m/KHS\sav=(\d+),/g) {
+      $mkhashav = $1;
+    }
+    if ($res =~ m/KHS\s\ds=(\d+),/g) {
+      $mkhashrate =$1;
+    }
+    if ($res =~ m/Found\sBlocks=(\d+),/g) {
+      $mfoundbl =$1;
+    }
+    if ($res =~ m/Getworks=(\d+),/g) {
+      $mgetworks =$1;
+    }
+    if ($res =~ m/Accepted=(\d+),/g) {
+      $maccept = $1
+    }
+    if ($res =~ m/Rejected=(\d+),/g) {
+      $mreject = $1
+    }
+    if ($res =~ m/Hardware\sErrors=(\d+),/g) {
+      $mhwerrors = $1
+    }
+    if ($res =~ m/Utility=(.+?),/g) {
+      $mutility = $1
+    }
+    if ($res =~ m/Discarded=(\d+),/g) {
+      $mdiscarded = $1
+    }
+    if ($res =~ m/Stale=(\d+),/g) {
+      $mstale = $1
+    }
+    if ($res =~ m/Get\sFailures=(\d+),/g) {
+      $mgetfails = $1
+    }
+    if ($res =~ m/Local\sWork=(\d+),/g) {
+      $mlocalwork = $1
+    }
+    if ($res =~ m/Remote\sFailures=(\d+),/g) {
+      $mremfails = $1
+    }
+    if ($res =~ m/Network\sBlocks=(\d+),/g) {
+      $mnetblocks = $1
+    }
+    if ($res =~ m/Total\sMH=(?),/g) {
+      $mtotalmh = $1
+    }
+    if ($res =~ m/Work\sUtility=(\d+\.\d+),/g) {
+      $mworkutil = $1
+    }
+    if ($res =~ m/Difficulty\sAccepted=(\d+\.\d+),/g) {
+      $mdiffacc = $1
+    }
+    if ($res =~ m/Difficulty\sRejected=(\d+\.\d+),/g) {
+      $mdiffrej = $1
+    }
+    if ($res =~ m/Difficulty\sStale=(\d+\.\d+),/g) {
+      $mdiffstale = $1
+    }
+    if ($res =~ m/Best\sShare=(\d+),/g) {
+      $mbestshare = $1
+    }
+push(@summary, ({elapsed=>$melapsed, hashavg=>$mhashav, hashrate=>$mhashrate, khashavg=>$mkhashav, khashrate=>$mkhashrate, shares_accepted=>$maccept, found_blocks=>$mfoundbl, getworks=>$mgetworks, shares_invalid=>$mreject, hardware_errors=>$mhwerrors, utility=>$mutility, discarded=>$mdiscarded, stale=>$mstale, get_failures=>$mgetfails, local_work=>$mlocalwork, remote_failures=>$mremfails, network_blocks=>$mnetblocks, total_mh=>$mtotalmh, work_utility=>$mworkutil, diff_accepted=>$mdiffacc, diff_rejected=>$mdiffrej, diff_stale=>$mdiffstale, best_share=>$mbestshare }) );
+
     return(@summary);
     } else {
     	$url = "cgminer socket failed";
