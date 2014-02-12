@@ -25,8 +25,8 @@ EASY PEASY SURE FIRE INSTALL INSTRUCTIONS:
 1. ssh into your miner, so you are at the command prompt. be root (if you are user, do: sudo su - ).
 2. do: wget https://github.com/starlilyth/bamt-poolmanager/archive/master.zip
 3. do: unzip master.zip
-4. cd to 'bamt-poolmanager-master/bamt-pm' directory and run: ./install.sh
-5. add an API line to your .conf. (please see the README). 
+4. cd to 'bamt-poolmanager-master/bamt-pm' directory and run: ./install-pm.sh
+5. add an API line to your cgminer.conf. (please see the README). 
 
 Absolutely NO hidden donate code! 
 You can trust the IFMI brand to never include any kind of auto donate or hash theft code. 
