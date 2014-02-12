@@ -34,7 +34,7 @@ case "$input" in
       cp common.pl /opt/bamt/
       chmod +x /usr/lib/cgi-bin/*.pl
       if ! grep coldreboot /etc/sudoers ; then
-       sed '/\/bin\/cp/ s/$/,\/sbin\/coldreboot\n/' /etc/sudoers
+       sed -i '/\/bin\/cp/ s/$/,\/sbin\/coldreboot\n/' /etc/sudoers
       fi
       echo "Done!";;
       * ) echo "installation exited";;
