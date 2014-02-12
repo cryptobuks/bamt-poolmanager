@@ -14,6 +14,60 @@ if ($zreq ne "") {
   $zreq = "";
 }
 
+my $preq = $in{'swpool'};
+if ($preq ne "") {
+  &switchPool($preq);
+  $preq = "";
+}
+
+my $apooln = $in{'npoolurl'};
+my $apoolu = $in{'npooluser'};
+my $apoolp = $in{'npoolpw'};
+if ($apooln ne "") {
+  my $pmatch = 0;
+  my @pools = &getCGMinerPools(1);
+  if (@pools) {
+    for (my $i=0;$i<@pools;$i++) {
+      $pname = ${@pools[$i]}{'url'};
+      $pmatch++ if ($pname eq $apooln);
+    }
+  }
+  if ($pmatch eq 0) {
+  # print "<td><big>Adding Pool...</big></td>";
+    &addPool($apooln, $apoolu, $apoolp);
+    &saveConfig();
+    $apooln = ""; $apoolu = ""; $apoolp = "";
+  } 
+  #else {
+  #  print "<td bgcolor='yellow'><p><big>Duplicate Pool, not adding!</big></td>";
+  #}
+}
+my $dpool = $in{'delpool'};
+if ($dpool ne "") {
+#  print "<td><big>Removing Pool...</big></td>";
+  &delPool($dpool);
+  &saveConfig();
+  $dpool = "";
+}
+
+# Someday, maybe.
+my $qval = $in{'qval'};
+if ($qval ne "") {
+  $qpool = $in{'qpool'};
+ # print "<td><big>Setting pool $qpool to quota $qval... </big></td>";
+  &quotaPool($qpool, $qval);
+  $qval = ""; $qpool = "";
+}
+my $qreset = $in{'qreset'};
+if ($qreset eq "reset") {
+ # print "<td><big>Unsetting pool quotas ... </big></td>";
+  my @pools = &getCGMinerPools(1);
+  for (my $i=0;$i<@pools;$i++) {
+    &quotaPool($i, "1");
+  }
+  $qreset = "";
+}
+
 # Now carry on
 our $conf = &getConfig;
 %conf = %{$conf};
@@ -452,7 +506,7 @@ my @poolmsg; $pqb=0;
 if (@pools) { 
   my $g0url = $gpus[0]{'pool_url'}; 
   for (my $i=0;$i<@pools;$i++) {
-    $pimg = "<form name='pselect' action='poolmanage.pl' method='POST'><input type='hidden' name='swpool' value='$i'><button type='submit'>Switch</button></form>";
+    $pimg = "<form name='pselect' action='status.pl' method='POST'><input type='hidden' name='swpool' value='$i'><button type='submit'>Switch</button></form>";
     $pnum = ${@pools[$i]}{'poolid'};
     $pname = ${@pools[$i]}{'url'};
     $pimg = "<img src='/bamt/ok24.png'>" if ($g0url eq $pname);
@@ -504,7 +558,7 @@ if (@pools) {
       }
       $psput .= "<tr><td class='big'>$current</td>";
       if ($g0url ne $pname) {
-      $psput .= "<td><form name='pdelete' action='poolmanage.pl' method='POST'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
+      $psput .= "<td><form name='pdelete' action='status.pl' method='POST'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
       }
       $psput .= "<tr><td>Mining URL:</td><td>" . $pname . "</td></tr>";
 	  if ($avers > 16) {
@@ -543,7 +597,7 @@ if (@pools) {
 #      $psum .= "<input type='submit' value='Set'></form></td></tr>";
     }
   }
-  $psum .= "<tr><form name='padd' action='poolmanage.pl' method='POST'>";
+  $psum .= "<tr><form name='padd' action='status.pl' method='POST'>";
   $psum .= "<td colspan='2'><input type='text' size='45' placeholder='MiningURL:portnumber' name='npoolurl' required>";
   $psum .= "</td><td colspan='2'><input type='text' placeholder='username.worker' name='npooluser' required>";
   $psum .= "</td><td colspan='2'><input type='text' size='15' placeholder='worker password' name='npoolpw'>";
