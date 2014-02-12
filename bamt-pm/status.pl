@@ -420,8 +420,6 @@ if (@summary) {
 		  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
 		}
 		$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required></td></form>";
-		$mcontrol .= "<td><form name='zero' action='status.pl' method='POST'><input type='hidden' name='zero' value='zero'>";
-		$mcontrol .= "<input type='image' src='/IFMI/button_round_navy.png' width='10' height='10'></form></td>";
 	}
   }
 } 
@@ -573,8 +571,10 @@ $p1sum .= $psum;
 print "<div id='overview'>";
 print "<table><TR><TD>";
 print "<table><TR><TD id='overviewlogo' rowspan=2><IMG src='/IFMI/IFMI-logo-small.png'></TD>";
-print "<TD class='overviewid'>" . $conf{'settings'}{'miner_id'} . "</td></tr>";
-print "<tr><TD class='overviewhash'>";
+print "<TD class='overviewid'>" . $conf{'settings'}{'miner_id'} . "</td>";
+print "<td><form name='zero' action='status.pl' method='POST'><input type='hidden' name='zero' value='zero'>";
+print "<input type='image' src='/IFMI/button_round_navy.png' width='10' height='10'></form></td>";
+print "<tr><TD class='overviewhash' colspan=2>";
 $minerate = "0" if ($minerate eq ""); 
 print $minerate . " Mh/s</TD></tr></table></td>";
 $mineacc = "0" if ($mineacc eq ""); 
