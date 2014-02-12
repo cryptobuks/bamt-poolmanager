@@ -19,7 +19,8 @@ case "$input" in
       cp status.css /var/www/bamt/
       cp /var/www/bamt/mgpumon.css /var/www/bamt/mgpumon.css.back
       cp mgpumon.css /var/www/bamt/
-      cp ./*.png /var/www/bamt/
+      cp ./bimages/*.png /var/www/bamt/
+      cp ./images/*.png /var/www/IFMI
       cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.back
       cp status.pl /usr/lib/cgi-bin/
       cp /usr/lib/cgi-bin/confedit.pl /usr/lib/cgi-bin/confedit.pl.back
@@ -50,7 +51,8 @@ case "$input" in
       cp status.css /var/www/bamt/
       cp /var/www/bamt/mgpumon.css /var/www/bamt/mgpumon.css.bamt
       cp mgpumon.css /var/www/bamt/
-      cp ./*.png /var/www/bamt/
+      cp ./bimages/*.png /var/www/bamt/
+      cp ./images/*.png /var/www/IFMI
       cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.bamt
       cp status.pl /usr/lib/cgi-bin/
       cp confedit.pl /usr/lib/cgi-bin/
