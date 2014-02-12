@@ -5,6 +5,16 @@ use Data::Dumper;
 
 require '/opt/bamt/common.pl';
 
+# Take care of business
+&ReadParse(%in);
+
+my $zreq = $in{'zero'};
+if ($zreq ne "") {
+  &zeroStats;
+  $zreq = "";
+}
+
+# Now carry on
 our $conf = &getConfig;
 %conf = %{$conf};
 
@@ -67,15 +77,6 @@ else
 #	print start_html( -title=>'PoolManager - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -script=>{-type=>'text', -src=>'poolmanage.pl?name=zero'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30; url=' . $url })  );
 	print start_html( -title=>'PoolManager - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30; url=' . $url })  );
 
-}
-
-# Take care of business
-&ReadParse(%in);
-
-my $zreq = $in{'zero'};
-if ($zreq ne "") {
-  &zeroStats;
-  $zreq = "";
 }
 
 # pull info
@@ -419,7 +420,8 @@ if (@summary) {
 		  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
 		}
 		$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required></td></form>";
-		$mcontrol .= "<td><form name='zero' action='status.pl' method='POST'><input type='hidden' name='zero' value='zero'><small>stats</small><br><button type='submit'>0</form></td>";
+		$mcontrol .= "<td><form name='zero' action='status.pl' method='POST'><input type='hidden' name='zero' value='zero'>";
+		$mcontrol .= "<input type='image' src='/IFMI/button_round_navy.png' width='10' height='10'></form></td>";
 	}
   }
 } 
@@ -570,7 +572,7 @@ $p1sum .= $psum;
 
 print "<div id='overview'>";
 print "<table><TR><TD>";
-print "<table><TR><TD id='overviewlogo' rowspan=2><IMG src='/bamt/IFMI-logo-small.png'></TD>";
+print "<table><TR><TD id='overviewlogo' rowspan=2><IMG src='/IFMI/IFMI-logo-small.png'></TD>";
 print "<TD class='overviewid'>" . $conf{'settings'}{'miner_id'} . "</td></tr>";
 print "<tr><TD class='overviewhash'>";
 $minerate = "0" if ($minerate eq ""); 
