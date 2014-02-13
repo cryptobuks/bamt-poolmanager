@@ -394,35 +394,38 @@ sub getFreshGPUData
 	my $res = `DISPLAY=:0.0 /usr/local/bin/atitweak -s`;
   #monster regex for atitweak        
   # tamed some, less likely to break if a card responds strangely
-	while ($res =~ m/^(\d+)\.\s(.*?)\s+\(:/gm)
+	while ($res =~ m/(\d)\.\s(.+\n.+\n.+\n.+\n.+)/g)
 	{
-    my $gpu = $1; $gdesc = $2;
-    
-     if ($res =~ m/\(:(\d+\.\d+)\)/) {
-       $gdisp = $1;
+    my $gpu = $1; 
+    $gidata = $2; 
+     if ($gidata =~ m/^(.+)\s+\(:/) {
+      $gdesc = $1;
+     }  
+     if ($gidata =~ m/\(:(\d+\.\d+)\)/) {
+      $gdisp = $1;
      }
-     if ($res =~ m/engine\sclock\s(\d+)MHz/) {
+     if ($gidata =~ m/engine\sclock\s(\d+)MHz/) {
        $geclock = $1;
      }
-     if ($res =~ m/memory\sclock\s(\d+)MHz/) {
+     if ($gidata =~ m/memory\sclock\s(\d+)MHz/) {
        $gmclock = $1;
      }
-     if ($res =~ m/core\svoltage\s([\d\.]+)VDC/) {
+     if ($gidata =~ m/core\svoltage\s([\d\.]+)VDC/) {
        $gvolt = $1;
      }
-     if ($res =~ m/performance\slevel\s(\d+),/) {
+     if ($gidata =~ m/performance\slevel\s(\d+),/) {
        $gplevel = $1;
      } 
-     if ($res =~ m/utilization\s(\d+)\%/) {
+     if ($gidata =~ m/utilization\s(\d+)\%/) {
        $gutil = $1;
      }       
-     if ($res =~ m/temperature\s([\d\.]+)\sC/) {
+     if ($gidata =~ m/temperature\s([\d\.]+)\sC/) {
        $gtemp = $1;
      }
-     if ($res =~ m/powertune\s(\d+)\%/) {
+     if ($gidata =~ m/powertune\s(\d+)\%/) {
        $gptune = $1;
      }
-     if ($res =~ m/fan\sspeed\s(\d+)\%\s\((\d+)\sRPM\)/) {
+     if ($gidata =~ m/fan\sspeed\s(\d+)\%\s\((\d+)\sRPM\)/) {
         $gfspeed = $1;
         $gfrpm = $2;
      } else {
@@ -430,7 +433,7 @@ sub getFreshGPUData
        $gfrpm = "na";
      }
 
-$gpus[$gpu] = ({ desc => $gdesc, display => $gdisp, current_core_clock => $geclock, current_mem_clock=>$gmclock, current_core_voltage=>$gvolt, current_performance_level => $gplevel, current_load=>$gutil, current_temp_0=>$gtemp, current_powertune=>$gptune, fan_speed=>$gfspeed, fan_rpm=>$gfrpm });
+     $gpus[$gpu] = ({ desc => $gdesc, display => $gdisp, current_core_clock => $geclock, current_mem_clock=>$gmclock, current_core_voltage=>$gvolt, current_performance_level => $gplevel, current_load=>$gutil, current_temp_0=>$gtemp, current_powertune=>$gptune, fan_speed=>$gfspeed, fan_rpm=>$gfrpm });
 
 		# mining data
 		
@@ -565,11 +568,10 @@ $gpus[$gpu] = ({ desc => $gdesc, display => $gdisp, current_core_clock => $geclo
 			
 			}
 		
-        }           
+    }           
         
-    }      	
- 
-    return(@gpus);
+  }      	
+  return(@gpus);
 }
 
 
