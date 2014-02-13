@@ -399,7 +399,7 @@ sub getFreshGPUData
     my $gpu = $1; $gdesc = $2;
     
      if ($res =~ m/\(:(\d+\.\d+)\)/) {
-       $gpus[$gpu]{display} = $1;
+       $gdisp = $1;
      }
      if ($res =~ m/engine\sclock\s(\d+)MHz/) {
        $geclock = $1;
