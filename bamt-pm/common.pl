@@ -1067,7 +1067,7 @@ sub getCGMinerSummary
     if ($res =~ m/Network\sBlocks=(\d+),/g) {
       $mnetblocks = $1
     }
-    if ($res =~ m/Total\sMH=(?),/g) {
+    if ($res =~ m/Total\sMH=(\d+\.\d+),/g) {
       $mtotalmh = $1
     }
     if ($res =~ m/Work\sUtility=(\d+\.\d+),/g) {
