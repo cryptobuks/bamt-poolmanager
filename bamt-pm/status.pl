@@ -794,7 +794,13 @@ given($x) {
                 print "All OK";
         }
    		print "</td></tr></table>";        
-        print "</td><td><table><tr><td>$msput</td></tr></table></td></tr></table>";
+        print "</td><td><table><tr><td>$msput</td></tr>";
+        print "<tr><td colspan=2><hr></td></tr>";
+        print "<tr><td colspan=2>PoolManager was written by Lily, and updates are available at ";
+        print "<a href=https://github.com/starlilyth/bamt-poolmanager target=_blank>GitHub</a>.<br>"; 
+        print "Please consider donating at BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6<br>";
+
+        print "</table></td></tr></table>";
 #        print "</td></tr></table>";
     	print "</div>";
 	}
@@ -804,7 +810,6 @@ given($x) {
 	  if ($UHOH eq "true") {
 		print "<table><tr><td class=big><p>Uh Oh! No data could be retreived! Please check your configuration and try again.</p></td></tr></table>";
 	  } else {
-	  	print $UHOH;
 	    print $mcontrol;	
 	    print $p1sum;
 	    print $g1put;
