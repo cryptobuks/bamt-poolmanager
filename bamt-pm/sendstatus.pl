@@ -41,11 +41,8 @@ sub bcastStatus
   $ts .= "|$s sum:" . encode_json $summary[$s];
  }
 
- my @version; my @version = &getCGMinerVersion;
- for ($v = 0;$v < @version;$v++)
- {
-  $ts .= "|$v ver:" . encode_json $version[$v];
- }
+ my $version; my $version = &getCGMinerVersion;
+ $ts .= "| ver: $version";
 
  my $port = 54545;
 
@@ -63,7 +60,6 @@ sub bcastStatus
  }
 
 }
-
 
 sub directStatus
 {

@@ -134,7 +134,7 @@ else
 }
 
 # pull info
-my @version = &getCGMinerVersion;
+my $version = &getCGMinerVersion;
 my $ispriv = &CGMinerIsPriv; 
 my @gpus = &getFreshGPUData(1);
 my @pools = &getCGMinerPools(1);
@@ -379,11 +379,9 @@ $g1put .= "</table>";
 $mcontrol .= "<table><tr>";
 my $surl = "?"; $surl .= "miner=$i";
 $mcontrol .= '<TD class="bigger"><A href="' . $surl . '">Miner</a></td>';
-if (@version) {
-  for (my $i=0;$i<@version;$i++) {
-    $mvers = ${@version[$i]}{'miner'};
-    $avers = ${@version[$i]}{'api'};
-  }
+if ($version =~ m/Miner=(\d+\.\d+\.\d+),API=1\.(\d+)/) {
+  	$mvers = $1; 
+  	$avers = $2; 
 } else { 
 	$mvers = "Unknown";
 	$avers = "0"; 
@@ -498,7 +496,6 @@ $mcontrol .= "</tr></table><br>";
 $p1sum .= "<table id='pcontent'>";
 
 if ($ispriv eq "S") {
-
 	$p1sum .= "<TR class='ghdr'><TD class='ghdr'>Pool</TD>";
 	$p1sum .= "<TD class='ghdr'>Pool URL</TD>";
 	if ($avers > 16) {
@@ -634,8 +631,6 @@ if ($ispriv eq "S") {
   $p1sum .= "</p></td></tr>";
   $p1sum .= "</table><br>";
 }
-
-
 
 # Overview starts here
 

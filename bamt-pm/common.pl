@@ -783,11 +783,9 @@ sub getCGMinerPools
 	my $conf = &getConfig;
     	%conf = %{$conf}; 
     
-	my @version = &getCGMinerVersion;
-	if (@version) {
-  	  for (my $i=0;$i<@version;$i++) {
-	    $avers = ${$version[$i]}{'api'};
-  	  }
+	my $version = &getCGMinerVersion;
+	if ($version =~ m/API=1\.(\d+)/) {
+    $avers = $1; 
 	} else { 
 	  $avers = "0";
 	}
@@ -937,49 +935,31 @@ sub getCGMinerVersion
 {
     my $conf = &getConfig;
     %conf = %{$conf};
-
     my $cgport = 4028;
-        if (defined(${$conf}{'settings'}{'cgminer_port'}))
-        {
+        if (defined(${$conf}{'settings'}{'cgminer_port'})) {
           $cgport = ${$conf}{'settings'}{'cgminer_port'};
         }
-
         my $sock = new IO::Socket::INET (
-                                  PeerAddr => '127.0.0.1',
-                                  PeerPort => $cgport,
-                                  Proto => 'tcp',
-                                  ReuseAddr => 1,
-                                  Timeout => 10,
-                                 );
-
-    if ($sock)
-    {
-
-        print $sock "version|\n";
-
-                my $res = "";
-
-                while(<$sock>)
-                {
-                        $res .= $_;
-                }
-
-                close($sock);
-
+            PeerAddr => '127.0.0.1',
+            PeerPort => $cgport,
+            Proto => 'tcp',
+            ReuseAddr => 1,
+            Timeout => 10,
+           );
+    if ($sock) {
+      print $sock "version|\n";
+      my $res = "";
+      while(<$sock>) {
+        $res .= $_;
+      }
+      close($sock);
 #This will need to be changed if the API is ever changed to v2.x v0.7 should return null 
-        while ($res =~ m/Miner=(\d+\.\d+\.\d+),API=1\.(\d+)/g) 
-        {
-          push(@version,({ miner=>$1, api=>$2 }) );
-        }
-
-        return(@version);
-
+      while ($res =~ m/(Miner=\d+\.\d+\.\d+,API=1\.\d+)/g) {
+        return $1; 
+      }
+    } else {
+      $url = "cgminer socket failed";
     }
-    else
-    {
-        $url = "cgminer socket failed";
-    }
-
 }
 
 sub CGMinerIsPriv

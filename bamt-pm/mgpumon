@@ -267,7 +267,7 @@ sub genhttp
 			my @gpus;
 			my @pools;
 			my @summary;
-			my @version; 
+			my $version; 
 			my @nodemsg;
 
 			my $minerhash = 0; 
@@ -292,9 +292,9 @@ sub genhttp
 				push(@summary, decode_json $2);
 			}
 
-			while ( $res =~ m/(\d+?) ver\:(\{.*?\})/g)
+			while ( $res =~ m/ver\:\s(.+)/g)
 			{
-				push(@version, decode_json $2);
+				$version = $1
 			}
 
 			my $statclass = 'node';
@@ -349,12 +349,8 @@ sub genhttp
 			}
 			$sput .= '</td><td><A href=ssh://user@' . $iptxt . '>' . $iptxt . '</a></td>';
 
-			if (@version)
-			{
-				for (my $i=0;$i<@version;$i++) {
-					$mvers = ${@version[$i]}{'miner'};
-					$mapi = ${@version[$i]}{'api'};
-				}
+			if ($version  =~ m/Miner=(\d+\.\d+\.\d+),/) { 
+				$mvers = $1;
 				$sput .= "<td>" . $mvers . "</td>";
 			} else {
 				$sput .= "<td>unknown</td>";
