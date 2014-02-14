@@ -798,8 +798,8 @@ given($x) {
         print "<tr><td colspan=2><hr></td></tr>";
         print "<tr><td colspan=2>PoolManager was written by Lily, and updates are available at ";
         print "<a href=https://github.com/starlilyth/bamt-poolmanager target=_blank>GitHub</a>.<br>"; 
-        print "Please consider donating at BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6<br>";
-
+        print "If you love PoolManager, please consider donating. Thank you!<br> ";
+        print "BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6 <br>LTC: LdMJB36zEfTo7QLZyKDB55z9epgN78hhFb<br>";
         print "</table></td></tr></table>";
 #        print "</td></tr></table>";
     	print "</div>";
