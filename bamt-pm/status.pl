@@ -412,6 +412,11 @@ if (@summary) {
 #   	$msdkv = "1";
 #      	$msput .= "<tr><td>SDK Version:</td><td>" . $msdkv . "</td></tr>";		
       	$msput .= "<tr><td> </td><td class='big'><a href='/cgi-bin/confedit.pl' target='_blank'>Configuration Editor</a></td></tr>";
+      	my $nicget = `/sbin/ifconfig`; 
+      	while ($nicget =~ m/(\w\w\w\w?\d)\s.+\n\s+inet addr:(\d+\.\d+\.\d+\.\d+)\s/g) {
+      	  $iptxt = $2; 
+		  $msput .= '<td> </td><td class=big><A href=ssh://user@' . $iptxt . '>SSH to Host</a></td>';
+		}
 		$msput .= "<form name='reboot' action='poolmanage.pl' method='POST'><input type='hidden' name='reboot' value='reboot'>";
 		$msput .= "<tr><td><input type='submit' value='Reboot' onclick='this.disabled=true;this.form.submit();' ></td><td>";
 		$msput .= "<input type='password' placeholder='root password' name='ptext' required></td></tr></form>";
