@@ -7,15 +7,10 @@
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    BAMT is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
 #    You should have received a copy of the GNU General Public License
 #    along with BAMT.  If not, see <http://www.gnu.org/licenses/>.
 
-# Modified for IFMI by Lily 
+# Modified for IFMI PoolManager by Lily 
 
 
 use Socket;
@@ -352,7 +347,7 @@ sub genhttp
 					$sput .= "<A href=http://$iptxt/cgi-bin/status.pl>" . $miners{$miner}{id} . "</a>";			
 				}
 			}
-			$sput .= "</td><td>" . $iptxt . '</td>';
+			$sput .= '</td><td><A href=ssh://user@' . $iptxt . '>' . $iptxt . '</a></td>';
 
 			if (@version)
 			{
