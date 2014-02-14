@@ -135,6 +135,7 @@ else
 
 # pull info
 my @version = &getCGMinerVersion;
+my $ispriv = &CGMinerIsPriv; 
 my @gpus = &getFreshGPUData(1);
 my @pools = &getCGMinerPools(1);
 my @summary = &getCGMinerSummary;
@@ -495,135 +496,146 @@ else {
 $mcontrol .= "</tr></table><br>";
 
 $p1sum .= "<table id='pcontent'>";
-$p1sum .= "<TR class='ghdr'><TD class='ghdr'>Pool</TD>";
-$p1sum .= "<TD class='ghdr'>Pool URL</TD>";
-if ($avers > 16) {
-  $p1sum .= "<TD class='ghdr'>Worker</TD>"; 
-}
-$p1sum .= "<TD class='ghdr'>Status</TD>";
-$p1sum .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
-$p1sum .= "<TD class='ghdr'>Active</TD>";
-$p1sum .= "<TD class='ghdr'>Prio</TD>";
-#$p1sum .= "<TD class='ghdr' colspan=2>Quota (ratio or %)</TD>";
-$p1sum .= "</TR>";
 
-my @poolmsg; $pqb=0;
-if (@pools) { 
-  my $g0url = $gpus[0]{'pool_url'}; 
-  for (my $i=0;$i<@pools;$i++) {
-    $pimg = "<form name='pselect' action='status.pl' method='POST'><input type='hidden' name='swpool' value='$i'><button type='submit'>Switch</button></form>";
-    $pnum = ${@pools[$i]}{'poolid'};
-    $pname = ${@pools[$i]}{'url'};
-    $pimg = "<img src='/bamt/ok24.png'>" if ($g0url eq $pname);
-    $pusr = ${@pools[$i]}{'user'};
-    $pstat = ${@pools[$i]}{'status'};
-    if ($pstat eq "Dead") {
-      $problems++;
-      push(@nodemsg, "Pool $i is dead"); 
-      $pstatus = "<td class='error'>" . $pstat . "</td>";
-	  if ($i == $showpool) {
-	  	push(@poolmsg, "Pool is dead"); 
-	  }	
-    } else {
-      $pstatus = "<td>" . $pstat . "</td>";
-    }
-    $pimg = "<img src='/bamt/error24.png'>" if ($pstat ne "Alive");
-    $ppri = ${@pools[$i]}{'priority'};
-    $pimg = "<img src='/bamt/timeout24.png'>" if (($g0url ne $pname)&&(($ppri eq 0)&&($pstat eq "Alive")));
-    $pacc = ${@pools[$i]}{'accepted'};
-    $prej = ${@pools[$i]}{'rejected'};
-    if ($prej ne "0") {
-      $prr = sprintf("%.2f", $prej / ($pacc + $prej)*100);
-    } else { 
-	   $prr = "0.0";
-    }
-	if (defined(${$config}{monitor_reject_hi}) && ($prr > ${$config}{monitor_reject_hi})) {
-      $problems++;
-      push(@nodemsg, "Pool $i reject ratio too high"); 
-  	  $prat = "<td class='error'>" . $prr . "%</td>";
-	  if ($i == $showpool) {
-        push(@poolmsg, "Reject ratio is too high"); 
-	  }	
-    } else { 
-      $prat = "<td>" . $prr . "%</td>";
-    }
-#    $pquo = ${@pools[$i]}{'quota'};
-#    $pqb++ if ($pquo ne "1");
-      if ($showpool == $i) { 
-      $psgw = ${@pools[$i]}{'getworks'};
-      $psw = ${@pools[$i]}{'works'}; 
-      $psd = ${@pools[$i]}{'discarded'}; 
-      $pss = ${@pools[$i]}{'stale'}; 
-      $psgf = ${@pools[$i]}{'getfails'}; 
-      $psrf = ${@pools[$i]}{'remotefailures'};
-      if ($g0url eq $pname) {
-	$current = "Active";
-      } else { 
-	$current = "Not Active";
-      }
-      $psput .= "<tr><td class='big'>$current</td>";
-      if ($g0url ne $pname) {
-      $psput .= "<td><form name='pdelete' action='status.pl' method='POST'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
-      }
-      $psput .= "<tr><td>Mining URL:</td><td>" . $pname . "</td></tr>";
-	  if ($avers > 16) {
-        $psput .= "<tr><td>Worker:</td><td>" . $pusr . "</td></tr>";
-      }  
-      $psput .= "<tr><td>Priority:</td><td>" . $ppri . "</td></tr>";
-      $psput .= "<tr><td>Quota:</td><td>" . $ppri . "</td></tr>";
-      $psput .= "<tr><td>Status:</td>" . $pstatus . "</tr>";
-      $psput .= "<tr><td>Shares A/R:</td><td>" . $pacc . " / " . $prej . "</td></tr>";
-      $psput .= "<tr><td>Getworks:</td><td>" . $psgw . "</td></tr>";
-      $psput .= "<tr><td>Works:</td><td>" . $psw . "</td></tr>";
-      $psput .= "<tr><td>Discarded:</td><td>" . $psd . "</td></tr>";
-      $psput .= "<tr><td>Stale:</td><td>" . $pss . "</td></tr>";
-      $psput .= "<tr><td>Get Failures:</td><td>" . $psgf . "</td></tr>";
-      $psput .= "<tr><td>Remote Failures:</td><td>" . $psrf . "</td></tr>";
-    } else {
-      my $purl = "?";
-      $purl .= "pool=$i";
-      $psum .= '<TR><TD class="bigger"><A href="' . $purl . '">' . $i . '</TD>';
-      $psum .= "<td>" . $pname . "</td>";
-      if (length($pusr) > 20) { 
-        $pusr = substr($pusr, 1, 6) . " ... " . substr($pusr, -6, 6) if (index($pusr, '.') < 0);
-      }
-      if ($avers > 16) {
-        $psum .= "<td>" . $pusr . "</td>";
-      }
-      $psum .= $pstatus;
-      $psum .= "<td>" . $pacc . " / " . $prej . "</td>";
-      $psum .= $prat;
-      $psum .= "<td>" . $pimg . "</td>";
-      $psum .= "<td>" . $ppri . "</td>";
-#      $psum .= "<td>" . $pquo . "</td>";
-#      $psum .= "<td><form name='pquota' action='poolmanage.pl' method='text'>";
-#      $psum .= "<input type='text' size='3' name='qval' required>";
-#      $psum .= "<input type='hidden' name='qpool' value='$i'>";
-#      $psum .= "<input type='submit' value='Set'></form></td></tr>";
-    }
-  }
-  $psum .= "<tr><form name='padd' action='status.pl' method='POST'>";
-  $psum .= "<td colspan='2'><input type='text' size='45' placeholder='MiningURL:portnumber' name='npoolurl' required>";
-  $psum .= "</td><td colspan='2'><input type='text' placeholder='username.worker' name='npooluser' required>";
-  $psum .= "</td><td colspan='2'><input type='text' size='15' placeholder='worker password' name='npoolpw'>";
-  $psum .= "</td><td colspan='2'><input type='submit' value='Add'>"; 
-  $psum .= "</td></form></tr>";
+if ($ispriv eq "S") {
 
-#if ($pqb ne "0") {
-#  $p1add .= "<td colspan='3'><form name='qreset' action='poolmanage.pl' method='text'>";
-#  $p1add .= "<input type='hidden' name='qreset' value='reset'>";
-#  $p1add .= "<input type='submit' value='Unset Quotas'></form></td>";
-#} else { 
-#  $p1add .= "<td colspan='3'><small>Failover Mode</small></td>"; 
-#}
+	$p1sum .= "<TR class='ghdr'><TD class='ghdr'>Pool</TD>";
+	$p1sum .= "<TD class='ghdr'>Pool URL</TD>";
+	if ($avers > 16) {
+	  $p1sum .= "<TD class='ghdr'>Worker</TD>"; 
+	}
+	$p1sum .= "<TD class='ghdr'>Status</TD>";
+	$p1sum .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
+	$p1sum .= "<TD class='ghdr'>Active</TD>";
+	$p1sum .= "<TD class='ghdr'>Prio</TD>";
+	#$p1sum .= "<TD class='ghdr' colspan=2>Quota (ratio or %)</TD>";
+	$p1sum .= "</TR>";
+
+	my @poolmsg; $pqb=0;
+	if (@pools) { 
+	  my $g0url = $gpus[0]{'pool_url'}; 
+	  for (my $i=0;$i<@pools;$i++) {
+	    $pimg = "<form name='pselect' action='status.pl' method='POST'><input type='hidden' name='swpool' value='$i'><button type='submit'>Switch</button></form>";
+	    $pnum = ${@pools[$i]}{'poolid'};
+	    $pname = ${@pools[$i]}{'url'};
+	    $pimg = "<img src='/bamt/ok24.png'>" if ($g0url eq $pname);
+	    $pusr = ${@pools[$i]}{'user'};
+	    $pstat = ${@pools[$i]}{'status'};
+	    if ($pstat eq "Dead") {
+	      $problems++;
+	      push(@nodemsg, "Pool $i is dead"); 
+	      $pstatus = "<td class='error'>" . $pstat . "</td>";
+		  if ($i == $showpool) {
+		  	push(@poolmsg, "Pool is dead"); 
+		  }	
+	    } else {
+	      $pstatus = "<td>" . $pstat . "</td>";
+	    }
+	    $pimg = "<img src='/bamt/error24.png'>" if ($pstat ne "Alive");
+	    $ppri = ${@pools[$i]}{'priority'};
+	    $pimg = "<img src='/bamt/timeout24.png'>" if (($g0url ne $pname)&&(($ppri eq 0)&&($pstat eq "Alive")));
+	    $pacc = ${@pools[$i]}{'accepted'};
+	    $prej = ${@pools[$i]}{'rejected'};
+	    if ($prej ne "0") {
+	      $prr = sprintf("%.2f", $prej / ($pacc + $prej)*100);
+	    } else { 
+		   $prr = "0.0";
+	    }
+		if (defined(${$config}{monitor_reject_hi}) && ($prr > ${$config}{monitor_reject_hi})) {
+	      $problems++;
+	      push(@nodemsg, "Pool $i reject ratio too high"); 
+	  	  $prat = "<td class='error'>" . $prr . "%</td>";
+		  if ($i == $showpool) {
+	        push(@poolmsg, "Reject ratio is too high"); 
+		  }	
+	    } else { 
+	      $prat = "<td>" . $prr . "%</td>";
+	    }
+	#    $pquo = ${@pools[$i]}{'quota'};
+	#    $pqb++ if ($pquo ne "1");
+	      if ($showpool == $i) { 
+	      $psgw = ${@pools[$i]}{'getworks'};
+	      $psw = ${@pools[$i]}{'works'}; 
+	      $psd = ${@pools[$i]}{'discarded'}; 
+	      $pss = ${@pools[$i]}{'stale'}; 
+	      $psgf = ${@pools[$i]}{'getfails'}; 
+	      $psrf = ${@pools[$i]}{'remotefailures'};
+	      if ($g0url eq $pname) {
+		$current = "Active";
+	      } else { 
+		$current = "Not Active";
+	      }
+	      $psput .= "<tr><td class='big'>$current</td>";
+	      if ($g0url ne $pname) {
+	      $psput .= "<td><form name='pdelete' action='status.pl' method='POST'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
+	      }
+	      $psput .= "<tr><td>Mining URL:</td><td>" . $pname . "</td></tr>";
+		  if ($avers > 16) {
+	        $psput .= "<tr><td>Worker:</td><td>" . $pusr . "</td></tr>";
+	      }  
+	      $psput .= "<tr><td>Priority:</td><td>" . $ppri . "</td></tr>";
+	      $psput .= "<tr><td>Quota:</td><td>" . $ppri . "</td></tr>";
+	      $psput .= "<tr><td>Status:</td>" . $pstatus . "</tr>";
+	      $psput .= "<tr><td>Shares A/R:</td><td>" . $pacc . " / " . $prej . "</td></tr>";
+	      $psput .= "<tr><td>Getworks:</td><td>" . $psgw . "</td></tr>";
+	      $psput .= "<tr><td>Works:</td><td>" . $psw . "</td></tr>";
+	      $psput .= "<tr><td>Discarded:</td><td>" . $psd . "</td></tr>";
+	      $psput .= "<tr><td>Stale:</td><td>" . $pss . "</td></tr>";
+	      $psput .= "<tr><td>Get Failures:</td><td>" . $psgf . "</td></tr>";
+	      $psput .= "<tr><td>Remote Failures:</td><td>" . $psrf . "</td></tr>";
+	    } else {
+	      my $purl = "?";
+	      $purl .= "pool=$i";
+	      $psum .= '<TR><TD class="bigger"><A href="' . $purl . '">' . $i . '</TD>';
+	      $psum .= "<td>" . $pname . "</td>";
+	      if (length($pusr) > 20) { 
+	        $pusr = substr($pusr, 1, 6) . " ... " . substr($pusr, -6, 6) if (index($pusr, '.') < 0);
+	      }
+	      if ($avers > 16) {
+	        $psum .= "<td>" . $pusr . "</td>";
+	      }
+	      $psum .= $pstatus;
+	      $psum .= "<td>" . $pacc . " / " . $prej . "</td>";
+	      $psum .= $prat;
+	      $psum .= "<td>" . $pimg . "</td>";
+	      $psum .= "<td>" . $ppri . "</td>";
+	#      $psum .= "<td>" . $pquo . "</td>";
+	#      $psum .= "<td><form name='pquota' action='poolmanage.pl' method='text'>";
+	#      $psum .= "<input type='text' size='3' name='qval' required>";
+	#      $psum .= "<input type='hidden' name='qpool' value='$i'>";
+	#      $psum .= "<input type='submit' value='Set'></form></td></tr>";
+	    }
+	  }
+	  $psum .= "<tr><form name='padd' action='status.pl' method='POST'>";
+	  $psum .= "<td colspan='2'><input type='text' size='45' placeholder='MiningURL:portnumber' name='npoolurl' required>";
+	  $psum .= "</td><td colspan='2'><input type='text' placeholder='username.worker' name='npooluser' required>";
+	  $psum .= "</td><td colspan='2'><input type='text' size='15' placeholder='worker password' name='npoolpw'>";
+	  $psum .= "</td><td colspan='2'><input type='submit' value='Add'>"; 
+	  $psum .= "</td></form></tr>";
+
+	#if ($pqb ne "0") {
+	#  $p1add .= "<td colspan='3'><form name='qreset' action='poolmanage.pl' method='text'>";
+	#  $p1add .= "<input type='hidden' name='qreset' value='reset'>";
+	#  $p1add .= "<input type='submit' value='Unset Quotas'></form></td>";
+	#} else { 
+	#  $p1add .= "<td colspan='3'><small>Failover Mode</small></td>"; 
+	#}
+
+	} else { 
+	  $psum .= "<TR><TD colspan='8'><big>Active Pool Information Unavailable</big></td></tr>";
+	}
+	$psum .= "</table><br>";
+	$p1sum .= $psum;
 
 } else { 
-    $psum .= "<TR><TD colspan='8'><big>Active Pool Information Unavailable</big></td></tr>";
+  $p1sum .= "<TR><TD id=perror><p>The required API permissions do not appear to be enabled.<br>";
+  $p1sum .= "Please ensure your cgminer.conf contains the following line:<br>";
+  $p1sum .= '"api-allow" : "W:127.0.0.1",';
+  $p1sum .= "</p></td></tr>";
+  $p1sum .= "</table><br>";
 }
 
-$psum .= "</table><br>";
 
-$p1sum .= $psum;
 
 # Overview starts here
 
