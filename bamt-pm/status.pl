@@ -139,6 +139,8 @@ my $ispriv = &CGMinerIsPriv;
 my @gpus = &getFreshGPUData(1);
 my @pools = &getCGMinerPools(1);
 my @summary = &getCGMinerSummary;
+my $UHOH = "false";
+$UHOH = "true" if (!(@pools) && (@summary) && (@gpus)); 
 
 # do GPUs
 my $gput = "";
@@ -797,8 +799,12 @@ given($x) {
     	print "</div>";
 	}
 	default {
-		print "<div class='gpudata'>";	
+	  print "<div class='gpudata'>";
 
+	  if ($UHOH eq "true") {
+		print "<table><tr><td class=big><p>Uh Oh! No data could be retreived! Please check your configuration and try again.</p></td></tr></table>";
+	  } else {
+	  	print $UHOH;
 	    print $mcontrol;	
 	    print $p1sum;
 	    print $g1put;
@@ -823,6 +829,7 @@ given($x) {
 		print "</td></tr></table>";
 		print "</div>";	
 		print "<P><A href='/munin/" . $conf{'settings'}{'miner_id'} . "/index.html'>More system stats (munin)...</A>";
+	  }
 	}
 }
 
