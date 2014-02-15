@@ -140,7 +140,7 @@ my @gpus = &getFreshGPUData(1);
 my @pools = &getCGMinerPools(1);
 my @summary = &getCGMinerSummary;
 my $UHOH = "false";
-$UHOH = "true" if (!(@pools) && (@summary) && (@gpus)); 
+$UHOH = "true" if (!(@pools) && !(@summary) && !(@gpus)); 
 
 # do GPUs
 my $gput = "";
