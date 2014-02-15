@@ -425,13 +425,12 @@ sub getFreshGPUData
      if ($gidata =~ m/powertune\s(\d+)\%/) {
        $gptune = $1;
      }
-     if ($gidata =~ m/fan\sspeed\s(\d+)\%\s\((\d+)\sRPM\)/) {
+     if ($gidata =~ m/fan\sspeed\s(\d+)\%/) {
         $gfspeed = $1;
-        $gfrpm = $2;
-     } else {
-       $gfspeed = "na";
-       $gfrpm = "na";
      }
+     if ($gidata =~ m/\s\((\d+)\sRPM\)/) {
+        $gfrpm = $1;
+     } 
 
      $gpus[$gpu] = ({ desc => $gdesc, display => $gdisp, current_core_clock => $geclock, current_mem_clock=>$gmclock, current_core_voltage=>$gvolt, current_performance_level => $gplevel, current_load=>$gutil, current_temp_0=>$gtemp, current_powertune=>$gptune, fan_speed=>$gfspeed, fan_rpm=>$gfrpm });
 

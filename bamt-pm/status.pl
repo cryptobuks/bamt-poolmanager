@@ -153,7 +153,7 @@ my @gpumsg;
 $g1put .= "<TABLE><TR class='ghdr'><TD class='ghdr'>GPU</TD>";
 $g1put .= "<TD class='ghdr'>Status</TD>";
 $g1put .= "<TD class='ghdr'>Temp</TD>";
-$g1put .= "<TD class='ghdr'>Fan\% (rpm)</TD>";
+$g1put .= "<TD class='ghdr'>Fan</TD>";
 $g1put .= "<TD class='ghdr'>Load</TD>";
 $g1put .= "<TD class='ghdr'>Pool</TD>";
 $g1put .= "<TD class='ghdr'>Rate</TD>";
@@ -206,7 +206,8 @@ for (my $i=0;$i<@gpus;$i++)
 	$gput .= sprintf("%.1f", $gpus[$i]{'current_temp_0'}) . ' C';
 	$gput .= '</TD>';
 	
-	if (defined($conf{'gpu'. $i}{monitor_fan_lo}) && ($gpus[$i]{'fan_rpm'} < $conf{'gpu'. $i}{monitor_fan_lo}) && (! $gpus[$i]{'fan_rpm'} eq 'na'))
+	$frpm = $gpus[$i]{'fan_rpm'}; $frpm = "0" if ($frpm eq "");
+	if (defined($conf{'gpu'. $i}{monitor_fan_lo}) && $frpm < ($conf{'gpu'. $i}{monitor_fan_lo}) && ($frpm > 0))
 	{
 		$problems++;
 		push(@nodemsg, "GPU $i is below minimum fan rpm");
@@ -223,12 +224,19 @@ for (my $i=0;$i<@gpus;$i++)
 	{
 		if ($i == $showgpu)
 		{
-				$gsput .= "<tr><td>Fan speed:</td><td>" .  $gpus[$i]{'fan_speed'} . '% (' . $gpus[$i]{'fan_rpm'}  . " rpm)</td></tr>";
+				$gsput .= "<tr><td>Fan speed:</td><td>" .  $gpus[$i]{'fan_speed'} . '% ';
+				if ($frpm > 0) {
+				  $gsput .= '(' . $gpus[$i]{'fan_rpm'}  . ' rpm)';
+				}
+				$gsput .= "</td></tr>";
 		}
 		
 		$gput .= '<td>';
 	}		
-	$gput .= $gpus[$i]{'fan_speed'} . '% (' . $gpus[$i]{'fan_rpm'} . ')';
+	$gput .= $gpus[$i]{'fan_speed'} . '% ';
+	if ($frpm > 0) {
+	  $gput .= '(' . $gpus[$i]{'fan_rpm'} . ')';
+	}
 	$gput .= '</TD>';
 
 	if (defined($conf{'gpu'. $i}{monitor_hash_lo}) && ($gpus[$i]{'current_load'} < $conf{'gpu'. $i}{monitor_load_lo}))
@@ -335,12 +343,15 @@ for (my $i=0;$i<@gpus;$i++)
 	  $gpuhwe = "<td>" . $ghwe . "</td>";
 	}
     $gput .= $gpuhwe;
-		
-	$gput .= '<TD>' . $gpus[$i]{'current_core_clock'} . ' Mhz</td>';
-		
-	$gput .= '<TD>' . $gpus[$i]{'current_mem_clock'} . ' Mhz</td>';
-		
-	$gput .= '<TD>' . $gpus[$i]{'current_core_voltage'} . 'v</td>';
+	
+	$gccc = $gpus[$i]{'current_core_clock'}; $gccc = "0" if ($gccc eq "");	
+	$gput .= '<TD>' . $gccc . ' Mhz</td>';
+
+	$gcmc = $gpus[$i]{'current_mem_clock'}; $gcmc = "0" if ($gcmc eq "");			
+	$gput .= '<TD>' . $gcmc . ' Mhz</td>';
+
+	$gccv = $gpus[$i]{'current_core_voltage'}; $gccv = "0" if ($gccv eq "");				
+	$gput .= '<TD>' . $gccv . 'v</td>';
 
 	$gput .= "</TR>";
 
@@ -350,9 +361,9 @@ for (my $i=0;$i<@gpus;$i++)
 		$gsput .= "<tr><td>HW Errors:</td>" . $gpuhwe . "</tr>"; 
         $gsput .= "<tr><td>Powertune:</td><td>" . $gpus[$i]{'current_powertune'} . "%</td></tr>";
         $gsput .= "<tr><td>Intensity:</td><td>" . $gpus[$i]{'intensity'} . "</td></tr>";
-		$gsput .= "<tr><td>Core clock:</td><td>" . $gpus[$i]{'current_core_clock'} . ' Mhz</td></tr>'; 
-		$gsput .= "<tr><td>Mem clock:</td><td>" . $gpus[$i]{'current_mem_clock'} . ' Mhz</td></tr>';
-		$gsput .= "<tr><td>Core power:</td><td>" . $gpus[$i]{'current_core_voltage'} . "v</td></tr>";
+		$gsput .= "<tr><td>Core clock:</td><td>" . $gccc . ' Mhz</td></tr>'; 
+		$gsput .= "<tr><td>Mem clock:</td><td>" . $gcmc . ' Mhz</td></tr>';
+		$gsput .= "<tr><td>Core power:</td><td>" . $gccv . "v</td></tr>";
 		$gsput .= "<tr><td>GPU model:</td><td>" . $gpus[$i]{'desc'}  . "</td></tr>";
 	}
 		
