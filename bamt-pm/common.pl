@@ -404,7 +404,7 @@ sub getFreshGPUData
      if ($gidata =~ m/\(:(\d+\.\d+)\)/) {
       $gdisp = $1;
      }
-     if ($gidata =~ m/engine\sclock\s(\d+)MHz/) {
+     if ($gidata =~ m/engine\sclock\s(\d+\.?\d+?)MHz/) {
        $geclock = $1;
      }
      if ($gidata =~ m/memory\sclock\s(\d+)MHz/) {
