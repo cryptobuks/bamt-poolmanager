@@ -33,18 +33,13 @@ if ($apooln ne "") {
     }
   }
   if ($pmatch eq 0) {
-  # print "<td><big>Adding Pool...</big></td>";
     &addPool($apooln, $apoolu, $apoolp);
     &saveConfig();
     $apooln = ""; $apoolu = ""; $apoolp = "";
   } 
-  #else {
-  #  print "<td bgcolor='yellow'><p><big>Duplicate Pool, not adding!</big></td>";
-  #}
 }
 my $dpool = $in{'delpool'};
 if ($dpool ne "") {
-#  print "<td><big>Removing Pool...</big></td>";
   &delPool($dpool);
   &saveConfig();
   $dpool = "";
@@ -54,13 +49,11 @@ if ($dpool ne "") {
 my $qval = $in{'qval'};
 if ($qval ne "") {
   $qpool = $in{'qpool'};
- # print "<td><big>Setting pool $qpool to quota $qval... </big></td>";
   &quotaPool($qpool, $qval);
   $qval = ""; $qpool = "";
 }
 my $qreset = $in{'qreset'};
 if ($qreset eq "reset") {
- # print "<td><big>Unsetting pool quotas ... </big></td>";
   my @pools = &getCGMinerPools(1);
   for (my $i=0;$i<@pools;$i++) {
     &quotaPool($i, "1");
@@ -78,8 +71,6 @@ $showgpu = -1;
 $showpool = -1;
 $showminer = -1;
 
-#$mgpumon = $q->param('mgpumon') or $mgpumon = "";
-
 if (defined($q->param('gpu')))
 {
 	$showgpu = $q->param('gpu');
@@ -93,19 +84,7 @@ if (defined($q->param('miner')))
 	$showminer = $q->param('miner');
 }
 
-#$refer = $q->referer();
-
-#if ($refer =~ m/.*\/mgpumon\/$/)
-#{
-#	$mgpumon = $refer;
-#}
-
 my $url = "?";
-
-#if (! $mgpumon eq "")
-#{
-#	$url .= "mgpumon=$mgpumon&";
-#}
 
 if ($showgpu > -1)
 {
@@ -128,7 +107,6 @@ if ($url eq "?")
 else
 {
 	$url .= "tok=1";
-#	print start_html( -title=>'PoolManager - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -script=>{-type=>'text', -src=>'poolmanage.pl?name=zero'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30; url=' . $url })  );
 	print start_html( -title=>'PoolManager - ' . $conf{'settings'}{'miner_id'} . ' status', -style=>{-src=>'/bamt/status.css'},  -head=>$q->meta({-http_equiv=>'REFRESH',-content=>'30; url=' . $url })  );
 
 }
@@ -368,10 +346,7 @@ for (my $i=0;$i<@gpus;$i++)
 	}
 		
 	my $gpuurl = "?";	
-#	if (! $mgpumon eq "")
-#	{
-#		$gpuurl .= "mgpumon=$mgpumon&";
-#	}
+
 	$gpuurl .= "gpu=$i";
 	
 	if ($problems)
@@ -478,10 +453,6 @@ if (@summary) {
 		$minebs = ${@summary[$i]}{'best_share'};
 		$minebs = 0 if ($minebs eq "");
       	$msput .= "<tr><td>Best Share:</td><td>" . $minebs . "</td></tr>";
-#		$mineut = ${@summary[$i]}{'utility'};
-#      	$msput .= "<tr><td>Utility:</td><td>" . $mineut . "</td></tr>";
-#		$minelw = ${@summary[$i]}{'local_work'};
-#      	$msput .= "<tr><td>Local Work:</td><td>" . $minelw . "</td></tr>";
   	} else {		
 		if ($melapsed > 0) {  	  
 		  $mcontrol .= "<td>Run time: " . $mrunt . "</td>";
@@ -716,10 +687,6 @@ given($x) {
 	when ($showgpu > -1) {
 		print "<div id='showgpu'>";
 		print "<A HREF=?";	
-#		if (! $mgpumon eq "")
-#		{
-#			$gpuurl .= "mgpumon=$mgpumon&";
-#		}	
 		print "tok=1> << Back to overview</A>";
 		print "<P>";	
 
