@@ -782,13 +782,6 @@ sub getCGMinerPools
 	
 	my $conf = &getConfig;
     	%conf = %{$conf}; 
-    
-	my $version = &getCGMinerVersion;
-	if ($version =~ m/API=1\.(\d+)/) {
-    $avers = $1; 
-	} else { 
-	  $avers = "0";
-	}
 
   my $cgport = 4028;
  	if (defined(${$conf}{'settings'}{'cgminer_port'}))
@@ -816,25 +809,60 @@ sub getCGMinerPools
 		}
 		
 		close($sock);
-	
-      # Per https://github.com/ckolivas/cgminer/blob/master/API-README		
-    	if ($avers > 7) {
-    	  while ($res =~ m/\|POOL=(\d+),URL=(.+?),Status=(.+?),Priority=(\d+),Quota=(\d+),Long Poll=(.+?),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Works=(\d+),Discarded=(\d+),Stale=(\d+),Get Failures=(\d+),Remote Failures=(\d+),User=(.+?),/g)
-    	  {
-    	  push(@pools, ({ poolid=>$1, url=>$2, status=>$3, priority=>$4, quota=>$5, lp=>$6, getworks=>$7, accepted=>$8, rejected=>$9, works=>$10, discarded=>$11, stale=>$12, getfails=>$13, remotefailures=>$14, user=>$15 }) );
-    	  }
-    	} else { 
-    	  while ($res =~ m/\|POOL=(\d+),URL=(.+?),Status=(.+?),Priority=(\d+),Quota=(\d+),Long Poll=(.+?),Getworks=(\d+),Accepted=(\d+),Rejected=(\d+),Works=(\d+),Discarded=(\d+),Stale=(\d+),Get Failures=(\d+),Remote Failures=(\d+),/g)
-    	  {
-    	  push(@pools, ({ poolid=>$1, url=>$2, status=>$3, priority=>$4, quota=>$5, lp=>$6, getworks=>$7, accepted=>$8, rejected=>$9, works=>$10, discarded=>$11, stale=>$12, getfails=>$13, remotefailures=>$14 }) );
-    	  }
 
-    	}
+	      my $poid = ""; $pdata = ""; 
+    	  while ($res =~ m/POOL=(\d+),(.+?)\|/g) {
+          $poid = $1; $pdata = $2; 
+          if ($pdata =~ m/URL=(.+?),/) {
+            $purl = $1; 
+          }
+          if ($pdata =~ m/Status=(.+?),/) {
+            $pstat = $1; 
+          }
+          if ($pdata =~ m/Priority=(\d+),/) {
+            $ppri = $1; 
+          }
+          if ($pdata =~ m/Quota=(\d+),/) {
+            $pquo = $1; 
+          }
+          if ($pdata =~ m/Long Poll=(.+?),/) {
+            $plp = $1; 
+          }
+          if ($pdata =~ m/Getworks=(\d+),/) {
+            $pgw = $1; 
+          }
+          if ($pdata =~ m/Accepted=(\d+),/) {
+            $pacc = $1; 
+          }
+          if ($pdata =~ m/Rejected=(\d+),/) {
+            $prej = $1; 
+          }        
+          if ($pdata =~ m/Works=(\d+),/) {
+            $pworks = $1; 
+          }  
+          if ($pdata =~ m/Discarded=(\d+),/) {
+            $pdisc = $1; 
+          }  
+          if ($pdata =~ m/Stale=(\d+),/) {
+            $pstale = $1; 
+          }  
+          if ($pdata =~ m/Get Failures=(\d+),/) {
+            $pgfails = $1; 
+          }  
+          if ($pdata =~ m/Remote Failures=(\d+),/) {
+            $prfails = $1; 
+          }  
+          if ($pdata =~ m/User=(.+?),/) {
+            $puser = $1; 
+          }  
 
-    }
-	
-	return(@pools);
-		
+    	    push(@pools, ({ poolid=>$poid, url=>$purl, status=>$pstat, priority=>$ppri, quota=>$pquo, 
+          lp=>$plp, getworks=>$pgw, accepted=>$pacc, rejected=>$prej, works=>$pworks, discarded=>$pdisc, 
+          stale=>$pstale, getfails=>$pgfails, remotefailures=>$prfails, user=>$puser }) );
+
+        }
+        return(@pools);   
+    } 
 }
 
 sub getCGMinerStats
