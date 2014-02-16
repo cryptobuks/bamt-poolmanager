@@ -14,8 +14,7 @@ Extended from the BAMT miner web interface, which is in perl (no php).
 
 See the wiki page for screenshots.
 
-Reqirements: BAMT linux running cgminer/sgminer. 
-API version detection should now prevent breakage on various miner build versions. 
+Reqirements: BAMT linux running cgminer/sgminer (not version dependent). 
 Built and tested on litecoin-bamt 1.2, but should work with any flavor of BAMT, including SMOS. 
 
 EASY PEASY SURE FIRE INSTALL INSTRUCTIONS: 
