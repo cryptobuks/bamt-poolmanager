@@ -45,6 +45,12 @@ if ($dpool ne "") {
   $dpool = "";
 }
 
+my $cgraphs = $in{'cgraphs'};
+if ($cgraphs ne "") {
+  exec `/usr/bin/touch /tmp/cleargraphs.flag`;
+  $cgraphs = "";
+}
+
 # Someday, maybe.
 my $qval = $in{'qval'};
 if ($qval ne "") {
@@ -333,6 +339,8 @@ for (my $i=0;$i<@gpus;$i++)
 
 	$gput .= "</TR>";
 
+#	$gput .= "<TR><td colspan=13><img src=/IFMI/gpu$i.png></td></tr>";
+
 	if ($i == $showgpu)
 	{
         push(@gpumsg, "GPU $i has Hardware Errors") if ($ghwe > 0);		
@@ -343,6 +351,7 @@ for (my $i=0;$i<@gpus;$i++)
 		$gsput .= "<tr><td>Mem clock:</td><td>" . $gcmc . ' Mhz</td></tr>';
 		$gsput .= "<tr><td>Core power:</td><td>" . $gccv . "v</td></tr>";
 		$gsput .= "<tr><td>GPU model:</td><td>" . $gpus[$i]{'desc'}  . "</td></tr>";
+		$ggimg = "<img src='/IFMI/graphs/gpu$i.png'>";
 	}
 		
 	my $gpuurl = "?";	
@@ -453,6 +462,9 @@ if (@summary) {
 		$minebs = ${@summary[$i]}{'best_share'};
 		$minebs = 0 if ($minebs eq "");
       	$msput .= "<tr><td>Best Share:</td><td>" . $minebs . "</td></tr>";
+ 		$msput .= "<tr><td colspan=2><hr></td></tr>";
+ 		$msput .= "<tr><td>Clear All Graphs</td><td>";
+	    $msput .= "<form name='pselect' action='status.pl' method='POST'><input type='hidden' name='cgraphs' value='cgraphs'><button type='submit'>Clear</button></form></td></tr>";
   	} else {		
 		if ($melapsed > 0) {  	  
 		  $mcontrol .= "<td>Run time: " . $mrunt . "</td>";
@@ -564,6 +576,8 @@ if ($ispriv eq "S") {
 	      $psput .= "<tr><td>Stale:</td><td>" . $pss . "</td></tr>";
 	      $psput .= "<tr><td>Get Failures:</td><td>" . $psgf . "</td></tr>";
 	      $psput .= "<tr><td>Remote Failures:</td><td>" . $psrf . "</td></tr>";
+	      $pgimg = "<img src='/IFMI/graphs/pool$i.png'>";
+
 	    } else {
 	      my $purl = "?";
 	      $purl .= "pool=$i";
@@ -609,8 +623,9 @@ if ($ispriv eq "S") {
 	$p1sum .= $psum;
 
 } else { 
-  $p1sum .= "<TR><TD id=perror><p>The required API permissions do not appear to be enabled.<br>";
-  $p1sum .= "Please ensure your cgminer.conf contains the following line:<br>";
+  $p1sum .= "<TR><TD id=perror><p>The required API permissions do not appear to be available.<br>";
+  $p1sum .= "If your miner is not in a stopped state,<br>";
+  $p1sum .= "please ensure your cgminer.conf contains the following line:<br>";
   $p1sum .= '"api-allow" : "W:127.0.0.1",';
   $p1sum .= "</p></td></tr>";
   $p1sum .= "</table><br>";
@@ -689,8 +704,6 @@ given($x) {
 		print "<A HREF=?";	
 		print "tok=1> << Back to overview</A>";
 		print "<P>";	
-
-		print "<table><tr><td>";
 		print "<table><tr><td id='showgpustats'>";	
 		print "<table><tr><td width=200px class='bigger'>GPU $showgpu<br>";	
 		print sprintf("%d", $gpus[$showgpu]{'hashrate'}) . " Kh/s</td></tr>";	
@@ -706,12 +719,8 @@ given($x) {
 		}
 		print "</td></tr></table>";
 
-		print "</td><td><table><tr><td>$gsput</td></tr></table></td></tr></table>";
-		print "</td>";	
-
-		print "<td><img src='/munin/" .  $conf{'settings'}{'miner_id'} .'/'. $conf{'settings'}{'miner_id'} . "/gpuhash$showgpu-day.png'></td></tr>";
-		print "<tr><td style='vertical-align: bottom;'><img src='/munin/" .  $conf{'settings'}{'miner_id'} .'/'. $conf{'settings'}{'miner_id'} . "/gputemp$showgpu-day.png'></td>";
-		print "<td><img src='/munin/" .  $conf{'settings'}{'miner_id'} .'/'. $conf{'settings'}{'miner_id'} . "/gpushares$showgpu-day.png'></td></tr></table>";	
+		print "</td><td><table><tr><td>$gsput</td></tr></table></td></tr></table></td>";	
+		print "<tr><td>$ggimg</td></tr>";
 		print "</div>";
 	}
 	when ($showpool > -1) {
@@ -719,8 +728,6 @@ given($x) {
         print "<A HREF=?";
         print "tok=1> << Back to overview</A>";
         print "<P>";
-#		print "<table><tr><td>";
-# Because someday munin
         print "<table><tr><td id='showgpustats'>";
         print "<table><tr><td width=200px class='bigger'>Pool $showpool<br>";
         my $psacc = ${@pools[$showpool]}{'accepted'};
@@ -743,8 +750,8 @@ given($x) {
                 print "All OK";
         }
    		print "</td></tr></table>";
-		print "</td><td><table><tr><td>$psput</td></tr></table></td></tr></table>";
-#		print "</td></tr></table>";
+		print "</td><td><table><tr><td>$psput</td></tr></table></td></tr></table></td>";
+		print "<tr><td>$pgimg</td></tr>";
 		print "</div>";
 	}
 	when ($showminer > -1) {
@@ -752,11 +759,9 @@ given($x) {
         print "<A HREF=?";
         print "tok=1> << Back to overview</A>";
         print "<P>";
-#		print "<table><tr><td>";
-# Because someday munin
         print "<table><tr><td id='showgpustats'>";
         print "<table><tr><td width=200px class='bigger'>" . $conf{'settings'}{'miner_id'} . "<br>";
-		if ($minerate ne "0") { 
+		if (($minerate ne "0") && ($minewu ne "0")) {
  	      print sprintf("%.1f%%", ($minewu / $minerate) / 10);
 		} else { print "0"; }
 		print "</td></tr><tr><td>Efficiency (WU / Hashrate)</td></tr>"; 
@@ -779,7 +784,6 @@ given($x) {
         print "If you love PoolManager, please consider donating. Thank you!<br> ";
         print "BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6 <br>LTC: LdMJB36zEfTo7QLZyKDB55z9epgN78hhFb<br>";
         print "</table></td></tr></table>";
-#        print "</td></tr></table>";
     	print "</div>";
 	}
 	default {
@@ -796,22 +800,14 @@ given($x) {
 		print "<div id=gpugraphs>";	
 		print "<table id=graphs>";
 		print "<tr><td>";	
-		my $img = $conf{'settings'}{'miner_id'} . '/' . $conf{'settings'}{'miner_id'} . '/gpuhash_all-day.png';
-		if (-e '/tmp/munin/html/' . $img) {
-			print "<img src='/munin/" . $img . "'>";
+		my $img = "/var/www/IFMI/graphs/msummary.png";
+		if (-f $img) {
+			print '<img src="/IFMI/graphs/msummary.png">';
 		} else {
-			print "<font style='color: #999999; font-size: 10px;'>Hash summary graph not available yet.<br>It can take up to 10 minutes for graphs to be created<br>after a restart or node name change.";
+			print "<font style='color: #999999; font-size: 10px;'>Summary graph not available yet.";
 		}
-		print "</td><td>";
-		my $img = $conf{'settings'}{'miner_id'} . '/' . $conf{'settings'}{'miner_id'} . '/gputemp_all-day.png';	
-		if (-e '/tmp/munin/html/' . $img) {
-			print "<img src='/munin/" . $img . "'>";
-		} else {
-			print "<font style='color: #999999; font-size: 10px;'>Temperature summary graph not available yet.<br>It can take up to 10 minutes for graphs to be created<br>after a restart or node name change.";
-		}	
 		print "</td></tr></table>";
 		print "</div>";	
-		print "<P><A href='/munin/" . $conf{'settings'}{'miner_id'} . "/index.html'>More system stats (munin)...</A>";
 	  }
 	}
 }
