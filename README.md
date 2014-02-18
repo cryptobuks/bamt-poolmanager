@@ -11,6 +11,7 @@ Extended from the BAMT miner web interface, which is in perl (no php).
 - Miner details page with reboot control and Configuration Editor. 
 - Farm Overview (mgpumon) is much improved with more information in less space. 
 - Install script enables SSL redirection (and optional default page password) for security. 
+- Native graphing with better details - no Munin
 
 See the wiki page for screenshots.
 

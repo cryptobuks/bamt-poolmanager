@@ -39,6 +39,7 @@ case "$input" in
       cp /opt/bamt/common.pl /opt/bamt/common.pl.back
       cp common.pl /opt/bamt/
       cp pmgraph.pl /opt/ifmi/rrdtool
+      /opt/ifmi/rrdtool/pmgraph.pl
       if ! grep -q  "pmgraph" "/etc/crontab" ; then
         echo "*/5 * * * * root /opt/ifmi/rrdtool/pmgraph.pl" >> /etc/crontab
       fi   

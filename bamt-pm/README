@@ -3,7 +3,7 @@ an extension of the default BAMT web interface that allows you to manage cgminer
 has a few system stats, config editor, and stop/start miner control. 
 It was written and tested on litecoin-bamt 1.2 
 ( https://litecointalk.org/index.php?topic=2924.0 ), but should work on any BAMT based 
-distro (SMOS, etc). I am interested to hear if it doesnt. I am on freenode in #scrypt-mining 
+distro (SMOS, etc). I am interested to hear if it doesnt. I am on freenode in #scrypt-mining and #litecoin-bamt
 
 INSTALL: 
 Executing the install-pm.sh script as root ('sudo ./install-pm.sh') will put the files in 
@@ -22,6 +22,7 @@ Pool priority is not preserved by CGminer when it stops. CGminer will prioritize
 in the conf when it starts in the same order that they appear, so if you have a pool you 
 always want to be Pri 0 on start, make it Pool 0. 
 
+PoolManager can be removed by running the remove-pm.sh script. 
 
 Pizza and praises to lily@disorg.net
 LTC: LdMJB36zEfTo7QLZyKDB55z9epgN78hhFb
@@ -29,6 +30,3 @@ BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6
 
 "Island Farm and Mining Implement - cross over to the Island!" 
 
-TODO: 
-quotas
-munin for pools
