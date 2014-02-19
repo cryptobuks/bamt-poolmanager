@@ -471,12 +471,9 @@ if (@summary) {
 		  $mcontrol .= "<td class='error'>Stopped</td>";
 		  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
 		}
-		$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required></td></form>";
-		
+		$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required></td></form>";		
 		my $mcheck = `ps -eo command | grep [m]gpumon | wc -l`;
 		$mcontrol .=  "<td><A href=/mgpumon/>Farm Overview</A></td>" if ($mcheck >0);
-
-
 	}
   }
 } 
@@ -638,10 +635,11 @@ if ($ispriv eq "S") {
 
 print "<div id='overview'>";
 print "<table><TR><TD>";
-print "<table><TR><TD id='overviewlogo' rowspan=2><IMG src='/IFMI/IFMI-logo-small.png'></TD>";
+print "<table><TR><TD id='overviewlogo' rowspan=2><a href='https://github.com/starlilyth/bamt-poolmanager' target=_blank>";
+print "<IMG src='/IFMI/IFMI-logo-small.png'></a></TD>";
 print "<TD class='overviewid'>" . $conf{'settings'}{'miner_id'} . "</td>";
-print "<td><form name='zero' action='status.pl' method='POST'><input type='hidden' name='zero' value='zero'>";
-print "<input type='image' src='/IFMI/button_round_navy.png' width='10' height='10'></form></td>";
+print "<td align='right'><form name='zero' action='status.pl' method='POST'><input type='hidden' name='zero' value='zero'>";
+print "<input type='image' src='/IFMI/button_round_navy.png' width='10' height='10' alt='Zero Stats'></form></td>";
 print "<tr><TD class='overviewhash' colspan=2>";
 $minerate = "0" if ($minerate eq ""); 
 print $minerate . " Mh/s</TD></tr></table></td>";
@@ -689,7 +687,7 @@ $rigload = $1 if ($uptime =~ /average:\s+(.*?),/);
 my $memfree = `cat /proc/meminfo | grep MemFree`; 
 $rmem = $1 if ($memfree =~ /^MemFree:\s+(.*?)\s+kB$/);
 $rigmem = sprintf("%.3f", $rmem / 1000000);  
-print "System Uptime: $rigup<br>";
+print "Uptime: $rigup<br>";
 print "CPU Load: $rigload<br>";
 print "Mem free: $rigmem GB<br>";
 # END EXTRA STATS
