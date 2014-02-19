@@ -7,6 +7,7 @@ use IO::Socket::INET;
 
 my $PICPATH = "/var/www/IFMI/graphs/";
 my $DBPATH = "/opt/ifmi/rrdtool/";
+my $mport = 4028; 
 
 if (-e '/tmp/cleargraphs.flag') {
   system('/bin/rm /tmp/cleargraphs.flag');
@@ -39,7 +40,7 @@ while ($atidata =~ m/(\d+)\.\s(.+\n.+\n.+\n.+\n.+)/g) {
    my $ghash = ""; my $ghwe = ""; my $gshacc = "";
    my $sock = new IO::Socket::INET (
 	   PeerAddr => '127.0.0.1',
-	   PeerPort => 4028,
+	   PeerPort => $mport,
 	   Proto => 'tcp',
 	   ReuseAddr => 1,
 	   Timeout => 10,
@@ -107,7 +108,7 @@ if (! -f $SDB){
 } 
 my $sock = new IO::Socket::INET (
      PeerAddr => '127.0.0.1',
-     PeerPort => 4028,
+     PeerPort => $mport,
      Proto => 'tcp',
      ReuseAddr => 1,
      Timeout => 10,
@@ -178,7 +179,7 @@ RRDs::graph("-P", $PICPATH . "msummary.png",
 
 my $psock = new IO::Socket::INET (
      PeerAddr => '127.0.0.1',
-     PeerPort => 4028,
+     PeerPort => $mport,
      Proto => 'tcp',
      ReuseAddr => 1,
      Timeout => 10,
