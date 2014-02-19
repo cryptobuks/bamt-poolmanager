@@ -41,7 +41,7 @@ case "$input" in
       cp pmgraph.pl /opt/ifmi/rrdtool
       /opt/ifmi/rrdtool/pmgraph.pl
       if ! grep -q  "pmgraph" "/etc/crontab" ; then
-        echo "*/5 * * * * root /opt/ifmi/rrdtool/pmgraph.pl" >> /etc/crontab
+        echo -e "*/5 * * * * root /opt/ifmi/rrdtool/pmgraph.pl\n" >> /etc/crontab
       fi   
       chmod +x /usr/lib/cgi-bin/*.pl #because windows
       if ! grep coldreboot /etc/sudoers ; then
