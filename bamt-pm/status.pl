@@ -142,7 +142,7 @@ $g1put .= "<TD class='ghdr'>Load</TD>";
 $g1put .= "<TD class='ghdr'>Pool</TD>";
 $g1put .= "<TD class='ghdr'>Rate</TD>";
 $g1put .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
-$g1put .= "<TD class='ghdr'>HW Errors</TD>";
+$g1put .= "<TD class='ghdr'>HW</TD>";
 $g1put .= "<TD class='ghdr'>Core</TD>";
 $g1put .= "<TD class='ghdr'>Memory</TD>";
 $g1put .= "<TD class='ghdr'>Power</TD></tr>";
@@ -339,8 +339,6 @@ for (my $i=0;$i<@gpus;$i++)
 
 	$gput .= "</TR>";
 
-#	$gput .= "<TR><td colspan=13><img src=/IFMI/gpu$i.png></td></tr>";
-
 	if ($i == $showgpu)
 	{
         push(@gpumsg, "GPU $i has Hardware Errors") if ($ghwe > 0);		
@@ -474,6 +472,11 @@ if (@summary) {
 		  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
 		}
 		$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required></td></form>";
+		
+		my $mcheck = `ps -eo command | grep [m]gpumon | wc -l`;
+		$mcontrol .=  "<td><A href=/mgpumon/>Farm Overview</A></td>" if ($mcheck >0);
+
+
 	}
   }
 } 
@@ -690,9 +693,6 @@ print "System Uptime: $rigup<br>";
 print "CPU Load: $rigload<br>";
 print "Mem free: $rigmem GB<br>";
 # END EXTRA STATS
-
-my $mcheck = `ps -eo command | grep [m]gpumon | wc -l`;
-print "<td><A href=/mgpumon/>Farm Overview</A></td>" if ($mcheck >0);
 
 print "</TR></table></div>";
 
