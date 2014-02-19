@@ -142,7 +142,7 @@ if ($sock) {
    or die "Update error: ($RRDs::error)";
 }
 
-my $mname = `hostname`;
+my $mname = `/bin/hostname`;
 chomp $mname; 
 RRDs::graph("-P", $PICPATH . "msummary.png",
  "--start","now-1d",
