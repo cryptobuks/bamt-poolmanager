@@ -5,9 +5,16 @@ use RRDs;
 use Socket;
 use IO::Socket::INET;
 
+require '/opt/bamt/common.pl';
+
+my $conf = &getConfig;
+my %conf = %{$conf};
 my $PICPATH = "/var/www/IFMI/graphs/";
 my $DBPATH = "/opt/ifmi/rrdtool/";
-my $mport = 4028; 
+my $mport = 4028;
+if (defined(${$conf}{'settings'}{'cgminer_port'})) {
+       $mport = ${$conf}{'settings'}{'cgminer_port'};
+}
 
 if (-e '/tmp/cleargraphs.flag') {
   system('/bin/rm /tmp/cleargraphs.flag');
