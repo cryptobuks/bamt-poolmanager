@@ -5,6 +5,9 @@ use RRDs;
 use Socket;
 use IO::Socket::INET;
 
+my $login = (getpwuid $>);
+die "must run as root" if ($login ne 'root');
+
 require '/opt/bamt/common.pl';
 
 my $conf = &getConfig;
