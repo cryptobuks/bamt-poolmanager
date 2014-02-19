@@ -37,14 +37,14 @@ while ($atidata =~ m/(\d+)\.\s(.+\n.+\n.+\n.+\n.+)/g) {
       "RRA:LAST:0.5:1:288", 
       ) or die "Create error: ($RRDs::error)";
    } 
-   my $gtemp = ""; my $gfspeed = "";
+   my $gtemp = "0"; my $gfspeed = "0";
    if ($gidata =~ m/temperature\s([\d\.]+)\sC/) {
      $gtemp = $1;
    }
    if ($gidata =~ m/fan\sspeed\s(\d+)\%/) {
      $gfspeed = $1;
    }
-   my $ghash = ""; my $ghwe = ""; my $gshacc = "";
+   my $ghash = "0"; my $ghwe = "0"; my $gshacc = "0";
    my $sock = new IO::Socket::INET (
 	   PeerAddr => '127.0.0.1',
 	   PeerPort => $mport,
@@ -213,7 +213,7 @@ if ($psock) {
       "RRA:LAST:0.5:1:288", 
       ) or die "Create error: ($RRDs::error)";
     } 
-    my $pstat = ""; my $plive = ""; my $pacc = ""; my $prej = ""; my $pstale = ""; my $prfails = "";
+    my $pstat = "0"; my $plive = "0"; my $pacc = "0"; my $prej = "0"; my $pstale = "0"; my $prfails = "0";
     if ($pdata =~ m/Status=(.+?),/) {
       $pstat = $1; $plive = 0; 
       if ($pstat eq "Alive") {
