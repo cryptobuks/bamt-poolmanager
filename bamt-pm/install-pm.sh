@@ -16,7 +16,7 @@ case "$input" in
     shopt -s nocasematch
     case "$overwrite" in
       y|Y|Yes)
-      echo "Copying files..."
+      echo -e "Copying files...\n"
       mkdir -p /var/www/IFMI/graphs
       mkdir -p /opt/ifmi/rrdtool
       cp /var/www/bamt/status.css /var/www/bamt/status.css.back
@@ -43,15 +43,15 @@ case "$input" in
         echo -e "*/5 * * * * root /opt/ifmi/rrdtool/pmgraph.pl\n" >> /etc/crontab
       fi   
       chmod +x /usr/lib/cgi-bin/*.pl #because windows
-      if ! grep coldreboot /etc/sudoers ; then
+      if ! grep -q "coldreboot" "/etc/sudoers" ; then
        sed -i '/\/bin\/cp/ s/$/,\/sbin\/coldreboot\n/' /etc/sudoers
       fi
-      echo "Done!";;
-      * ) echo "installation exited";;
+      echo -e "Done!\n";;
+      * ) echo -e "installation exited\n";;
     esac
   else
     if [ -d /var/www/bamt ] && [ -d /opt/bamt ]; then
-      echo "Copying files..."
+      echo -e "Copying files...\n"
       mkdir -p /var/www/IFMI/graphs
       mkdir -p /opt/ifmi/rrdtool
       cp /var/www/favicon.ico /var/www/favicon.ico.bamt
@@ -74,20 +74,20 @@ case "$input" in
       cp /opt/bamt/mgpumon /opt/bamt/mgpumon.bamt
       cp mgpumon /opt/bamt/
       cp pmgraph.pl /opt/ifmi/rrdtool
-      echo "*/5 * * * * root /opt/ifmi/rrdtool/pmgraph.pl" >> /etc/crontab
+      echo -e "*/5 * * * * root /opt/ifmi/rrdtool/pmgraph.pl\n" >> /etc/crontab
       chmod +x /usr/lib/cgi-bin/*.pl #because windows
-      echo "Modifying sudoers...."
+      echo -e "Modifying sudoers....\n"
       sed \$a"Defaults targetpw\n"\
 "www-data ALL=(ALL) /usr/sbin/mine,/bin/cp,/sbin/coldreboot\n" /etc/sudoers > /etc/sudoers.ifmi
       cp /etc/sudoers /etc/sudoers.bamt
       cp /etc/sudoers.ifmi /etc/sudoers
-      echo "Running Apache security script..."
+      echo -e "Running Apache security script...\n"
       ./htsec.sh
-      echo "Done! Please read the README and edit your conf file as required. Thank you for flying IFMI!\n"
+      echo -e "Done! Please read the README and edit your conf file as required. Thank you for flying IFMI!\n"
     else
-      echo "This doesn't appear to be a BAMT distribution! Quitting.\n"
+      echo -e "This doesn't appear to be a BAMT distribution! Quitting.\n"
       exit 1;
     fi
   fi ;;
-  * ) echo "installation exited";;
+  * ) echo -e "installation exited\n";;
 esac
