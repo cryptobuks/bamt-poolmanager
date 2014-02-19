@@ -24,10 +24,13 @@ if (-e '/tmp/cleargraphs.flag') {
 
 #GPUs 
 my $atidata = `DISPLAY=:0.0 /usr/local/bin/atitweak -s`;
+if ($atidata eq "") {
+     &blog("No ATI data for graphing!");
+}
 while ($atidata =~ m/(\d+)\.\s(.+\n.+\n.+\n.+\n.+)/g) {
    my $gnum = $1; my $gidata = $2;
    my $GDB = $DBPATH . "gpu" . $gnum . ".rrd";
-   if (! -f $GDB){ 
+   if (! -f $GDB) { 
       RRDs::create("gpu" . $gnum . ".rrd", "--step=300", 
       "DS:hash:GAUGE:600:U:U",
       "DS:shacc:DERIVE:600:0:U",
