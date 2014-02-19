@@ -34,7 +34,7 @@ while ($atidata =~ m/(\d+)\.\s(.+\n.+\n.+\n.+\n.+)/g) {
    my $gnum = $1; my $gidata = $2;
    my $GDB = $DBPATH . "gpu" . $gnum . ".rrd";
    if (! -f $GDB) { 
-      RRDs::create("gpu" . $gnum . ".rrd", "--step=300", 
+      RRDs::create($GDB, "--step=300", 
       "DS:hash:GAUGE:600:U:U",
       "DS:shacc:DERIVE:600:0:U",
       "DS:temp:GAUGE:600:30:100",
@@ -109,7 +109,7 @@ while ($atidata =~ m/(\d+)\.\s(.+\n.+\n.+\n.+\n.+)/g) {
 
 my $SDB = $DBPATH . "summary.rrd";
 if (! -f $SDB){ 
-  RRDs::create("summary.rrd", "--step=300", 
+  RRDs::create($SDB, "--step=300", 
   "DS:mhash:GAUGE:600:U:U",
   "DS:mwu:GAUGE:600:U:U",
   "DS:mshacc:DERIVE:600:0:U",
