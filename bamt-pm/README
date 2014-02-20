@@ -1,9 +1,9 @@
 This is Island Farm and Mining Implement BAMT-PoolManager, 
-an extension of the default BAMT web interface that allows you to manage cgminer pools, 
-has a few system stats, config editor, and stop/start miner control. 
+an extension of the default BAMT web interface that allows you to manage cgminer pools. 
 It was written and tested on litecoin-bamt 1.2 
 ( https://litecointalk.org/index.php?topic=2924.0 ), but should work on any BAMT based 
-distro (SMOS, etc). I am interested to hear if it doesnt. I am on freenode in #scrypt-mining and #litecoin-bamt
+distro (SMOS, etc). I am interested to hear if it doesnt. 
+I am on freenode in #scrypt-mining and #litecoin-bamt
 
 INSTALL: 
 Executing the install-pm.sh script as root ('sudo ./install-pm.sh') will put the files in 
@@ -16,6 +16,9 @@ Please make sure the following entries are in your cgminer.conf
 "api-listen" : true,
 "api-port" : "4028",
 "api-allow" : "W:127.0.0.1",
+
+You may also want the following entry so dead pools will be returned to when they come back to life: 
+"no-pool-disable" : true,
 
 NOTES:
 Pool priority is not preserved by CGminer when it stops. CGminer will prioritize the pools 
