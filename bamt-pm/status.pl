@@ -138,10 +138,10 @@ $g1put .= "<TABLE><TR class='ghdr'><TD class='ghdr'>GPU</TD>";
 $g1put .= "<TD class='ghdr'>Status</TD>";
 $g1put .= "<TD class='ghdr'>Temp</TD>";
 $g1put .= "<TD class='ghdr'>Fan</TD>";
-$g1put .= "<TD class='ghdr'>Load</TD>";
-$g1put .= "<TD class='ghdr'>Pool</TD>";
 $g1put .= "<TD class='ghdr'>Rate</TD>";
+$g1put .= "<TD class='ghdr'>Pool</TD>";
 $g1put .= "<TD class='ghdr' colspan=2>Accept/Reject</TD>";
+$g1put .= "<TD class='ghdr'>I</TD>";
 $g1put .= "<TD class='ghdr'>HW</TD>";
 $g1put .= "<TD class='ghdr'>Core</TD>";
 $g1put .= "<TD class='ghdr'>Memory</TD>";
@@ -152,8 +152,43 @@ my $gsput = "";
 for (my $i=0;$i<@gpus;$i++)
 {
     my $gput = "";
+#    my $gsput = ""; 
 
-	if (defined($conf{'gpu'. $i}{monitor_temp_hi}) && ($gpus[$i]{'current_temp_0'} > $conf{'gpu'. $i}{monitor_temp_hi}))
+	if ($i == $showgpu)
+	{
+ 		my $gpudesc = ""; 
+    	my $gpudesc = $gpus[$i]{'desc'}; 
+    	if ($gpudesc ne "") {
+  	  		$gsput .= "<tr><td>GPU model:</td><td colspan=3>$gpudesc</td></tr>";
+  		} else { 
+  	  		$gsput .= "<tr><td>GPU model:</td><td colspan=3>Unknown</td></tr>";
+  		}
+  	}
+
+    my $ghealth = $gpus[$i]{'status'}; 
+    if ($ghealth ne "Alive") 
+	{
+		$problems++;
+		push(@nodemsg, "GPU $i is $ghealth");
+		
+		if ($i == $showgpu)
+		{
+			push(@gpumsg, "$ghealth");
+			$gsput .= "<tr><td>Status:</td><td class='error'>$ghealth</td>";	
+	        $gsput .= '<td>Enabled:</td><td>' . $gpus[$i]{'enabled'} . "</td></tr>";
+		}
+	}
+	else
+	{
+		if ($i == $showgpu)
+		{
+			$gsput .= "<tr><td>Status:</td><td>$ghealth</td>";	
+	        $gsput .= "<td>Enabled:</td><td>" . $gpus[$i]{'enabled'} . "</td></tr>";
+		}
+		
+ 	}	
+
+	if (defined($conf{'gpu'. $i}{monitor_temp_hi}) && ($gpus[$i]{'current_temp_0_c'} > $conf{'gpu'. $i}{monitor_temp_hi}))
 	{
 			$problems++;
 			push(@nodemsg, "GPU $i is over maximum temp");
@@ -161,12 +196,12 @@ for (my $i=0;$i<@gpus;$i++)
 			if ($i == $showgpu)
 			{
 				push(@gpumsg, "Over maximum temp");
-				$gsput .= "<tr><td>Temp:</td><td class='error'>" . sprintf("%.1f", $gpus[$i]{'current_temp_0'}) . ' c</td></tr>';	
+				$gsput .= "<tr><td>Temp:</td><td class='error'>" . sprintf("%.1f", $gpus[$i]{'current_temp_0_c'}) . 'C</td>';	
 			}
 			
 			$gput .= "<td class='error'>";
 	}
-	elsif (defined( $conf{'gpu'. $i}{monitor_temp_lo}) && ($gpus[$i]{'current_temp_0'} < $conf{'gpu'. $i}{monitor_temp_lo}))
+	elsif (defined( $conf{'gpu'. $i}{monitor_temp_lo}) && ($gpus[$i]{'current_temp_0_c'} < $conf{'gpu'. $i}{monitor_temp_lo}))
 	{
 			$problems++;
 			push(@nodemsg, "GPU $i is below minimum temp");
@@ -174,7 +209,7 @@ for (my $i=0;$i<@gpus;$i++)
 			if ($i == $showgpu)
 			{
 				push(@gpumsg, "Below minimum temp");
-				$gsput .= "<tr><td>Temp:</td><td class='error'>" . sprintf("%.1f", $gpus[$i]{'current_temp_0'}) . ' c</td></tr>';	
+				$gsput .= "<tr><td>Temp:</td><td class='error'>" . sprintf("%.1f", $gpus[$i]{'current_temp_0_c'}) . ' C</td>';	
 			}
 			
 			$gput .= "<td class='error'>";
@@ -183,14 +218,13 @@ for (my $i=0;$i<@gpus;$i++)
 	{
 		if ($i == $showgpu)
 		{
-			$gsput .= "<tr><td>Temp:</td><td>" . sprintf("%.1f", $gpus[$i]{'current_temp_0'}) . ' c</td></tr>';	
+			$gsput .= "<tr><td>Temp:</td><td>" . sprintf("%.1f", $gpus[$i]{'current_temp_0_c'}) . ' C</td>';
 		}
-		$gput .= '<td>';
+		$gput .= '<td>' . sprintf("%.1f", $gpus[$i]{'current_temp_0_c'}) . ' C</td>';
 	}		
-	$gput .= sprintf("%.1f", $gpus[$i]{'current_temp_0'}) . ' C';
 	$gput .= '</TD>';
 	
-	$frpm = $gpus[$i]{'fan_rpm'}; $frpm = "0" if ($frpm eq "");
+	$frpm = $gpus[$i]{'fan_rpm_c'}; $frpm = "0" if ($frpm eq "");
 	if (defined($conf{'gpu'. $i}{monitor_fan_lo}) && $frpm < ($conf{'gpu'. $i}{monitor_fan_lo}) && ($frpm > 0))
 	{
 		$problems++;
@@ -199,7 +233,7 @@ for (my $i=0;$i<@gpus;$i++)
 		if ($i == $showgpu)
 		{
 			push(@gpumsg, "Below minimum fan rpm");
-			$gsput .= "<tr><td>Fan speed:</td><td class='error'>" .  $gpus[$i]{'fan_speed'} . '% (' . $gpus[$i]{'fan_rpm'}  . " rpm)</td></tr>";
+			$gsput .= "<td>Fan speed:</td><td class='error'>" .  $gpus[$i]{'fan_speed_c'} . '% (' . $gpus[$i]{'fan_rpm_c'}  . " rpm)</td></tr>";
 		}
 		
 		$gput .= "<td class='error'>";
@@ -208,45 +242,39 @@ for (my $i=0;$i<@gpus;$i++)
 	{
 		if ($i == $showgpu)
 		{
-				$gsput .= "<tr><td>Fan speed:</td><td>" .  $gpus[$i]{'fan_speed'} . '% ';
+				$gsput .= "<td>Fan speed:</td><td>" .  $gpus[$i]{'fan_speed_c'} . '% ';
 				if ($frpm > 0) {
-				  $gsput .= '(' . $gpus[$i]{'fan_rpm'}  . ' rpm)';
+				  $gsput .= '(' . $gpus[$i]{'fan_rpm_c'}  . ' rpm)';
 				}
 				$gsput .= "</td></tr>";
 		}
 		
 		$gput .= '<td>';
 	}		
-	$gput .= $gpus[$i]{'fan_speed'} . '% ';
+	$gput .= $gpus[$i]{'fan_speed_c'} . '% ';
 	if ($frpm > 0) {
-	  $gput .= '(' . $gpus[$i]{'fan_rpm'} . ')';
+	  $gput .= '(' . $gpus[$i]{'fan_rpm_c'} . ')';
 	}
 	$gput .= '</TD>';
+		
 
-	if (defined($conf{'gpu'. $i}{monitor_hash_lo}) && ($gpus[$i]{'current_load'} < $conf{'gpu'. $i}{monitor_load_lo}))
+	if (defined($conf{'gpu'. $i}{monitor_hash_lo}) && ($gpus[$i]{'hashrate'} < $conf{'gpu'. $i}{monitor_hash_lo}))
 	{
 		$problems++;
-		push(@nodemsg, "GPU $i is below minimum load");
-		
+		push(@nodemsg, "GPU $i is below minimum hash rate");
 		if ($i == $showgpu)
 		{
-			push(@gpumsg, "Below minimum load");
-			$gsput .= "<tr><td>Load:</td><td class='error'>" . $gpus[$i]{'current_load'}  ."%</td></tr>";	
-		}
-		
+			push(@gpumsg, "Below minimum hash rate");
+		}	
 		$gput .= "<td class='error'>";
 	}
 	else
 	{
-		if ($i == $showgpu)
-		{
-			$gsput .= "<tr><td>Load:</td><td>" . $gpus[$i]{'current_load'}  ."%</td></tr>";	
-		}
-		
 		$gput .= '<td>';
- 	}	
-	$gput .= $gpus[$i]{'current_load'} . '%</TD>';
-		
+	}	
+	$gput .= sprintf("%d", $gpus[$i]{'hashrate'}) . " Kh/s</TD>";
+
+
     my $poolurl = $gpus[$i]{'pool_url'};
     if ($poolurl =~ m/.+\@(.+)/) {
       $poolurl = $1;
@@ -256,25 +284,10 @@ for (my $i=0;$i<@gpus;$i++)
     }
  	$shorturl = "N/A" if ($shorturl eq ""); 
     if ($i == $showgpu) {
-        $gsput .= "<tr><td>Pool:</td><td>" . $shorturl  . "</td></tr>";
+        $gsput .= "<tr><td>Pool:</td><td colspan=3>" . $poolurl  . "</td>";
     }
 	$gput .= "<td>" . $shorturl . "</td>";
 
-	if (defined($conf{'gpu'. $i}{monitor_hash_lo}) && ($gpus[$i]{'hashrate'} < $conf{'gpu'. $i}{monitor_hash_lo}))
-	{
-		$problems++;
-		push(@nodemsg, "GPU $i is below minimum hash rate");
-		if ($i == $showgpu)
-		{
-			push(@gpumsg, "Below minimum hash rate");	
-		}	
-		$gput .= "<td class='error'>";
-	}
-	else
-	{
-		$gput .= '<td>';
-	}	
-	$gput .= sprintf("%d", $gpus[$i]{'hashrate'}) . " Kh/s</TD>";
 
 	my $gsha = $gpus[$i]{'shares_accepted'}; $gsha = 0 if ($gsha eq "");
 	my $gshi = $gpus[$i]{'shares_invalid'}; $gshi = 0 if ($gshi eq "");
@@ -289,7 +302,8 @@ for (my $i=0;$i<@gpus;$i++)
 			if ($i == $showgpu)
 			{
 				push(@gpumsg, "Above maximum reject rate");
-				$gsput .= "<tr><td>Shares A/R:</td><td class='error'>" .  $gpus[$i]{'shares_accepted'} . ' / ' . $gpus[$i]{'shares_invalid'} . ' (' . sprintf("%-2.2f%", $rr) . ")</td></tr>";
+		        $gsput .= "<tr><td>Total MH:</td><td>" . $gpus[$i]{'total_mh'} . "</td>";
+				$gsput .= "<td>Shares A/R:</td><td class='error'>" .  $gpus[$i]{'shares_accepted'} . ' / ' . $gpus[$i]{'shares_invalid'} . ' (' . sprintf("%-2.2f%", $rr) . ")</td></tr>";
 			}			
 			$gput .= "<td class='error'>";
 		}
@@ -297,7 +311,8 @@ for (my $i=0;$i<@gpus;$i++)
 		{
 			if ($i == $showgpu)
 			{
-				$gsput .= "<tr><td>Shares A/R:</td><td>" .  $gpus[$i]{'shares_accepted'} . ' / ' . $gpus[$i]{'shares_invalid'} . ' (' . sprintf("%-2.2f%", $rr) . ")</td></tr>";
+		        $gsput .= "<tr><td>Total MH:</td><td>" . $gpus[$i]{'total_mh'} . "</td>";
+				$gsput .= "<td>Shares A/R:</td><td>" .  $gpus[$i]{'shares_accepted'} . ' / ' . $gpus[$i]{'shares_invalid'} . ' (' . sprintf("%-2.2f%", $rr) . ")</td></tr>";
 			}			
 			$gput .= '<td>';
 		}		
@@ -313,6 +328,9 @@ for (my $i=0;$i<@gpus;$i++)
 		$gput .= '<td>N/A';
 	}	
 	$gput .= "</TD>";
+
+	$gint = $gpus[$i]{'intensity'}; $gint = "0" if ($gint eq "");	
+	$gput .= '<TD>' . $gint . '</td>';
 	
     my $ghwe = $gpus[$i]{'hardware_errors'};	
 	if ($ghwe > 0) { 
@@ -328,28 +346,42 @@ for (my $i=0;$i<@gpus;$i++)
 	}
     $gput .= $gpuhwe;
 	
-	$gccc = $gpus[$i]{'current_core_clock'}; $gccc = "0" if ($gccc eq "");	
+	$gccc = $gpus[$i]{'current_core_clock_c'}; $gccc = "0" if ($gccc eq "");	
 	$gput .= '<TD>' . $gccc . ' Mhz</td>';
 
-	$gcmc = $gpus[$i]{'current_mem_clock'}; $gcmc = "0" if ($gcmc eq "");			
+	$gcmc = $gpus[$i]{'current_mem_clock_c'}; $gcmc = "0" if ($gcmc eq "");			
 	$gput .= '<TD>' . $gcmc . ' Mhz</td>';
 
-	$gccv = $gpus[$i]{'current_core_voltage'}; $gccv = "0" if ($gccv eq "");				
+	$gccv = $gpus[$i]{'current_core_voltage_c'}; $gccv = "0" if ($gccv eq "");				
 	$gput .= '<TD>' . $gccv . 'v</td>';
 
 	$gput .= "</TR>";
 
+	if (defined($conf{'gpu'. $i}{monitor_hash_lo}) && ($gpus[$i]{'current_load_c'} < $conf{'gpu'. $i}{monitor_load_lo}))
+	{
+		$problems++;
+		push(@nodemsg, "GPU $i is below minimum load");
+		$gpuload = "<td class='error'>" . $gpus[$i]{'current_load_c'}  ."%</td>";
+		push(@gpumsg, "Below minimum load");
+	} else {
+		$gpuload = "<td>" . $gpus[$i]{'current_load_c'}  . "%</td>";		
+ 	}	
+
 	if ($i == $showgpu)
 	{
+		$gsput .= "<tr><td>Load:</td>" . $gpuload;
+
         push(@gpumsg, "GPU $i has Hardware Errors") if ($ghwe > 0);		
-		$gsput .= "<tr><td>HW Errors:</td>" . $gpuhwe . "</tr>"; 
-        $gsput .= "<tr><td>Powertune:</td><td>" . $gpus[$i]{'current_powertune'} . "%</td></tr>";
-        $gsput .= "<tr><td>Intensity:</td><td>" . $gpus[$i]{'intensity'} . "</td></tr>";
-		$gsput .= "<tr><td>Core clock:</td><td>" . $gccc . ' Mhz</td></tr>'; 
-		$gsput .= "<tr><td>Mem clock:</td><td>" . $gcmc . ' Mhz</td></tr>';
+		$gsput .= "<td>HW Errors:</td>" . $gpuhwe . "</tr>"; 
+
+        $gsput .= "<tr><td>Intensity:</td><td>" . $gpus[$i]{'intensity'} . "</td>";
+        $gsput .= "<td>Powertune:</td><td>" . $gpus[$i]{'current_powertune_c'} . "%</td></tr>";
+
+		$gsput .= "<tr><td>Core clock:</td><td>" . $gccc . ' Mhz</td>'; 
+		$gsput .= "<td>Mem clock:</td><td>" . $gcmc . ' Mhz</td></tr>';
 		$gsput .= "<tr><td>Core power:</td><td>" . $gccv . "v</td></tr>";
-		$gsput .= "<tr><td>GPU model:</td><td>" . $gpus[$i]{'desc'}  . "</td></tr>";
-		$ggimg = "<img src='/IFMI/graphs/gpu$i.png'>";
+#        $gsput .= "<tr><td>Run time:</td><td>" . $gpus[$i]{'elapsed'} . "</td></tr>";
+		$ggimg = "<br><img src='/IFMI/graphs/gpu$i.png'>";
 	}
 		
 	my $gpuurl = "?";	
@@ -358,7 +390,7 @@ for (my $i=0;$i<@gpus;$i++)
 	
 	if ($problems)
 	{
-		$gput = '<TR><TD class="bigger"><A href="' . $gpuurl . '">' . $i . '</TD><TD><img src=/bamt/error24.png></td>' . $gput;
+		$gput = '<TR><TD class="bigger"><A href="' . $gpuurl . '">' . $i . '</TD><TD class=error><img src=/bamt/error24.png></td>' . $gput;
 		$problemgpus++;
 	}
 	else
@@ -397,7 +429,7 @@ if (@summary) {
   	if ($showminer == $i) {
   		$getmlinv = `cat /proc/version`;
   		$mlinv = $1 if ($getmlinv =~ /version\s(.*?\s+\(.*?\))\s+\(/);
-      	$msput .= "<tr><td class='big'>Linux Version:</td><td>" . $mlinv . "</td></tr>";
+      	$msput .= "<tr><td class='big'>Linux Version:</td><td  colspan=3>" . $mlinv . "</td></tr>";
 # It is unclear how relevant this information is, and it is difficult to extract. 
 #  		$madlv = "1";
 #      	$msput .= "<tr><td>ADL Version:</td><td>" . $madlv . "</td></tr>";
@@ -405,73 +437,73 @@ if (@summary) {
 #      	$msput .= "<tr><td>Catalyst Version:</td><td>" . $mcatv . "</td></tr>";
 #   	$msdkv = "1";
 #      	$msput .= "<tr><td>SDK Version:</td><td>" . $msdkv . "</td></tr>";		
-      	$msput .= "<tr><td> </td><td class='big'><a href='/cgi-bin/confedit.pl' target='_blank'>Configuration Editor</a></td></tr>";
       	my $nicget = `/sbin/ifconfig`; 
       	while ($nicget =~ m/(\w\w\w\w?\d)\s.+\n\s+inet addr:(\d+\.\d+\.\d+\.\d+)\s/g) {
       	  $iptxt = $2; 
-		  $msput .= '<td> </td><td class=big><A href=ssh://user@' . $iptxt . '>SSH to Host</a></td>';
+		  $msput .= '<td class=big colspan=2><A href=ssh://user@' . $iptxt . '>SSH to Host</a></td></tr>';
 		}
+      	$msput .= "<tr><td class='big' colspan=2><a href='/cgi-bin/confedit.pl' target='_blank'>Configuration Editor</a></td></tr>";
 		$msput .= "<form name='reboot' action='poolmanage.pl' method='POST'><input type='hidden' name='reboot' value='reboot'>";
-		$msput .= "<tr><td><input type='submit' value='Reboot' onclick='this.disabled=true;this.form.submit();' ></td><td>";
+		$msput .= "<tr><td></td></tr><tr><td colspan=2><input type='submit' value='Reboot' onclick='this.disabled=true;this.form.submit();' > ";
 		$msput .= "<input type='password' placeholder='root password' name='ptext' required></td></tr></form>";
-		$msput .= "<tr><td colspan=2><hr></td></tr>";
+		$msput .= "<tr><td colspan=4><hr></td></tr>";
 		$avers = " (1." . $avers . ")" if ($avers ne "");
-  		$msput .= "<tr><td>Miner Version (API)</td><td>" . $mvers . $avers . "</td></tr>";
-      	$msput .= "<tr><td>Run time:</td><td>" . $mrunt . "</td></tr>";
+  		$msput .= "<tr><td>Miner Version (API)</td><td colspan=3>" . $mvers . $avers . "</td></tr>";
+      	$msput .= "<tr><td>Run time:</td><td>" . $mrunt . "</td>";
 		if ($melapsed > 0) {  	  
-		  $msput .= "<td><form name='mstop' action='poolmanage.pl' method='POST'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></td>";
+		  $msput .= "<td  colspan=2><form name='mstop' action='poolmanage.pl' method='POST'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' > ";
 		} else { 
-		  $msput .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
+		  $msput .= "<td  colspan=2><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' > ";
 		}
-		$msput .= "<td><input type='password' placeholder='root password' name='ptext' required></form></tr>";
+		$msput .= "<input type='password' placeholder='root password' name='ptext' required></form></tr>";
 		$mtm = ${@summary[$i]}{'total_mh'};
 		$minetm = sprintf("%.2f", $mtm); 
-      	$msput .= "<tr><td>Total MH:</td><td>" . $minetm . "</td></tr>";
+      	$msput .= "<tr><td>Total MH:</td><td>" . $minetm . "</td>";
 		$minefb = ${@summary[$i]}{'found_blocks'};
 		$minefb = 0 if ($minefb eq "");
-      	$msput .= "<tr><td>Found Blocks:</td><td>" . $minefb . "</td></tr>";
+      	$msput .= "<td>Found Blocks:</td><td>" . $minefb . "</td></tr>";
 		$minegw = ${@summary[$i]}{'getworks'};
 		$minegw = 0 if ($minegw eq "");
-      	$msput .= "<tr><td>Getworks:</td><td>" . $minegw . "</td></tr>";
+      	$msput .= "<tr><td>Getworks:</td><td>" . $minegw . "</td>";
 		$minedis = ${@summary[$i]}{'discarded'};
       	$minedis = 0 if ($minedis eq "");
-      	$msput .= "<tr><td>Discarded:</td><td>" . $minedis . "</td></tr>";
+      	$msput .= "<td>Discarded:</td><td>" . $minedis . "</td></tr>";
 		$minest = ${@summary[$i]}{'stale'};
 		$minest = 0 if ($minest eq "");
-      	$msput .= "<tr><td>Stale:</td><td>" . $minest . "</td></tr>";
+      	$msput .= "<tr><td>Stale:</td><td>" . $minest . "</td>";
 		$minegf = ${@summary[$i]}{'get_failures'};
 		$minegf = 0 if ($minegf eq "");
-      	$msput .= "<tr><td>Get Failures:</td><td>" . $minegf . "</td></tr>";
+      	$msput .= "<td>Get Failures:</td><td>" . $minegf . "</td></tr>";
 		$minerf = ${@summary[$i]}{'remote_failures'};
 		$minerf = 0 if ($minerf eq "");
-      	$msput .= "<tr><td>Remote Failures:</td><td>" . $minerf . "</td></tr>";
+      	$msput .= "<tr><td>Remote Fails:</td><td>" . $minerf . "</td>";
 		$minenb = ${@summary[$i]}{'network_blocks'};
 		$minenb = 0 if ($minenb eq "");
-      	$msput .= "<tr><td>Network Blocks:</td><td>" . $minenb . "</td></tr>";
+      	$msput .= "<td>Network Blocks:</td><td>" . $minenb . "</td></tr>";
       	$mdia = ${@summary[$i]}{'diff_accepted'};
 		$minedia = sprintf("%d", $mdia);
-      	$msput .= "<tr><td>Difficulty Accepted:</td><td>" . $minedia . "</td></tr>";
+      	$msput .= "<tr><td>Diff Accepted:</td><td>" . $minedia . "</td>";
       	$mdir = ${@summary[$i]}{'diff_rejected'};
 		$minedir = sprintf("%d", $mdir);
-      	$msput .= "<tr><td>Difficulty Rejected:</td><td>" . $minedir . "</td></tr>";
+      	$msput .= "<td>Diff Rejected:</td><td>" . $minedir . "</td></tr>";
       	$mds = ${@summary[$i]}{'diff_stale'};
 		$mineds = sprintf("%d", $mds);
-      	$msput .= "<tr><td>Difficulty Stale:</td><td>" . $mineds . "</td></tr>";
+      	$msput .= "<tr><td>Difficulty Stale:</td><td>" . $mineds . "</td>";
 		$minebs = ${@summary[$i]}{'best_share'};
 		$minebs = 0 if ($minebs eq "");
-      	$msput .= "<tr><td>Best Share:</td><td>" . $minebs . "</td></tr>";
- 		$msput .= "<tr><td colspan=2><hr></td></tr>";
+      	$msput .= "<td>Best Share:</td><td>" . $minebs . "</td></tr>";
+ 		$msput .= "<tr><td colspan=4><hr></td></tr>";
  		$msput .= "<tr><td>Clear All Graphs</td><td>";
 	    $msput .= "<form name='pselect' action='status.pl' method='POST'><input type='hidden' name='cgraphs' value='cgraphs'><button type='submit'>Clear</button></form></td></tr>";
   	} else {		
 		if ($melapsed > 0) {  	  
 		  $mcontrol .= "<td>Run time: " . $mrunt . "</td>";
-		  $mcontrol .= "<td><form name='mstop' action='poolmanage.pl' method='POST'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' ></td>";
+		  $mcontrol .= "<td><form name='mstop' action='poolmanage.pl' method='POST'><input type='hidden' name='mstop' value='stop'><input type='submit' value='Stop' onclick='this.disabled=true;this.form.submit();' > ";
 		} else { 
 		  $mcontrol .= "<td class='error'>Stopped</td>";
-		  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' ></td>";
+		  $mcontrol .= "<td><form name='mstart' action='poolmanage.pl' method='POST'><input type='hidden' name='mstart' value='start'><input type='submit' value='Start' onclick='this.disabled=true;this.form.submit();' > ";
 		}
-		$mcontrol .= "<td><input type='password' placeholder='root password' name='ptext' required></td></form>";		
+		$mcontrol .= "<input type='password' placeholder='root password' name='ptext' required></td></form>";		
 		my $mcheck = `ps -eo command | grep [m]gpumon | wc -l`;
 		$mcontrol .=  "<td><A href=/mgpumon/>Farm Overview</A></td>" if ($mcheck >0);
 	}
@@ -554,29 +586,31 @@ if ($ispriv eq "S") {
 	      $psgf = ${@pools[$i]}{'getfails'}; 
 	      $psrf = ${@pools[$i]}{'remotefailures'};
 	      if ($g0url eq $pname) {
-		$current = "Active";
+			$current = "Active";
 	      } else { 
-		$current = "Not Active";
+			$current = "Not Active  ";
 	      }
-	      $psput .= "<tr><td class='big'>$current</td>";
+	      $psput .= "<tr><form name='pdelete' action='status.pl' method='POST'><td class='big' colspan=4>$current";
 	      if ($g0url ne $pname) {
-	      $psput .= "<td><form name='pdelete' action='status.pl' method='POST'><input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'> </form></td></tr>";
+	      $psput .= "<input type='hidden' name='delpool' value='$i'><input type='submit' value='Remove this pool'>";
 	      }
-	      $psput .= "<tr><td>Mining URL:</td><td>" . $pname . "</td></tr>";
-		  if ($avers > 16) {
-	        $psput .= "<tr><td>Worker:</td><td>" . $pusr . "</td></tr>";
-	      }  
-	      $psput .= "<tr><td>Priority:</td><td>" . $ppri . "</td></tr>";
-	      $psput .= "<tr><td>Quota:</td><td>" . $ppri . "</td></tr>";
-	      $psput .= "<tr><td>Status:</td>" . $pstatus . "</tr>";
-	      $psput .= "<tr><td>Shares A/R:</td><td>" . $pacc . " / " . $prej . "</td></tr>";
-	      $psput .= "<tr><td>Getworks:</td><td>" . $psgw . "</td></tr>";
-	      $psput .= "<tr><td>Works:</td><td>" . $psw . "</td></tr>";
-	      $psput .= "<tr><td>Discarded:</td><td>" . $psd . "</td></tr>";
-	      $psput .= "<tr><td>Stale:</td><td>" . $pss . "</td></tr>";
-	      $psput .= "<tr><td>Get Failures:</td><td>" . $psgf . "</td></tr>";
-	      $psput .= "<tr><td>Remote Failures:</td><td>" . $psrf . "</td></tr>";
-	      $pgimg = "<img src='/IFMI/graphs/pool$i.png'>";
+	      $psput .= "</form></td></tr>";
+	      $psput .= "<tr><td>Mining URL:</td><td colspan=3>" . $pname . "</td></tr>";
+		  $puser = "unknown" if ($puser eq "");
+	      $psput .= "<tr><td>Worker:</td><td colspan=3>" . $pusr . "</td></tr>";
+	      $psput .= "<td>Status:</td>" . $pstatus;
+	      $psput .= "<td>Shares A/R:</td><td>" . $pacc . " / " . $prej . "</td></tr>";
+
+
+	      $psput .= "<tr><td>Priority:</td><td>" . $ppri . "</td>";
+	      $psput .= "<td>Quota:</td><td>" . $ppri . "</td></tr>";
+	      $psput .= "<tr><td>Getworks:</td><td>" . $psgw . "</td>";
+	      $psput .= "<td>Works:</td><td>" . $psw . "</td></tr>";
+	      $psput .= "<tr><td>Discarded:</td><td>" . $psd . "</td>";
+	      $psput .= "<td>Stale:</td><td>" . $pss . "</td></tr>";
+	      $psput .= "<tr><td>Get Failures:</td><td>" . $psgf . "</td>";
+	      $psput .= "<td>Rem Fails:</td><td>" . $psrf . "</td></tr>";
+	      $pgimg = "<br><img src='/IFMI/graphs/pool$i.png'>";
 
 	    } else {
 	      my $purl = "?";
@@ -717,7 +751,7 @@ given($x) {
 		}
 		print "</td></tr></table>";
 
-		print "</td><td><table><tr><td>$gsput</td></tr></table></td></tr></table></td>";	
+		print "</td><td><div id='sumdata'><table class=datatbl>$gsput</table></div></td></tr></table></td>";	
 		print "<tr><td>$ggimg</td></tr>";
 		print "</div>";
 	}
@@ -748,7 +782,7 @@ given($x) {
                 print "All OK";
         }
    		print "</td></tr></table>";
-		print "</td><td><table><tr><td>$psput</td></tr></table></td></tr></table></td>";
+		print "</td><td><div id='sumdata'><table class=datatbl>$psput</table></div></td></tr></table></td>";
 		print "<tr><td>$pgimg</td></tr>";
 		print "</div>";
 	}
@@ -775,9 +809,9 @@ given($x) {
                 print "All OK";
         }
    		print "</td></tr></table>";        
-        print "</td><td><table><tr><td>$msput</td></tr>";
-        print "<tr><td colspan=2><hr></td></tr>";
-        print "<tr><td colspan=2>PoolManager was written by Lily, and updates are available at ";
+        print "</td><td><table class=datatbl>$msput</td></tr>";
+        print "<tr><td colspan=4><hr></td></tr>";
+        print "<tr><td colspan=4>PoolManager was written by Lily, and updates are available at ";
         print "<a href=https://github.com/starlilyth/bamt-poolmanager target=_blank>GitHub</a>.<br>"; 
         print "If you love PoolManager, please consider donating. Thank you!<br> ";
         print "BTC: 1JBovQ1D3P4YdBntbmsu6F1CuZJGw9gnV6 <br>LTC: LdMJB36zEfTo7QLZyKDB55z9epgN78hhFb<br>";
@@ -799,7 +833,7 @@ given($x) {
 		print "<table id=graphs>";
 		print "<tr><td>";	
 		my $img = "/var/www/IFMI/graphs/msummary.png";
-		if (-f $img) {
+		if (-e $img) {
 			print '<img src="/IFMI/graphs/msummary.png">';
 		} else {
 			print "<font style='color: #999999; font-size: 10px;'>Summary graph not available yet.";

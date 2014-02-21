@@ -1,21 +1,11 @@
 #!/usr/bin/perl
 
-#    This file is part of BAMT.
+#    This file is part of IFMI PoolManager.
 #
-#    BAMT is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    BAMT is distributed in the hope that it will be useful,
+#    PoolManager is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with BAMT.  If not, see <http://www.gnu.org/licenses/>.
-#
-# Modified for IFMI PoolManager by Lily
 #
 
 $SIG{__DIE__} = sub { &handleDeath(@_); };
@@ -35,7 +25,6 @@ use POSIX;
 
 setlogsock('unix');
 
-# Really? right here? 
 
 sub saveConfig 
 {
@@ -280,8 +269,6 @@ sub zeroStats
     }
 }
 
-# Thanks~
-
 sub getConfig
 {
  my $c;
@@ -376,125 +363,40 @@ sub getFreshGPUData
 	my ($su) = @_;
 
 	my @gpus;
-
-	my $uptime = `uptime`;
-	chomp($uptime);
 	
 	my $conf = &getConfig;
     %conf = %{$conf}; 
 	
-	my @cgpools;
-    
-	if (${$conf}{settings}{cgminer})
-	{
-		# cgminer gather pools
-		@cgpools = getCGMinerPools();			
-	}
+	my @cgpools = getCGMinerPools();	
 
-	my $res = `DISPLAY=:0.0 /usr/local/bin/atitweak -s`;
-  #monster regex for atitweak        
-  # tamed some, less likely to break if a card responds strangely
-	while ($res =~ m/(\d)\.\s(.+\n.+\n.+\n.+\n.+)/g)
-	{
-    my $gpu = $1; 
-    $gidata = $2; 
-     if ($gidata =~ m/^(.+)\s+\(:/) {
-      $gdesc = $1;
-     }  
-     if ($gidata =~ m/\(:(\d+\.\d+)\)/) {
-      $gdisp = $1;
-     }
-     if ($gidata =~ m/engine\sclock\s(\d+\.?\d+?)MHz/) {
-       $geclock = $1;
-     }
-     if ($gidata =~ m/memory\sclock\s(\d+)MHz/) {
-       $gmclock = $1;
-     }
-     if ($gidata =~ m/core\svoltage\s([\d\.]+)VDC/) {
-       $gvolt = $1;
-     }
-     if ($gidata =~ m/performance\slevel\s(\d+),/) {
-       $gplevel = $1;
-     } 
-     if ($gidata =~ m/utilization\s(\d+)\%/) {
-       $gutil = $1;
-     }       
-     if ($gidata =~ m/temperature\s([\d\.]+)\sC/) {
-       $gtemp = $1;
-     }
-     if ($gidata =~ m/powertune\s(\d+)\%/) {
-       $gptune = $1;
-     }
-     if ($gidata =~ m/fan\sspeed\s(\d+)\%/) {
-        $gfspeed = $1;
-     }
-     if ($gidata =~ m/\s\((\d+)\sRPM\)/) {
-        $gfrpm = $1;
-     } 
+  my $gpucount = &getCGMinerGPUCount;
 
-     $gpus[$gpu] = ({ desc => $gdesc, display => $gdisp, current_core_clock => $geclock, current_mem_clock=>$gmclock, current_core_voltage=>$gvolt, current_performance_level => $gplevel, current_load=>$gutil, current_temp_0=>$gtemp, current_powertune=>$gptune, fan_speed=>$gfspeed, fan_rpm=>$gfrpm });
+  for (my $i=0;$i<$gpucount;$i++)
+  {
+    my $gpu = $i; 
 
-		# mining data
+  	my $res = `DISPLAY=:0.0 /usr/local/bin/atitweak -s`;
+
+	  while ($res =~ m/(\d)\.\s(.+\n.+\n.+\n.+\n.+)/g) {
+      $gidata = $2; 
+       if ($gidata =~ m/^(.+)\s+\(:/) {
+        $gdesc = $1;
+       }  
+       if ($gidata =~ m/\(:(\d+\.\d+)\)/) {
+        $gdisp = $1;
+       }
+    }
+
+     $gpus[$gpu] = ({ desc => $gdesc, display => $gdisp });
+
+	  	# mining data
 		
 		my $gc = &getGPUConfig($gpu);
 		
 		if (! ${$gc}{'disabled'})
 		{
-			
-			if (${$gc}{'cgminer'})
-			{
-				# cgminer gather
-				${$gpus[$gpu]}{miner} = 'cgminer';
-				&getCGMinerStats($gpu, \%{$gpus[$gpu]}, @cgpools );
-				
-			}
-			elsif (${$gc}{'phoenix2'})
-			{
-				# Phoenix2 gather
-				${$gpus[$gpu]}{miner} = 'phoenix2';
-				
-				&getPhoenix2Stats($gpu, \%{$gpus[$gpu]} );
-				
-			}
-			else
-			{
-				# Phoenix gather 
-				${$gpus[$gpu]}{miner} = 'phoenix';
-				${$gpus[$gpu]}{status} = 'enabled';
-				
-				if (defined(${$gc}{'kernel'}))
-				{
-					${$gpus[$gpu]}{kernel} = ${$gc}{'kernel'}
-				}
-				else
-				{
-					${$gpus[$gpu]}{kernel} = 'phatk2';
-				}
-				
-				if (defined(${$gc}{'kernel_params'}))
-				{
-					${$gpus[$gpu]}{kernel_params} = ${$gc}{'kernel_params'}
-				}
-				else
-				{
-					${$gpus[$gpu]}{kernel_params} = '';
-				}
-				
-				
-				if ($su)
-				{
-				 (${$gpus[$gpu]}{hashrate}, ${$gpus[$gpu]}{shares_accepted}, ${$gpus[$gpu]}{shares_invalid}, ${$gpus[$gpu]}{pool_url}) = &getPhoenixStatsSU($gpu);
-				}
-				else
-				{
-				 (${$gpus[$gpu]}{hashrate}, ${$gpus[$gpu]}{shares_accepted}, ${$gpus[$gpu]}{shares_invalid}, ${$gpus[$gpu]}{pool_url}) = &getPhoenixStats($gpu);
-				}
-				
-				${$gpus[$gpu]}{shares_stale} = 0;
-				${$gpus[$gpu]}{shares_other} = 0;
-				${$gpus[$gpu]}{hashrate_avg} = ${$gpus[$gpu]}{hashrate};
-				${$gpus[$gpu]}{gpu_uptime} = 0;
-			}
+			${$gpus[$gpu]}{miner} = 'cgminer';
+			&getCGMinerStats($gpu, \%{$gpus[$gpu]}, @cgpools );				
 		}
 		else
 		{
@@ -503,7 +405,7 @@ sub getFreshGPUData
 		}
 		
 		# system info
-		${$gpus[$gpu]}{uptime} = $uptime;
+#		${$gpus[$gpu]}{uptime} = $uptime;
 
 		# monitoring
 	
@@ -572,208 +474,6 @@ sub getFreshGPUData
   }      	
   return(@gpus);
 }
-
-
-
-
-sub getPhoenix2Stats
-  {
-    my ($gpu, $data) = @_;
-
-
-    
-    my $conf = &getConfig;
-    %conf = %{$conf}; 
-   
-     my $p2port = 7780;
- 	 if (defined(${$conf}{'settings'}{'phoenix2_port'}))
- 	 {
- 	 	 $p2port = ${$conf}{'settings'}{'phoenix2_port'};
- 	 }
- 	 
- 	 my $p2pass = 'bamt';
- 	 
- 	 if (defined(${$conf}{'settings'}{'phoenix2_pass'}))
- 	 {
- 	 	 $p2pass = ${$conf}{'settings'}{'phoenix2_pass'};
- 	 }
-    
-    
-    my $fname = "/tmp/p2cache.gpu$gpu.". $>;
-    
-    if (-e $fname)
-    {
-    	my $mtime = (stat($fname))[9];
-    	
-    	if (time - $mtime < 10)
-    	{
-    		# cached data..
-    		 my $c = LoadFile($fname);
-    		 
-    		 $data->{'hashrate'} = ($c->{'rate'} / 1000);
-    		 $data->{'shares_accepted'} = $c->{'accepted'};
-    		 $data->{'shares_invalid'} = $c->{'results'} - $c->{'accepted'} - $c->{'stale'};  # ???
-    		 $data->{'shares_stale'} = $c->{'stale'};
-    		 $data->{'shares_other'} = $c->{'nothardenough'};
-    		 $data->{'pool_url'} = $c->{'url'};
-    		 $data->{'kernel'} = $c->{'meta'}->{'kernel'};
-    		 $data->{'clid'} = $c->{'id'};
-    		 $data->{'family'} = $c->{'meta'}->{'device'};
-    		 $data->{'cores'} = $c->{'meta'}->{'cores'};
-    		 $data->{'gpu_uptime'} = $c->{'uptime'};
-    		 $data->{'status'} = $c->{'status'};
-    		 
-    		 return;
-    	}
-    }
-    
-    # otherwise grab new data
-    
-    my $client = new JSON::RPC::Client;
- 
-    $client->ua->credentials( 'localhost:' . $p2port , 'Phoenix RPC', 'user' => $p2pass );
- 
-    my $uri = 'http://localhost:' . $p2port. '/';
-    my $obj = 
-    {
-      id => '1',
-      jsonrpc => '1.0',          
-      method  => 'getstatus',
-      params  => [] ,
-    };
- 
-    my $res = $client->call( $uri, $obj );
- 
-    if ($res) 
-    {
-    	my $r = $res->result();
-    	
-    	if ($r->{'connection'}->{'connected'}  == 1 )
-    	{
-    		$data->{'pool_url'} = $r->{'connection'}->{'url'} ;
-    	}
-    	else
-    	{
-    		$data->{'pool_url'} = "Not connected";
-    	}
-    	
-    }
-
-    
-    $obj =
-    {
-      id => '1',
-      jsonrpc => '1.0',
-      method  => 'listdevices',
-      params  => [] ,
-    };
- 
-    $res = $client->call( $uri, $obj );
- 
-    if ($res) 
-    { 
-    	my $g = 0;
-    	foreach $c (@{$res->result()})
-    	{
-    		
-    		if ($g == $gpu)
-    		{
-				$data->{'hashrate'} = ($c->{'rate'} / 1000);
-				$data->{'shares_accepted'} = $c->{'accepted'};
-				$data->{'shares_invalid'} = $c->{'results'} - $c->{'accepted'} - $c->{'stale'};  # ???
-				$data->{'shares_stale'} = $c->{'stale'};
-				$data->{'shares_other'} = $c->{'nothardenough'};
-				$data->{'kernel'} = $c->{'meta'}->{'kernel'};
-				$data->{'clid'} = $c->{'id'};
-				$data->{'family'} = $c->{'meta'}->{'device'};
-				$data->{'cores'} = $c->{'meta'}->{'cores'};
-				$data->{'gpu_uptime'} = $c->{'uptime'};
-				$data->{'status'} = $c->{'status'};
-    		}
-    		
-    		$fname  =  '/tmp/p2cache.gpu' . $g . "." . $> ;
-    		
-    		$c->{'url'} = $data->{'pool_url'}; 
-    		
-    		DumpFile( $fname, $c );
-    		
-    		$g++;
-    	}
-    }
-   
-  
-  }
-
-
-
-
-sub getPhoenixStats
-  {
-    my ($gpu) = @_;
-
-    my $hash = 0;
-    my $accept = 0;
-    my $invalid = 0;
-    my $url = 'No connection';
-
-    if (-e "/tmp/phoenix-$gpu.sock")
-    {
-        socket(TSOCK, PF_UNIX, SOCK_STREAM,0);
-        connect(TSOCK, sockaddr_un("/tmp/phoenix-$gpu.sock")) or return(0,0,0);
-        my $dat = <TSOCK>;
-
-        if ($dat =~ m/(\d+)\s(\d+)\s(\d+)\s(.*)$/)
-        {
-                $hash = $1 / 1000;
-                $accept = $2;
-                $invalid = $3;
-                $url = $4;
-                chomp($url);
-
-        }
-
-    }
-
-    return($hash, $accept, $invalid, $url);
-  }
-
-
-sub getPhoenixStatsSU
-{
-    my ($gpu) = @_;
-
-    my $hash = 0;
-    my $accept = 0;
-    my $invalid = 0;
-    my $url = 'No connection';
-
-    if (-e "/tmp/phoenix-$gpu.sock")
-    {
-        my $dat = `socat /tmp/phoenix-$gpu.sock -`;
-
-        if ($dat =~ m/(\d+)\s(\d+)\s(\d+)\s(.*)/)
-        {
-                $hash = $1 / 1000;
-                $accept = $2;
-                $invalid = $3;
-		$url = $4;
-                chomp($url);
-
-                if ($url =~ m/.+\@(.+)/)
-                {
-                  $url = $1;
-		  if ($url =~ m/(.+):.*/)
-		  {
- 			$url = $1;
-                  }	
-                }
-        }
-
-    }
-
-    return($hash, $accept, $invalid, $url);
-}
-
 
 sub getCGMinerPools
 {	 
@@ -883,10 +583,9 @@ sub getCGMinerStats
                                   Proto => 'tcp',
                                   ReuseAddr => 1,
                                   Timeout => 10,
-                                 );
-    
-    if ($sock)
-    {
+                                 );  
+  if ($sock)
+  {
     	print $sock "gpu|$gpu\n";
     
 		my $res = "";
@@ -898,66 +597,103 @@ sub getCGMinerStats
 		
 		close($sock);
 	
-		if ($res =~ m/.*,MHS\sav=(\d+\.\d+),*/)
-		{
+		if ($res =~ m/MHS\sav=(\d+\.\d+),/) {
 			$data->{'hashrate'} = $1 * 1000;
 		}
-		
-		if ($res =~ m/.*,Accepted=(\d+),.*/)
-		{
+		if ($res =~ m/Accepted=(\d+),/)	{
 			$data->{'shares_accepted'} = $1;
-		}
-		
-		if ($res =~ m/.*,Rejected=(\d+),.*/)
-		{
+		}		
+		if ($res =~ m/Rejected=(\d+),/) {
 			$data->{'shares_invalid'} = $1;
-		}
-		
-		if ($res =~ m/.*,Status=(.+?),.*/)
-		{
+		}		
+		if ($res =~ m/Status=(\w+),/)	{
 			$data->{'status'} = $1;
 		}
-		
-		if ($res =~ m/.*,Hardware\sErrors=(\d+),.*/)
-		{
+    if ($res =~ m/Enabled=(\w+),/) {
+      $data->{'enabled'} = $1;
+    }
+    if ($res =~ m/Device\sElapsed=(.+?),/) {
+      $data->{'elapsed'} = $1; #I get no data here.
+    }
+		if ($res =~ m/Hardware\sErrors=(\d+),/)	{
 			$data->{'hardware_errors'} =$1;
 		}
-
-		if ($res =~ m/.*,Intensity=(\d+),.*/)
-		{
+		if ($res =~ m/Intensity=(\d+),/) {
 			$data->{'intensity'} =$1;
-		}
-		
-		if ($res =~ m/.*,Last\sShare\sPool=(\d+),.*/)
-		{
-			
-			foreach $p (@pools)
-			{
-				
-				if (${$p}{poolid} == $1)
-				{
+		}		
+		if ($res =~ m/Last\sShare\sPool=(\d+),/) {
+			foreach $p (@pools)	{
+				if (${$p}{poolid} == $1) {
 					$data->{'pool_url'} =${$p}{url};
 				}
-			}
-			
+			}		
 		}
-		
-		if ($res =~ m/.*,Last\sShare\sTime=(\d+),.*/)
+		if ($res =~ m/Last\sShare\sTime=(\d+),/)
 		{
 			$data->{'last_share_time'} =$1;
 		}
-		
-		
-	}
-	else
-	{
+    if ($res =~ m/Total\sMH=(\d+)\.\d+,/) {
+     $data->{'total_mh'} = $1;
+    }
+    if ($res =~ m/GPU\sClock=(\d+),/) {
+     $data->{'current_core_clock_c'} = $1;
+    }
+    if ($res =~ m/Memory\sClock=(\d+),/) {
+     $data->{'current_mem_clock_c'} = $1;
+    }
+    if ($res =~ m/GPU\sVoltage=(\d+\.\d+),/) {
+     $data->{'current_core_voltage_c'} = $1;
+    }
+    if ($res =~ m/GPU\sActivity=(.+?),/) {
+     $data->{'current_load_c'} = $1;
+    }       
+    if ($res =~ m/Temperature=(\d+\.\d+),/) {
+     $data->{'current_temp_0_c'} = $1;
+    }
+    if ($res =~ m/Powertune=(\d+),/) {
+     $data->{'current_powertune_c'} = $1;
+    }
+    if ($res =~ m/Fan\sPercent=(\d+),/) {
+      $data->{'fan_speed_c'} = $1;
+    }
+    if ($res =~ m/Fan\sSpeed=(\d+),/) {
+      $data->{'fan_rpm_c'} = $1;
+    } 		
+	} else {
 		$url = "cgminer socket failed";
 	}
-	
 }
 
+sub getCGMinerGPUCount
+{
+    my $conf = &getConfig;
+    %conf = %{$conf};
+    my $cgport = 4028;
+        if (defined(${$conf}{'settings'}{'cgminer_port'})) {
+          $cgport = ${$conf}{'settings'}{'cgminer_port'};
+        }
+        my $sock = new IO::Socket::INET (
+            PeerAddr => '127.0.0.1',
+            PeerPort => $cgport,
+            Proto => 'tcp',
+            ReuseAddr => 1,
+            Timeout => 10,
+           );
+    if ($sock) {
+      print $sock "gpucount|\n";
+      my $res = "";
+      while(<$sock>) {
+        $res .= $_;
+      }
+      close($sock);
+      while ($res =~ m/Count=(\d+)/g) {
+        return $1; 
+      }
+    } else {
+      $url = "cgminer socket failed";
+    }
+}
 
-# Oh hi! I cant believe this didnt exist yet..
 sub getCGMinerVersion
 {
     my $conf = &getConfig;
@@ -1123,7 +859,12 @@ sub getCGMinerSummary
     if ($res =~ m/Best\sShare=(\d+),/g) {
       $mbestshare = $1
     }
-push(@summary, ({elapsed=>$melapsed, hashavg=>$mhashav, hashrate=>$mhashrate, khashavg=>$mkhashav, khashrate=>$mkhashrate, shares_accepted=>$maccept, found_blocks=>$mfoundbl, getworks=>$mgetworks, shares_invalid=>$mreject, hardware_errors=>$mhwerrors, utility=>$mutility, discarded=>$mdiscarded, stale=>$mstale, get_failures=>$mgetfails, local_work=>$mlocalwork, remote_failures=>$mremfails, network_blocks=>$mnetblocks, total_mh=>$mtotalmh, work_utility=>$mworkutil, diff_accepted=>$mdiffacc, diff_rejected=>$mdiffrej, diff_stale=>$mdiffstale, best_share=>$mbestshare }) );
+push(@summary, ({elapsed=>$melapsed, hashavg=>$mhashav, hashrate=>$mhashrate, khashavg=>$mkhashav, 
+  khashrate=>$mkhashrate, shares_accepted=>$maccept, found_blocks=>$mfoundbl, getworks=>$mgetworks, 
+  shares_invalid=>$mreject, hardware_errors=>$mhwerrors, utility=>$mutility, discarded=>$mdiscarded, 
+  stale=>$mstale, get_failures=>$mgetfails, local_work=>$mlocalwork, remote_failures=>$mremfails, 
+  network_blocks=>$mnetblocks, total_mh=>$mtotalmh, work_utility=>$mworkutil, diff_accepted=>$mdiffacc, 
+  diff_rejected=>$mdiffrej, diff_stale=>$mdiffstale, best_share=>$mbestshare }) );
 
     return(@summary);
     } else {
@@ -1131,7 +872,6 @@ push(@summary, ({elapsed=>$melapsed, hashavg=>$mhashav, hashrate=>$mhashrate, kh
     }
 	
 }
-# taa taa
 
 sub stopMining
 {
@@ -1189,83 +929,6 @@ sub stopMining
  }
  
  
- # if phoenix2, ask nicely
- if (${$conf}{'settings'}{'phoenix2'})
- {
- 	 my $p2port = 7780;
- 	 if (defined(${$conf}{'settings'}{'phoenix2_port'}))
- 	 {
- 	 	 $cgport = ${$conf}{'settings'}{'phoenix2_port'};
- 	 }
- 	 
- 	 my $p2pass = 'bamt';
- 	 
- 	 if (defined(${$conf}{'settings'}{'phoenix2_pass'}))
- 	 {
- 	 	 $cgport = ${$conf}{'settings'}{'phoenix2_pass'};
- 	 }
- 	 
- 	 
- 	 print "phoenix2 api ";
- 	 
- 	 my $client = new JSON::RPC::Client;
- 
- 	 $client->ua->credentials( 'localhost:' . $p2port , 'Phoenix RPC', 'user' => $p2pass );
- 
- 	 my $uri = 'http://localhost:' . $p2port. '/';
- 	 my $obj = 
- 	 {
-      id => '1',
-      jsonrpc => '1.0',          
-      method  => 'shutdown',
-      params  => [] ,
-     };
- 
-    my $res = $client->call( $uri, $obj );
- 
-    if (!$res) 
-    {
-    	print "failed..";
-    }
- 	
-    	
- }
- 
-	
- # find and kill our mining screens
- if (opendir(DIR, '/var/run/screen/S-root'))  
- {
-	 while (defined($file = readdir(DIR))) 
-	 {
-	  next if $file =~ /^\.\.?$/;
-	 
-	  if ($file =~ m/(\d+)\.gpu?+/)
-	  {
-	     &blog("stop mining wrapper for gpu $1");
- 	 
-		 print "$file.."; 
-		`kill $1`;
-		sleep(1);
-	  }
-	  elsif ($file =~ m/(\d+)\.cgminer/)
-	  {
-	  	 &blog("kill cgminer"); 
-		 print "$file.."; 
-		`kill $1`;
-		sleep(1);
-	  }
-	  elsif ($file =~ m/(\d+)\.phoenix2/)
-	  {
-	  	 &blog("kill phoenix2"); 
-		 print "$file.."; 
-		`kill $1`;
-		sleep(1);
-	  }
-	 }
-	 
-	 closedir(DIR);
- }
- 
  # kill any straggler wrappers 
  if (opendir(DIR, '/tmp'))  
  {
@@ -1284,18 +947,6 @@ sub stopMining
  }
  
  sleep(1);
- 
- # kill any straggler phoenixes
- my @pps = `ps a`;
- 
- foreach(@pps)
- {
- 	 if ($_ =~ m/^\s*(\d+)\spts.*phoenix\.py.*/)
- 	 {
- 	 	 print "pid $1..";
- 	 	 `kill -9 $1`;
- 	 }	 	 
- }
  
  # tell mother we're done
  my $momtmp = &getMomTmp;
@@ -1392,17 +1043,6 @@ sub startMining
   	  
   	  &startCGMiner( ${$conf}{'settings'}{'cgminer_opts'} );
   }
-  
-  if ( defined(${$conf}{'settings'}{'phoenix2'}) && (${$conf}{'settings'}{'phoenix2'} == 1) && defined(${$conf}{'settings'}{'phoenix2_config'}) )
-  {
-  	  # startup a cgminer session
-  	  print "..phoenix2..";
-  	  
-  	  # wait for overclocking to settle down.. maybe not needed but cgminer sometimes bitches and wont start gpu
-  	  sleep(3);
-  	  
-  	  &startPhoenix2( ${$conf}{'settings'}{'phoenix2_config'} );
-  }
 
   
 
@@ -1454,35 +1094,6 @@ sub startCGMiner
 	}
 	
 }
-
-
-sub startPhoenix2
-{
-	my ($args) = @_;
-	
-	my $pid = fork(); 
-
-	
-	
-    if (not defined $pid)
-    {
-      die "out of resources? forking failed for phoenix2 process";
-    }
-    elsif ($pid == 0)
-    {
-    	$ENV{DISPLAY} = ":0.0";
-    	$ENV{LD_LIBRARY_PATH} = "/opt/AMD-APP-SDK-v2.4-lnx32/lib/x86/:";
-    	
-    	my $cmd = "cd /opt/miners/phoenix2;/usr/bin/screen -d -m -S phoenix2 /opt/miners/phoenix2/phoenix.py $args"; 
-    	
-    	&blog("starting phoenix2 with cmd: $cmd");
-    	
-		exec($cmd);
-		exit(0);
-	}
-	
-}
-
 
 
 sub doFAN

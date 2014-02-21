@@ -37,6 +37,17 @@ a
  color: #EEEEEE;
 }
 
+#sumdata table
+{
+    border-collapse:collapse;
+#   box-shadow: 3px 3px 2px #888888;
+}
+#sumdata tr td
+{
+   background-color: rgb(255,255,255);
+      border-bottom: 1px solid #cccccc;
+}
+
 img
 {
  padding: 0px;
@@ -100,6 +111,11 @@ img
         font-size: 25px;
 }
 
+#content table.datatbl
+{
+	border: 1px solid #cccccc;
+}
+
 #showgpu table
 {
         border: 0px;
@@ -145,7 +161,7 @@ img
 .gpudata td
 {
         padding: 0px;
-        padding-left: 10px;
+#        padding-left: 10px;
         margin: 0px;
         font-family: "Trebuchet MS", Helvetica, sans-serif;
         font-size: 12px;

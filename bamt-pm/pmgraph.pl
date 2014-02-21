@@ -26,14 +26,14 @@ if (-e '/tmp/cleargraphs.flag') {
 }
 
 #GPUs 
-my $atidata = `DISPLAY=:0.0 /usr/local/bin/atitweak -s`;
-if ($atidata eq "") {
-     &blog("No ATI data for graphing!");
-}
-while ($atidata =~ m/(\d+)\.\s(.+\n.+\n.+\n.+\n.+)/g) {
-   my $gnum = $1; my $gidata = $2;
-   my $GDB = $DBPATH . "gpu" . $gnum . ".rrd";
-   if (! -f $GDB) { 
+
+my $gpucount = &getCGMinerGPUCount;
+  for (my $i=0;$i<$gpucount;$i++)
+  {
+    my $gnum = $i; 
+
+    my $GDB = $DBPATH . "gpu" . $gnum . ".rrd";
+    if (! -f $GDB) { 
       RRDs::create($GDB, "--step=300", 
       "DS:hash:GAUGE:600:U:U",
       "DS:shacc:DERIVE:600:0:U",
@@ -42,44 +42,44 @@ while ($atidata =~ m/(\d+)\.\s(.+\n.+\n.+\n.+\n.+)/g) {
       "DS:hwe:COUNTER:600:U:U",
       "RRA:LAST:0.5:1:288", 
       ) or die "Create error: ($RRDs::error)";
-   } 
-   my $gtemp = "0"; my $gfspeed = "0";
-   if ($gidata =~ m/temperature\s([\d\.]+)\sC/) {
-     $gtemp = $1;
-   }
-   if ($gidata =~ m/fan\sspeed\s(\d+)\%/) {
-     $gfspeed = $1;
-   }
-   my $ghash = "0"; my $ghwe = "0"; my $gshacc = "0";
-   my $sock = new IO::Socket::INET (
-	   PeerAddr => '127.0.0.1',
-	   PeerPort => $mport,
-	   Proto => 'tcp',
-	   ReuseAddr => 1,
-	   Timeout => 10,
-	 );
-   if ($sock) {
-    print $sock "gpu|$gnum\n";
-    my $res = "";
-    while(<$sock>) {
-     $res .= $_;
-    }
-    close($sock);
-	if ($res =~ m/.*,MHS\sav=(\d+\.\d+),*/) {
-		$ghash = $1 * 100;
-	}
-	if ($res =~ m/.*,Accepted=(\d+),.*/)
-	{
-		$gshacc = $1;
-	}
-	if ($res =~ m/.*,Hardware\sErrors=(\d+),.*/) {
-		$ghwe = $1;
-	}
-   } else {
+    } 
+
+    my $ghash = "0"; my $ghwe = "0"; my $gshacc = "0"; my $gtemp = "0"; my $gfspeed = "0";
+    my $sock = new IO::Socket::INET (
+     PeerAddr => '127.0.0.1',
+     PeerPort => $mport,
+     Proto => 'tcp',
+     ReuseAddr => 1,
+     Timeout => 10,
+    );
+    if ($sock) {
+      print $sock "gpu|$gnum\n";
+      my $res = "";
+      while(<$sock>) {
+       $res .= $_;
+      }
+      close($sock);
+      if ($res =~ m/MHS\sav=(\d+\.\d+),/) {
+      	$ghash = $1 * 100;
+      }
+      if ($res =~ m/Accepted=(\d+),/) {
+      	$gshacc = $1;
+      }
+      if ($res =~ m/Hardware\sErrors=(\d+),/) {
+      	$ghwe = $1;
+      }
+      if ($res =~ m/Temperature=(\d+\.\d+),/) {
+       $gtemp = $1;
+      }
+      if ($res =~ m/Fan\sPercent=(\d+),/) {
+       $gfspeed = $1;
+      }
+    } else {
     print "cgminer socket failed";
-   }
-   RRDs::update($GDB, "--template=hash:shacc:temp:fanspeed:hwe", "N:$ghash:$gshacc:$gtemp:$gfspeed:$ghwe")
-   or die "Update error: ($RRDs::error)";
+    }
+
+  RRDs::update($GDB, "--template=hash:shacc:temp:fanspeed:hwe", "N:$ghash:$gshacc:$gtemp:$gfspeed:$ghwe")
+  or die "Update error: ($RRDs::error)";
 
   RRDs::graph("-P", $PICPATH . "gpu$gnum.png",
    "--start","now-1d",
@@ -102,7 +102,7 @@ while ($atidata =~ m/(\d+)\.\s(.+\n.+\n.+\n.+\n.+)/g) {
    "LINE3:gdfan#000000:<span font_family='Helvetica'>Fan %</span>",
    "TICK:gdhwe#FF0000:-0.1:<span font_family='Helvetica'>HW error</span>",
    ) or
-   die "graph failed ($RRDs::error)";
+  die "graph failed ($RRDs::error)";
 }
 
 # Summary
