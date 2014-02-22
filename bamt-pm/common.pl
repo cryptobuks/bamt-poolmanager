@@ -369,8 +369,15 @@ sub getFreshGPUData
 	
 	my @cgpools = getCGMinerPools();	
 
-  my $gpucount = &getCGMinerGPUCount;
 
+  my $gpucount = &getCGMinerGPUCount;
+  if ($gpucount eq "cgminer socket failed") {
+    $gpucount = 0; 
+    my $res = `DISPLAY=:0.0 /usr/local/bin/atitweak -s`;
+    foreach ($res =~ m/\d\.\s\w.+\n.+\n.+\n.+\n.+/g) {
+      $gpucount++
+    }
+  }
   for (my $i=0;$i<$gpucount;$i++)
   {
     my $gpu = $i; 
@@ -388,6 +395,8 @@ sub getFreshGPUData
     }
 
      $gpus[$gpu] = ({ desc => $gdesc, display => $gdisp });
+
+     $gpus[$gpu] = ({ fan_rpm_c => 0, current_load_c => 0, current_temp_0_c => 0 }); 
 
 	  	# mining data
 		
@@ -409,65 +418,65 @@ sub getFreshGPUData
 
 		# monitoring
 	
-		if (!defined(${$gc}{'disabled'}) || (${$gc}{'disabled'} == 0))
-		{		
-                
-			if (defined(${$gc}{'monitor_fan_lo'}))
-			{
-				if (isdigit($gpus[$gpu]{fan_rpm}))
-				{
-					if ($gpus[$gpu]{fan_rpm} <  ${$gc}{'monitor_fan_lo'})
-					{
-						$gpus[$gpu]{fault_fan_lo} = ${$gc}{'monitor_fan_lo'} . '|' . $gpus[$gpu]{fan_rpm};
-					}
-				}
-			}               
-			
-			if (defined(${$gc}{'monitor_load_lo'}))
-			{
-				if ($gpus[$gpu]{current_load} <  ${$gc}{'monitor_load_lo'})
-				{
-					$gpus[$gpu]{fault_load_lo} = ${$gc}{'monitor_load_lo'} . '|' . $gpus[$gpu]{current_load};
-				}
-			}
-		
-			if (defined(${$gc}{'monitor_hash_lo'}) && defined($gpus[$gpu]{hashrate}))
-			{
-				if ($gpus[$gpu]{hashrate} < ${$gc}{'monitor_hash_lo'})
-				{
-					$gpus[$gpu]{fault_hash_lo} = ${$gc}{'monitor_hash_lo'} . '|' . $gpus[$gpu]{hashrate};
-				}
-			}
-			
-			if (defined(${$gc}{'monitor_reject_hi'}))
-			{
-				if ($gpus[$gpu]{'shares_accepted'})
-				{
-					my $rr = $gpus[$gpu]{'shares_invalid'}/($gpus[$gpu]{'shares_accepted'} + $gpus[$gpu]{'shares_invalid'}) * 100;		
-			
-					if ($rr > ${$gc}{'monitor_reject_hi'})
-					{
-						$gpus[$gpu]{fault_reject_hi} = ${$gc}{'monitor_reject_hi'} . '|' . $rr;
-					}
-				}
-			}
-		
-			if (defined(${$gc}{'monitor_temp_lo'}))
-			{
-				if ($gpus[$gpu]{current_temp_0} < ${$gc}{'monitor_temp_lo'})
-				{
-					$gpus[$gpu]{fault_temp_lo} = ${$gc}{'monitor_temp_lo'} . '|' . $gpus[$gpu]{current_temp_0};
-				}
-			}
-		
-			if (defined(${$gc}{'monitor_temp_hi'}))
-			{
-				if ($gpus[$gpu]{current_temp_0} > ${$gc}{'monitor_temp_hi'})
-				{
-					$gpus[$gpu]{fault_temp_hi} = ${$gc}{'monitor_temp_hi'} . '|' . $gpus[$gpu]{current_temp_0};
-				}
-			
-			}
+  		if (!defined(${$gc}{'disabled'}) || (${$gc}{'disabled'} == 0))
+  		{		
+                  
+  			if (defined(${$gc}{'monitor_fan_lo'}))
+  			{
+  				if (isdigit($gpus[$gpu]{fan_rpm_c}))
+  				{
+  					if ($gpus[$gpu]{fan_rpm_c} <  ${$gc}{'monitor_fan_lo'})
+  					{
+  						$gpus[$gpu]{fault_fan_lo} = ${$gc}{'monitor_fan_lo'} . '|' . $gpus[$gpu]{fan_rpm_c};
+  					}
+  				}
+  			}               
+  			
+  			if (defined(${$gc}{'monitor_load_lo'}))
+  			{
+  				if ($gpus[$gpu]{current_load_c} <  ${$gc}{'monitor_load_lo'})
+  				{
+  					$gpus[$gpu]{fault_load_lo} = ${$gc}{'monitor_load_lo'} . '|' . $gpus[$gpu]{current_load_c};
+  				}
+  			}
+  		
+  			if (defined(${$gc}{'monitor_hash_lo'}) && defined($gpus[$gpu]{hashrate}))
+  			{
+  				if ($gpus[$gpu]{hashrate} < ${$gc}{'monitor_hash_lo'})
+  				{
+  					$gpus[$gpu]{fault_hash_lo} = ${$gc}{'monitor_hash_lo'} . '|' . $gpus[$gpu]{hashrate};
+  				}
+  			}
+  			
+  			if (defined(${$gc}{'monitor_reject_hi'}))
+  			{
+  				if ($gpus[$gpu]{'shares_accepted'})
+  				{
+  					my $rr = $gpus[$gpu]{'shares_invalid'}/($gpus[$gpu]{'shares_accepted'} + $gpus[$gpu]{'shares_invalid'}) * 100;		
+  			
+  					if ($rr > ${$gc}{'monitor_reject_hi'})
+  					{
+  						$gpus[$gpu]{fault_reject_hi} = ${$gc}{'monitor_reject_hi'} . '|' . $rr;
+  					}
+  				}
+  			}
+  		
+  			if (defined(${$gc}{'monitor_temp_lo'}))
+  			{
+  				if ($gpus[$gpu]{current_temp_0_c} < ${$gc}{'monitor_temp_lo'})
+  				{
+  					$gpus[$gpu]{fault_temp_lo} = ${$gc}{'monitor_temp_lo'} . '|' . $gpus[$gpu]{current_temp_0_c};
+  				}
+  			}
+  		
+  			if (defined(${$gc}{'monitor_temp_hi'}))
+  			{
+  				if ($gpus[$gpu]{current_temp_0_c} > ${$gc}{'monitor_temp_hi'})
+  				{
+  					$gpus[$gpu]{fault_temp_hi} = ${$gc}{'monitor_temp_hi'} . '|' . $gpus[$gpu]{current_temp_0_c};
+  				}
+  			
+  			}
 		
     }           
         
@@ -690,7 +699,7 @@ sub getCGMinerGPUCount
         return $1; 
       }
     } else {
-      $url = "cgminer socket failed";
+        &blog("failed to get socket for cgminer api");
     }
 }
 
@@ -721,7 +730,7 @@ sub getCGMinerVersion
         return $1; 
       }
     } else {
-      $url = "cgminer socket failed";
+       &blog("failed to get socket for cgminer api");
     }
 }
 
@@ -752,7 +761,7 @@ sub CGMinerIsPriv
         return $1;
         }
     } else {
-        $url = "cgminer socket failed";
+        &blog("failed to get socket for cgminer api");
     }
 }
 
@@ -868,7 +877,7 @@ push(@summary, ({elapsed=>$melapsed, hashavg=>$mhashav, hashrate=>$mhashrate, kh
 
     return(@summary);
     } else {
-    	$url = "cgminer socket failed";
+       &blog("failed to get socket for cgminer api");
     }
 	
 }
