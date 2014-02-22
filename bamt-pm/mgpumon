@@ -480,7 +480,7 @@ sub genhttp
 				for (my $i = 0; $i < @gpus;$i++)
 				{
 					$gproblem{$i} = 0; 	
- 					if ($gpus[$i]{'current_temp_0'} > ${$config}{monitor_temp_hi})
+ 					if ($gpus[$i]{'current_temp_0_c'} > ${$config}{monitor_temp_hi})
 					{
 						$gpuid = $i; 
 						$gproblem{$gpuid}++;
@@ -489,7 +489,7 @@ sub genhttp
 						
 						$gput .= "<td class='error'>";
 					}
-					elsif ($gpus[$i]{'current_temp_0'} < ${$config}{monitor_temp_lo})
+					elsif ($gpus[$i]{'current_temp_0_c'} < ${$config}{monitor_temp_lo})
 					{
 						$gpuid = $i; 
 						$gproblem{$gpuid}++;
@@ -503,13 +503,13 @@ sub genhttp
 						$gput .= '<td>';
 					}
 				
-					$gput .= $gpus[$i]{'current_temp_0'} . 'C </TD>';
+					$gput .= sprintf("%.1f", $gpus[$i]{'current_temp_0_c'}) . 'C </TD>';
 
 				}
 
 				for (my $i = 0; $i < @gpus;$i++)
 				{
-					if (($gpus[$i]{'fan_rpm'} < ${$config}{monitor_fan_lo}) && (! $gpus[$i]{'fan_rpm'} eq 'na'))
+					if (($gpus[$i]{'fan_rpm_c'} < ${$config}{monitor_fan_lo}) && (! $gpus[$i]{'fan_rpm_c'} eq '0'))
 					{
 						$gpuid = $i; 
 						$gproblem{$gpuid}++;
@@ -522,7 +522,7 @@ sub genhttp
 						$gput .= '<td>';
 					}
 						
-					$gput .= $gpus[$i]{'fan_speed'} . '% </TD>';
+					$gput .= $gpus[$i]{'fan_speed_c'} . '% </TD>';
 
 				}
 
@@ -954,15 +954,15 @@ sub drawMiners
         }
         $ls .= " $gpu: ";
        
-        my $tmp = $gpus[$gpu]{'current_temp_0'};
+        my $tmp = $gpus[$gpu]{'current_temp_0_c'};
 
-        my $ts = $tmp . 'c';
+        my $ts = $tmp . 'C';
 
-        if ($tmp > $lastgpus[$gpu]{'current_temp_0'})
+        if ($tmp > $lastgpus[$gpu]{'current_temp_0_c'})
         {
           $ts .= "+";
         }
-        elsif ($tmp < $lastgpus[$gpu]{'current_temp_0'})
+        elsif ($tmp < $lastgpus[$gpu]{'current_temp_0_c'})
         {
          $ts .= "-";
         }
@@ -1057,13 +1057,13 @@ sub drawMiners
           elsif ($mode == 3)
           {
  
-           $ts = 'Fan: ' . $gpus[$gpu]{'fan_speed'} . '% (' . $gpus[$gpu]{'fan_rpm'};
+           $ts = 'Fan: ' . $gpus[$gpu]{'fan_speed'} . '% (' . $gpus[$gpu]{'fan_rpm_c'};
 
-           if ($gpus[$gpu]{'fan_rpm'} > $lastgpus[$gpu]{'fan_rpm'})
+           if ($gpus[$gpu]{'fan_rpm_c'} > $lastgpus[$gpu]{'fan_rpm_c'})
            {
             $ts .= '+';
            }
-           elsif ($gpus[$gpu]{'fan_rpm'} < $lastgpus[$gpu]{'fan_rpm'})
+           elsif ($gpus[$gpu]{'fan_rpm_c'} < $lastgpus[$gpu]{'fan_rpm_c'})
            {
             $ts .= '-'; 
            }
