@@ -220,9 +220,9 @@ for (my $i=0;$i<@gpus;$i++)
 		{
 			$gsput .= "<tr><td>Temp:</td><td>" . sprintf("%.1f", $gpus[$i]{'current_temp_0_c'}) . ' C</td>';
 		}
-		$gput .= '<td>' . sprintf("%.1f", $gpus[$i]{'current_temp_0_c'}) . ' C</td>';
+		$gput .= '<td>';
 	}		
-	$gput .= '</TD>';
+	$gput .= sprintf("%.1f", $gpus[$i]{'current_temp_0_c'}) . ' C</td>';
 	
 	$frpm = $gpus[$i]{'fan_rpm_c'}; $frpm = "0" if ($frpm eq "");
 	if (defined($conf{'gpu'. $i}{monitor_fan_lo}) && $frpm < ($conf{'gpu'. $i}{monitor_fan_lo}) && ($frpm > 0))
