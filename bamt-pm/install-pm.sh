@@ -25,7 +25,9 @@ case "$input" in
       cp mgpumon.css /var/www/bamt/
       cp ./bimages/*.png /var/www/bamt/
       cp ./images/*.png /var/www/IFMI
-      ln -s /var/www/IFMI/IFMI-logo-small.png /var/www/bamt/
+      if ! -e /var/www/bamt/IFMI-logo-small.png ; then 
+        ln -s /var/www/IFMI/IFMI-logo-small.png /var/www/bamt/
+      fi
       cp /usr/lib/cgi-bin/status.pl /usr/lib/cgi-bin/status.pl.back
       cp status.pl /usr/lib/cgi-bin/
       cp /usr/lib/cgi-bin/confedit.pl /usr/lib/cgi-bin/confedit.pl.back

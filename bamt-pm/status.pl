@@ -257,8 +257,9 @@ for (my $i=0;$i<@gpus;$i++)
 	}
 	$gput .= '</TD>';
 		
-
-	if (defined($conf{'gpu'. $i}{monitor_hash_lo}) && ($gpus[$i]{'hashrate'} < $conf{'gpu'. $i}{monitor_hash_lo}))
+	my $ghashrate = $gpus[$i]{'hashrate'}; 
+	$ghashrate = $gpus[$i]{'hashavg'} if ($ghashrate eq "");
+	if (defined($conf{'gpu'. $i}{monitor_hash_lo}) && ($ghashrate < $conf{'gpu'. $i}{monitor_hash_lo}))
 	{
 		$problems++;
 		push(@nodemsg, "GPU $i is below minimum hash rate");
@@ -272,7 +273,7 @@ for (my $i=0;$i<@gpus;$i++)
 	{
 		$gput .= '<td>';
 	}	
-	$gput .= sprintf("%d", $gpus[$i]{'hashrate'}) . " Kh/s</TD>";
+	$gput .= sprintf("%d", $ghashrate) . " Kh/s</TD>";
 
 
     my $poolurl = $gpus[$i]{'pool_url'};
@@ -419,7 +420,8 @@ if (@summary) {
   for (my $i=0;$i<@summary;$i++) {
     $melapsed = ${@summary[$i]}{'elapsed'};
     $mrunt = sprintf("%d days, %02d:%02d.%02d",(gmtime $melapsed)[7,2,1,0]);
-    $mratem = ${@summary[$i]}{'hashavg'};
+    $mratem = ${@summary[$i]}{'hashrate'};
+    $mratem = ${@summary[$i]}{'hashavg'} if ($mratem eq "");
     $minerate = sprintf("%.2f", $mratem);
     $mineacc = ${@summary[$i]}{'shares_accepted'};
     $minerej = ${@summary[$i]}{'shares_invalid'};
