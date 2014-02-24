@@ -378,6 +378,9 @@ sub getFreshGPUData
       $gpucount++
     }
   }
+
+  my $gidata = "";
+
   for (my $i=0;$i<$gpucount;$i++)
   {
     my $gpu = $i; 
