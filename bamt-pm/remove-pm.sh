@@ -30,7 +30,7 @@ case "$input" in
     mv /opt/bamt/mgpumon.bamt /opt/bamt/mgpumon
     mv /opt/bamt/sendstatus.pl /var/www/IFMI/sendstatus.pl.ifmi
     mv /opt/bamt/sendstatus.pl.bamt /opt/bamt/sendstatus.pl
-    mv /opt/ifmi/pmgraph.pl /var/www/IFMI/pmgraph.pl.ifmi
+    mv /opt/ifmi/rrdtool/pmgraph.pl /var/www/IFMI/pmgraph.pl.ifmi
     mv /etc/sudoers /etc/sudoers.ifmi
     mv /etc/sudoers.bamt /etc/sudoers
     echo "Done!"

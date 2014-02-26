@@ -29,7 +29,7 @@ sub bcastStatus
   $ts .= "|$k:" . encode_json $gpus[$k];
  }
 
- my @pools;  my @pools = &getCGMinerPools(1);
+ my @pools;  my @pools = &getCGMinerPools;
  for ($p = 0;$p < @pools;$p++)
  {
   $ts .= "|$p pool:" . encode_json $pools[$p];
@@ -51,7 +51,9 @@ sub bcastStatus
   $port = ${$conf}{settings}{status_port};
  }
 
- my $socket = IO::Socket::INET->new(Broadcast => 1, Blocking => 1, ReuseAddr => 1, Type => SOCK_DGRAM, Proto => 'udp', PeerPort => $port, LocalPort => 0, PeerAddr => inet_ntoa(INADDR_BROADCAST));
+ my $socket = IO::Socket::INET->new(Broadcast => 1, Blocking => 1, ReuseAddr => 1, 
+  Type => SOCK_DGRAM, Proto => 'udp', PeerPort => $port, LocalPort => 0, 
+  PeerAddr => inet_ntoa(INADDR_BROADCAST));
  
  if ($socket)
  {
@@ -106,7 +108,8 @@ sub directStatus
   $port = ${$conf}{settings}{status_port};
  }
 
- my $socket = IO::Socket::INET->new(Blocking => 1, ReuseAddr => 1, Type => SOCK_DGRAM, Proto => 'udp', PeerPort => 54545, LocalPort => 0, PeerAddr => $target);
+ my $socket = IO::Socket::INET->new(Blocking => 1, ReuseAddr => 1, Type => SOCK_DGRAM, 
+  Proto => 'udp', PeerPort => $port, LocalPort => 0, PeerAddr => $target);
  
  if ($socket)
  {
